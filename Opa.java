@@ -1,4 +1,8 @@
-public class Opa{
+package SB;
+import SB.A;
+
+
+public class Opa implements A{
 
     public static void main(String args[]){
 
