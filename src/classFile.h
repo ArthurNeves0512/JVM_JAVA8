@@ -2,8 +2,8 @@
 #define CLASS_FILE_H
 
 #include "constant_pool_types.h"
-#include "consts.h"
-#include "dataTypes.h"
+#include "lib/consts.h"
+#include "lib/dataTypes.h"
 #include <stdio.h>
 #include <stdlib.h>
 typedef struct ClassFile_ {
