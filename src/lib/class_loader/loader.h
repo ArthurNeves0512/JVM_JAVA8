@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include "dot_class.h"
 #include "consts.h"
+#include "read_byte.h"
 
 u4 readCafeBabe(FILE *ptr_file);
 u2 readConstantPoolCount(FILE *ptr_file);
