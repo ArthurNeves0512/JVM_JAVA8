@@ -1,5 +1,11 @@
 CC      = gcc
-CFLAGS  = -Wall -Wextra -std=c11 -Isrc -Isrc/lib
+CFLAGS  = -Wall -Wextra -std=c11 \
+  -Isrc \
+  -Isrc/lib \
+  -Isrc/lib/types \
+  -Isrc/lib/types/class_file \
+  -Isrc/lib/class_loader \
+  -Isrc/lib/file
 LDFLAGS =
 
 TARGET   = main
