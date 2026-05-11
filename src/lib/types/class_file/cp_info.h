@@ -1,6 +1,6 @@
 #ifndef CP_INFO_H
 #define CP_INFO_H
-#include "dataTypes.h"
+#include "lib/types/dataTypes.h"
 
 typedef struct CONSTANT_Class_info_ {
     u1 tag;

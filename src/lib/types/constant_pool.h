@@ -1,6 +1,6 @@
 #ifndef CONSTANT_POOL_H
 #define CONSTANT_POOL_H
-#include "cp_info.h"
+#include "lib/types/class_file/cp_info.h"
 
 typedef struct cp_info_ {
     u1 tag;

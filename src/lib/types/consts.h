@@ -1,6 +1,6 @@
 #ifndef CONST_H
 #define CONST_H
-#include "dataTypes.h"
+#include "lib/types/dataTypes.h"
 
 enum CONSTANT_POOL_TAGS {
     CONSTANT_Class = (u1)7,

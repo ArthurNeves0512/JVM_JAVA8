@@ -1,9 +1,9 @@
 #ifndef LOADER_H
 #define LOADER_H
 #include <stdio.h>
-#include "dot_class.h"
-#include "consts.h"
-#include "read_byte.h"
+#include "lib/types/class_file/dot_class.h"
+#include "lib/types/consts.h"
+#include "lib/file/read_byte.h"
 
 u4 readCafeBabe(FILE *ptr_file);
 u2 readConstantPoolCount(FILE *ptr_file);

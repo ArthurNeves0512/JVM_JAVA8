@@ -1,6 +1,6 @@
 #ifndef ATTRIBUTES_INFO_H
 #define ATTRIBUTES_INFO_H
-#include "dataTypes.h"
+#include "lib/types/dataTypes.h"
 
 typedef struct attribute_info_ {
     u2 attribute_name_index;

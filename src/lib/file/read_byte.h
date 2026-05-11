@@ -1,7 +1,7 @@
 #ifndef READ_BYTE_H
 #define READ_BYTE_H
 #include <stdio.h>
-#include "dataTypes.h"
+#include "lib/types/dataTypes.h"
 
 static inline u1 u1Read(FILE *ptr_file) { return (u1)getc(ptr_file); }
 

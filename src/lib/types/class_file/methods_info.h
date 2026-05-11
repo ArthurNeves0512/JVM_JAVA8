@@ -1,7 +1,7 @@
 #ifndef METHODS_INFO_H
 #define METHODS_INFO_H
-#include "dataTypes.h"
-#include "attributes_info.h"
+#include "lib/types/dataTypes.h"
+#include "lib/types/class_file/attributes_info.h"
 
 typedef struct field_info_ {
     u2 access_flags;
