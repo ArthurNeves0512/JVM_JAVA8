@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include "lib/class_loader/loader.h"
 #include "lib/file/read_file.h"
+#include "lib/printer/printer.h"
 
 int main(int argc, char *argv[]) {
     if (argc != 2) {
@@ -16,6 +17,7 @@ int main(int argc, char *argv[]) {
     ClassFile *class_file_ptr = (ClassFile *)malloc(sizeof(ClassFile));
 
     classFilesSetup(class_file_ptr, file_ptr);
+    printClassFile(class_file_ptr);
 
     return 0;
 }
