@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "lib/class_loader/loader.h"
+#include "lib/class_loader/fields_interfaces.h"
 #include "lib/file/read_file.h"
 #include "lib/printer/printer.h"
 
@@ -15,8 +16,9 @@ int main(int argc, char *argv[]) {
     FILE *file_ptr = readFile(argv[1]);
 
     ClassFile *class_file_ptr = (ClassFile *)malloc(sizeof(ClassFile));
-
     classFilesSetup(class_file_ptr, file_ptr);
+    readInterfaces(class_file_ptr, file_ptr);
+    readFields(class_file_ptr, file_ptr);
     printClassFile(class_file_ptr);
 
     return 0;

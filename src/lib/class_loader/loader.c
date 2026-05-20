@@ -171,5 +171,4 @@ void classFilesSetup(ClassFile *cf, FILE *fp) {
     readAcessFlags(cf, fp);
     readThisClass(cf, fp);
     readSuperClass(cf, fp);
-    readInterfacesCount(cf, fp);
 }
