@@ -95,7 +95,7 @@ static void test_access_flag_public_is_printed(void) {
 
     char *out = capture_print(&cf);
     assert(strstr(out, "ACC_PUBLIC") != NULL);
-    assert(strstr(out, "ACC_SUPPER") != NULL);
+    assert(strstr(out, "ACC_SUPER") != NULL);
     free(out);
 }
 

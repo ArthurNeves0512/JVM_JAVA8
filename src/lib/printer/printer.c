@@ -29,21 +29,32 @@ void printClassFile(const ClassFile *cf) {
         return;
     }
     printClassFileHeader(cf);
+    SKIP_LINE;
     printConstantPool(cf);
-    printAccessFlags(cf->access_flags);
+    SKIP_LINE;
     printClassInfo(cf);
+    SKIP_LINE;
 }
 
 static void printClassFileHeader(const ClassFile *cf) {
+    printf("=== General Information ===\n");
     printf("Magic Number: %#X\n", cf->magic);
-    printf("Java class file version:%hu.%hu\n", cf->major_version, cf->minor_version);
-    printf("Constant Pool count: %hu\n", cf->constant_pool_count);
+    printf("Minor Version: %hu\n", cf->minor_version);
+    printf("Major Version: %hu\n", cf->major_version);
+    printf("Constant Pool Count: %hu\n", cf->constant_pool_count - 1);
+    printAccessFlags(cf->access_flags);
+    printf("This Class: %hu\n", cf->this_class);
+    printf("Super Class: %hu\n", cf->super_class);
+    printf("Interfaces Count: %hu\n", cf->interfaces_count);
+    printf("Fields Count: %hu\n", cf->fields_count);
+    printf("Methods Count: %hu\n", cf->methods_count);
+    printf("Attributes Count: %hu\n", cf->attributes_count);
 }
 
 static void printConstantPool(const ClassFile *cf) {
+    printf("=== Constant Pool ===\n");
     if (cf->constant_pool == NULL) return;
     for (u2 i = 0; i < (u2)(cf->constant_pool_count - 1); i++) {
-        printf("--------------------------\n");
         printf("[%hu] Tag: %hhu ", (u2)(i + 1), cf->constant_pool[i].tag);
         printCpEntry(&cf->constant_pool[i]);
     }
@@ -86,98 +97,114 @@ static void printCpEntry(const cp_info *entry) {
 
 static void print_CONSTANT_Class(const CONSTANT_Class_info *info) {
     printf("<Class>\n");
-    printf("name_index in constant_pool_table:%hu\n", info->name_index);
+    printf("\tname_index in constant_pool_table:%hu\n", info->name_index);
 }
 
 static void print_CONSTANT_Fieldref(const CONSTANT_Fieldref_info *info) {
     printf("<Fieldref>\n");
-    printf("class_index:%hu\n", info->class_index);
-    printf("name_and_type_index:%hu\n", info->name_and_type_index);
+    printf("\tclass_index:%hu\n", info->class_index);
+    printf("\tname_and_type_index:%hu\n", info->name_and_type_index);
 }
 
 static void print_CONSTANT_Methodref(const CONSTANT_Methodref_info *info) {
     printf("<Methodref>\n");
-    printf("class_index:%hu\n", info->class_index);
-    printf("name_and_type_index:%hu\n", info->name_and_type_index);
+    printf("\tclass_index:%hu\n", info->class_index);
+    printf("\tname_and_type_index:%hu\n", info->name_and_type_index);
 }
 
 static void print_CONSTANT_InterfaceMethodref(const CONSTANT_InterfaceMethodref_info *info) {
     printf("<InterfaceMethodref>\n");
-    printf("class_index:%hu\n", info->class_index);
-    printf("name_and_type_index:%hu\n", info->name_and_type_index);
+    printf("\tclass_index:%hu\n", info->class_index);
+    printf("\tname_and_type_index:%hu\n", info->name_and_type_index);
 }
 
 static void print_CONSTANT_String(const CONSTANT_String_info *info) {
     printf("<String>\n");
-    printf("string_index:%hu\n", info->string_index);
+    printf("\tstring_index:%hu\n", info->string_index);
 }
 
 static void print_CONSTANT_Integer(const CONSTANT_Integer_info *info) {
     printf("<Integer>\n");
-    printf("bytes_value:%u\n", info->bytes);
+    printf("\tbytes_value:%u\n", info->bytes);
 }
 
 static void print_CONSTANT_Float(const CONSTANT_Float_info *info) {
     printf("<Float>\n");
-    printf("PRECISO AINDA CONVERTER PARA FLOAT:%u\n", info->bytes);
+    printf("\tPRECISO AINDA CONVERTER PARA FLOAT:%u\n", info->bytes);
 }
 
 static void print_CONSTANT_Long(const CONSTANT_Long_info *info) {
     printf("<Long>\n");
     u8 value = ((u8)info->high_bytes << 32) | info->low_bytes;
-    printf("bytes_value:%llu\n", (unsigned long long)value);
+    printf("\tbytes_value:%llu\n", (unsigned long long)value);
 }
 
 static void print_CONSTANT_Double(const CONSTANT_Double_info *info) {
     printf("<Double>\n");
     u8 value = ((u8)info->high_bytes << 32) | info->low_bytes;
-    printf("PRECISO CONVERTER AINDA PARA DOUBLE:%llu\n", (unsigned long long)value);
+    printf("\tPRECISO CONVERTER AINDA PARA DOUBLE:%llu\n", (unsigned long long)value);
 }
 
 static void print_CONSTANT_NameAndType(const CONSTANT_NameAndType_info *info) {
     printf("<NameAndType>\n");
-    printf("name_index:%hu\n", info->name_index);
-    printf("descriptor_index:%hu\n", info->descriptor_index);
+    printf("\tname_index:%hu\n", info->name_index);
+    printf("\tdescriptor_index:%hu\n", info->descriptor_index);
 }
 
 static void print_CONSTANT_Utf8(const CONSTANT_Utf8_info *info) {
     printf("<Utf8>\n");
-    printf("lenght of array in bytes: %hu\n", info->length);
-    printf("the word: %s\n", info->bytes);
+    printf("\tlenght of array in bytes: %hu\n", info->length);
+    printf("\tthe word: %s\n", info->bytes);
 }
 
 static void print_CONSTANT_MethodHandle(const CONSTANT_MethodHandle_info *info) {
     printf("<MethodHandle>\n");
-    printf("reference_kind:%u\n", info->reference_kind);
-    printf("reference_index:%u\n", info->reference_index);
+    printf("\treference_kind:%u\n", info->reference_kind);
+    printf("\treference_index:%u\n", info->reference_index);
 }
 
 static void print_CONSTANT_MethodType(const CONSTANT_MethodType_info *info) {
     printf("<MethodType>\n");
-    printf("descriptor_index:%hu\n", info->descriptor_index);
+    printf("\tdescriptor_index:%hu\n", info->descriptor_index);
 }
 
 static void print_CONSTANT_InvokeDynamic(const CONSTANT_InvokeDynamic_info *info) {
     printf("<InvokeDynamic>\n");
-    printf("bootstrap_method_attr_index: %hu\n", info->bootstrap_method_attr_index);
-    printf("name_and_type_index: %hu\n", info->name_and_type_index);
+    printf("\tbootstrap_method_attr_index: %hu\n", info->bootstrap_method_attr_index);
+    printf("\tname_and_type_index: %hu\n", info->name_and_type_index);
 }
 
 static void printAccessFlags(u2 flags) {
-    printf("this is the flag value %04x\n", flags);
-    if ((flags & 0x0001) == 0x0001) printf("ACC_PUBLIC, ");
-    if ((flags & 0x0010) == 0x0010) printf("ACC_FINAL, ");
-    if ((flags & 0x0020) == 0x0020) printf("ACC_SUPPER, ");
-    if ((flags & 0x0200) == 0x0200) printf("ACC_INTERFACE, ");
-    if ((flags & 0x0400) == 0x0400) printf("ACC_ABSTRACT, ");
-    if ((flags & 0x1000) == 0x1000) printf("ACC_SYNTHETIC, ");
-    if ((flags & 0x2000) == 0x2000) printf("ACC_ANNOTATION, ");
-    if ((flags & 0x4000) == 0x4000) printf("ACC_ENUM, ");
+    static const struct {
+        u2          mask;
+        const char *name;
+    } FLAG_TABLE[] = {
+        { 0x0001, "ACC_PUBLIC"     },
+        { 0x0010, "ACC_FINAL"      },
+        { 0x0020, "ACC_SUPER"      },
+        { 0x0200, "ACC_INTERFACE"  },
+        { 0x0400, "ACC_ABSTRACT"   },
+        { 0x1000, "ACC_SYNTHETIC"  },
+        { 0x2000, "ACC_ANNOTATION" },
+        { 0x4000, "ACC_ENUM"       },
+    };
+    static const size_t FLAG_COUNT = sizeof(FLAG_TABLE) / sizeof(FLAG_TABLE[0]);
+
+    printf("Access flags (0x%04x): ", flags);
+
+    int printed = 0;
+    for (size_t i = 0; i < FLAG_COUNT; i++) {
+        if (flags & FLAG_TABLE[i].mask) {
+            printf("%s%s", printed ? " | " : "", FLAG_TABLE[i].name);
+            printed++;
+        }
+    }
+
+    if (!printed) printf("(none)");
     printf("\n");
 }
 
 static void printClassInfo(const ClassFile *cf) {
-    printf("this class index at constant_pool table %d\n", cf->this_class);
-    printf("this is the super class index at constant_pool table %d\n", cf->super_class);
-    printf("number of interfaces %d\n", cf->interfaces_count);
+    printf("This class index at constant_pool table %d\n", cf->this_class);
+    printf("This is the super class index at constant_pool table %d\n", cf->super_class);
 }
