@@ -5,22 +5,17 @@
 
 void readInterfaces(ClassFile *class_file_ptr, FILE *file_ptr) {
     class_file_ptr->interfaces_count = u2Read(file_ptr);
-    printf("\n=== Interfaces ===\n");
-    printf("interfaces_count: %hu\n", class_file_ptr->interfaces_count);
 
     class_file_ptr->interfaces = (u2*) malloc(class_file_ptr->interfaces_count * sizeof(u2));
 
     for (u2 i = 0; i < class_file_ptr->interfaces_count; i++) {
         u2 index = u2Read(file_ptr);
         class_file_ptr->interfaces[i] = index;
-        printf("interface[%hu]: #%hu\n", i, index);
     }
 }
 
 void readFields(ClassFile *class_file_ptr, FILE *file_ptr) {
     class_file_ptr->fields_count = u2Read(file_ptr);
-    printf("\n=== Fields ===\n");
-    printf("fields_count: %hu\n", class_file_ptr->fields_count);
 
     class_file_ptr->fields = (field_info*) malloc(class_file_ptr->fields_count * sizeof(field_info));
 
@@ -29,10 +24,6 @@ void readFields(ClassFile *class_file_ptr, FILE *file_ptr) {
         class_file_ptr->fields[i].name_index       = u2Read(file_ptr);
         class_file_ptr->fields[i].descriptor_index = u2Read(file_ptr);
         class_file_ptr->fields[i].attributes_count = u2Read(file_ptr);
-
-        printf("field[%hu]: name=#%hu descriptor=#%hu\n", i,
-            class_file_ptr->fields[i].name_index,
-            class_file_ptr->fields[i].descriptor_index);
 
         for (u2 j = 0; j < class_file_ptr->fields[i].attributes_count; j++) {
             u2Read(file_ptr);
