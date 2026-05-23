@@ -1,6 +1,7 @@
 #include "printer.h"
 #include "lib/types/consts.h"
 #include <stdio.h>
+#include <string.h>
 
 static void printClassFileHeader(const ClassFile *cf);
 static void printConstantPool(const ClassFile *cf);
@@ -54,8 +55,8 @@ static void printClassFileHeader(const ClassFile *cf) {
 static void printConstantPool(const ClassFile *cf) {
     printf("=== Constant Pool ===\n");
     if (cf->constant_pool == NULL) return;
-    for (u2 i = 0; i < (u2)(cf->constant_pool_count - 1); i++) {
-        printf("[%hu] Tag: %hhu ", (u2)(i + 1), cf->constant_pool[i].tag);
+    for (u2 i = 1; i < (u2)(cf->constant_pool_count); i++) {
+        printf("[%hu] Tag: %hhu ", (u2)(i), cf->constant_pool[i].tag);
         printCpEntry(&cf->constant_pool[i]);
     }
 }
@@ -90,6 +91,8 @@ static void printCpEntry(const cp_info *entry) {
         print_CONSTANT_MethodType(entry->methodType_info); break;
     case CONSTANT_InvokeDynamic:
         print_CONSTANT_InvokeDynamic(entry->invokeDynamic_info); break;
+    case CONSTANT_LargeNumeric:
+        printf("<LargeNumeric>\n"); break;
     default:
         printf("<unknown tag>\n"); break;
     }
@@ -129,8 +132,10 @@ static void print_CONSTANT_Integer(const CONSTANT_Integer_info *info) {
 }
 
 static void print_CONSTANT_Float(const CONSTANT_Float_info *info) {
+    float value;
+    memcpy(&value, &info->bytes, sizeof(float));
     printf("<Float>\n");
-    printf("\tPRECISO AINDA CONVERTER PARA FLOAT:%u\n", info->bytes);
+    printf("\tbytes_value: %f\n", value);
 }
 
 static void print_CONSTANT_Long(const CONSTANT_Long_info *info) {
@@ -140,9 +145,13 @@ static void print_CONSTANT_Long(const CONSTANT_Long_info *info) {
 }
 
 static void print_CONSTANT_Double(const CONSTANT_Double_info *info) {
+    u8 bits = ((u8)info->high_bytes << 32) | info->low_bytes;
+    double value;
+    memcpy(&value, &bits, sizeof(double));
     printf("<Double>\n");
-    u8 value = ((u8)info->high_bytes << 32) | info->low_bytes;
-    printf("\tPRECISO CONVERTER AINDA PARA DOUBLE:%llu\n", (unsigned long long)value);
+    printf("\thigh_bytes: 0x%08X\n", info->high_bytes);
+    printf("\tlow_bytes:  0x%08X\n", info->low_bytes);
+    printf("\tbytes_value: %f\n", value);
 }
 
 static void print_CONSTANT_NameAndType(const CONSTANT_NameAndType_info *info) {
@@ -179,14 +188,14 @@ static void printAccessFlags(u2 flags) {
         u2          mask;
         const char *name;
     } FLAG_TABLE[] = {
-        { 0x0001, "ACC_PUBLIC"     },
-        { 0x0010, "ACC_FINAL"      },
-        { 0x0020, "ACC_SUPER"      },
-        { 0x0200, "ACC_INTERFACE"  },
-        { 0x0400, "ACC_ABSTRACT"   },
-        { 0x1000, "ACC_SYNTHETIC"  },
-        { 0x2000, "ACC_ANNOTATION" },
-        { 0x4000, "ACC_ENUM"       },
+        { ACC_PUBLIC,     "ACC_PUBLIC"     },
+        { ACC_FINAL,      "ACC_FINAL"      },
+        { ACC_SUPER,      "ACC_SUPER"      },
+        { ACC_INTERFACE,  "ACC_INTERFACE"  },
+        { ACC_ABSTRACT,   "ACC_ABSTRACT"   },
+        { ACC_SYNTHETIC,  "ACC_SYNTHETIC"  },
+        { ACC_ANNOTATION, "ACC_ANNOTATION" },
+        { ACC_ENUM,       "ACC_ENUM"       },
     };
     static const size_t FLAG_COUNT = sizeof(FLAG_TABLE) / sizeof(FLAG_TABLE[0]);
 
