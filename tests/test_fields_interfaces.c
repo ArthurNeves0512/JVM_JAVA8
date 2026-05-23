@@ -132,8 +132,6 @@ static void test_opa_interfaces_count(void) {
     assert(f != NULL);
     ClassFile *cf = allocClassFile();
     classFilesSetup(cf, f);
-    readThisClass(cf, f);
-    readSuperClass(cf, f);
     readInterfaces(cf, f);
     assert(cf->interfaces_count == 1);
     fclose(f);
@@ -146,8 +144,6 @@ static void test_opa_fields_count_zero(void) {
     assert(f != NULL);
     ClassFile *cf = allocClassFile();
     classFilesSetup(cf, f);
-    readThisClass(cf, f);
-    readSuperClass(cf, f);
     readInterfaces(cf, f);
     readFields(cf, f);
     assert(cf->fields_count == 0);
