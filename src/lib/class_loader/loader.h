@@ -7,7 +7,7 @@
 
 u4   readCafeBabe(FILE *ptr_file);
 u2   readConstantPoolCount(FILE *ptr_file);
-void readAcessFlags(ClassFile *cf, FILE *fp);
+void readAccessFlags(ClassFile *cf, FILE *fp);
 void readThisClass(ClassFile *cf, FILE *fp);
 void readSuperClass(ClassFile *cf, FILE *fp);
 void readInterfacesCount(ClassFile *cf, FILE *fp);

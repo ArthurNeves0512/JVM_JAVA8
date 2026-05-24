@@ -17,14 +17,12 @@ enum CONSTANT_POOL_TAGS {
     CONSTANT_MethodHandle = (u1)15,
     CONSTANT_MethodType = (u1)16,
     CONSTANT_InvokeDynamic = (u1)18,
+    CONSTANT_LargeNumeric
 };
 
-enum ACESS_MODIFIERS {
-    /* Declared public; may be accessed from outside its package. */
+enum ACCESS_MODIFIERS {
     ACC_PUBLIC = (u2)0x0001,
-    /* Declared final; no subclasses allowed. */
     ACC_FINAL = (u2)0x0010,
-    /* Treat superclass methods specially when invoked by the invokespecial instruction. */
     ACC_SUPER = (u2)0x0020,
     ACC_INTERFACE = (u2)0x0200,
     ACC_ABSTRACT = (u2)0x0400,

@@ -1,7 +1,14 @@
 #include "loader.h"
 #include <stdlib.h>
 
-u4 readCafeBabe(FILE *ptr_file) { return u4Read(ptr_file); }
+u4 readCafeBabe(FILE *ptr_file) {
+    u4 magic = u4Read(ptr_file);
+    if (magic != 0xCAFEBABE) {
+        fprintf(stderr, "Error: Invalid magic number: %#X\n", magic);
+        exit(EXIT_FAILURE);
+    } 
+    return magic;
+}
 
 static u2 readMinorVersion(FILE *ptr_file) { return u2Read(ptr_file); }
 static u2 readMajorVersion(FILE *ptr_file) { return u2Read(ptr_file); }
@@ -140,7 +147,7 @@ static void constant_pool(cp_info *entry, u1 tag, FILE *fp) {
     }
 }
 
-void readAcessFlags(ClassFile *cf, FILE *fp) {
+void readAccessFlags(ClassFile *cf, FILE *fp) {
     cf->access_flags = u2Read(fp);
 }
 
@@ -162,13 +169,18 @@ void classFilesSetup(ClassFile *cf, FILE *fp) {
     cf->major_version       = readMajorVersion(fp);
     cf->constant_pool_count = readConstantPoolCount(fp);
 
-    cf->constant_pool = malloc((cf->constant_pool_count - 1) * sizeof(cp_info));
-    for (u2 i = 0; i < (u2)(cf->constant_pool_count - 1); i++) {
+    cf->constant_pool = malloc((cf->constant_pool_count) * sizeof(cp_info));
+    for (u2 i = 1; i < (u2)(cf->constant_pool_count); i++) {
         u1 tag = u1Read(fp);
-        constant_pool(&cf->constant_pool[i], tag, fp);
+        if (tag == CONSTANT_Long || tag == CONSTANT_Double) {
+            constant_pool(&cf->constant_pool[i], tag, fp);
+            cf->constant_pool[++i].tag = CONSTANT_LargeNumeric;
+        } else {
+            constant_pool(&cf->constant_pool[i], tag, fp);
+        }
     }
 
-    readAcessFlags(cf, fp);
+    readAccessFlags(cf, fp);
     readThisClass(cf, fp);
     readSuperClass(cf, fp);
 }
