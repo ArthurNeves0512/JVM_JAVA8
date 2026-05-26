@@ -2,6 +2,7 @@
 #include "lib/types/consts.h"
 #include <stdio.h>
 #include <string.h>
+#include <unistd.h>
 
 static void printClassFileHeader(const ClassFile *cf);
 static void printConstantPool(const ClassFile *cf);
@@ -24,6 +25,7 @@ static void print_CONSTANT_MethodType(const CONSTANT_MethodType_info *info);
 static void print_CONSTANT_InvokeDynamic(const CONSTANT_InvokeDynamic_info *info);
 static void print_NAME_AND_TYPE_INFO_VALUE(const cp_info * constant_pool, const CONSTANT_NameAndType_info * info);
 static void print_CONSTANT_Methodref(const cp_info* constant_pool, const CONSTANT_Methodref_info *info);
+static int isKnownConstantTag(u1 tag);
 
 void printClassFile(const ClassFile *cf) {
     if (cf == NULL) {
@@ -57,6 +59,9 @@ static void printConstantPool(const ClassFile *cf) {
     printf("=== Constant Pool ===\n");
     if (cf->constant_pool == NULL) return;
     for (u2 i = 1; i < (u2)(cf->constant_pool_count); i++) {
+        if (!isKnownConstantTag(cf->constant_pool[i].tag)) {
+            continue;
+        }
         printf("[%hu] Tag: %hhu ", (u2)(i), cf->constant_pool[i].tag);
         printCpEntry(cf->constant_pool, &cf->constant_pool[i]);
     }
@@ -95,8 +100,6 @@ static void printCpEntry(const cp_info * constant_pool,const cp_info *entry) {
         print_CONSTANT_MethodType(entry->methodType_info); break;
     case CONSTANT_InvokeDynamic:
         print_CONSTANT_InvokeDynamic(entry->invokeDynamic_info); break;
-    case CONSTANT_LargeNumeric:
-        printf("<LargeNumeric>\n"); break;
     default:
         printf("<unknown tag>\n"); break;
     }
@@ -252,4 +255,40 @@ static void printAccessFlags(u2 flags) {
 static void printClassInfo(const ClassFile *cf) {
     printf("This class index at constant_pool table %d\n", cf->this_class);
     printf("This is the super class index at constant_pool table %d\n", cf->super_class);
+}
+
+void printFileToTerminal(int terminal_fd, const char *path) {
+    FILE *f = fopen(path, "r");
+    if (f == NULL) {
+        const char *msg = "Warning: could not reopen output file for --print\n";
+        write(terminal_fd, msg, strlen(msg));
+        return;
+    }
+    char buf[4096];
+    size_t n;
+    while ((n = fread(buf, 1, sizeof(buf), f)) > 0)
+        write(terminal_fd, buf, n);
+    fclose(f);
+}
+
+static int isKnownConstantTag(u1 tag) {
+    switch (tag) {
+    case CONSTANT_Class:
+    case CONSTANT_Fieldref:
+    case CONSTANT_Methodref:
+    case CONSTANT_InterfaceMethodref:
+    case CONSTANT_String:
+    case CONSTANT_Integer:
+    case CONSTANT_Float:
+    case CONSTANT_Long:
+    case CONSTANT_Double:
+    case CONSTANT_NameAndType:
+    case CONSTANT_Utf8:
+    case CONSTANT_MethodHandle:
+    case CONSTANT_MethodType:
+    case CONSTANT_InvokeDynamic:
+        return 1;
+    default:
+        return 0;
+    }
 }
