@@ -31,7 +31,7 @@ $(BUILDDIR)/%.o: %.c
 	@mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) -c $< -o $@
 
-FILE ?= data/examples/Opa.class
+FILE ?= data/examples/A.class
 
 run: all
 	./$(TARGET) $(FILE)
