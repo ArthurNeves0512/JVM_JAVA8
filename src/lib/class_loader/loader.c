@@ -174,7 +174,7 @@ void classFilesSetup(ClassFile *cf, FILE *fp) {
         u1 tag = u1Read(fp);
         if (tag == CONSTANT_Long || tag == CONSTANT_Double) {
             constant_pool(&cf->constant_pool[i], tag, fp);
-            cf->constant_pool[++i].tag = CONSTANT_LargeNumeric;
+            cf->constant_pool[++i].tag = -1;
         } else {
             constant_pool(&cf->constant_pool[i], tag, fp);
         }
