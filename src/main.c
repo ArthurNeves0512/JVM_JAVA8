@@ -23,7 +23,6 @@ int main(int argc, char *argv[]) {
     readMethodsCount(class_file_ptr, file_ptr);
     readMethods(class_file_ptr, file_ptr);
     printClassFile(class_file_ptr);
-
     return 0;
 }
 #endif

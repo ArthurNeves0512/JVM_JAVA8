@@ -101,12 +101,14 @@ static void test_access_flag_public_is_printed(void) {
 
 static void test_constant_pool_class_entry_is_printed(void) {
     CONSTANT_Class_info class_info = { .tag = CONSTANT_Class, .name_index = 7 };
-    cp_info entry = { .tag = CONSTANT_Class, .constant_class_info = &class_info };
+    cp_info entries[2] = {0}; /* index 0 unused; constant pool é 1-indexed */
+    entries[1].tag                  = CONSTANT_Class;
+    entries[1].constant_class_info  = &class_info;
 
     ClassFile cf = {0};
     cf.magic               = 0xCAFEBABE;
     cf.constant_pool_count = 2; /* 1 entry */
-    cf.constant_pool       = &entry;
+    cf.constant_pool       = entries;
 
     char *out = capture_print(&cf);
     assert(strstr(out, "<Class>") != NULL);
