@@ -5,25 +5,24 @@
 
 static void printClassFileHeader(const ClassFile *cf);
 static void printConstantPool(const ClassFile *cf);
-static void printCpEntry(const cp_info * constant_pool,const cp_info *entry);
+static void printCpEntry(const cp_info *entry);
 static void printAccessFlags(u2 flags);
 static void printClassInfo(const ClassFile *cf);
-static void print_CONSTANT_Class(const cp_info* constant_pool,const CONSTANT_Class_info *info);
-static void print_CONSTANT_Fieldref(const cp_info* constant_pool, const CONSTANT_Fieldref_info *info);
-static void print_CLASS_INFO_VALUE(const cp_info * constant_pool, const CONSTANT_Class_info * info);
-static void print_CONSTANT_InterfaceMethodref(const cp_info* constant_pool,const CONSTANT_InterfaceMethodref_info *info);
-static void print_CONSTANT_String(const cp_info* constant_pool, const CONSTANT_String_info *info);
+
+static void print_CONSTANT_Class(const CONSTANT_Class_info *info);
+static void print_CONSTANT_Fieldref(const CONSTANT_Fieldref_info *info);
+static void print_CONSTANT_Methodref(const CONSTANT_Methodref_info *info);
+static void print_CONSTANT_InterfaceMethodref(const CONSTANT_InterfaceMethodref_info *info);
+static void print_CONSTANT_String(const CONSTANT_String_info *info);
 static void print_CONSTANT_Integer(const CONSTANT_Integer_info *info);
 static void print_CONSTANT_Float(const CONSTANT_Float_info *info);
 static void print_CONSTANT_Long(const CONSTANT_Long_info *info);
 static void print_CONSTANT_Double(const CONSTANT_Double_info *info);
-static void print_CONSTANT_NameAndType(const cp_info * constant_pool, const CONSTANT_NameAndType_info *info);
+static void print_CONSTANT_NameAndType(const CONSTANT_NameAndType_info *info);
 static void print_CONSTANT_Utf8(const CONSTANT_Utf8_info *info);
 static void print_CONSTANT_MethodHandle(const CONSTANT_MethodHandle_info *info);
 static void print_CONSTANT_MethodType(const CONSTANT_MethodType_info *info);
 static void print_CONSTANT_InvokeDynamic(const CONSTANT_InvokeDynamic_info *info);
-static void print_NAME_AND_TYPE_INFO_VALUE(const cp_info * constant_pool, const CONSTANT_NameAndType_info * info);
-static void print_CONSTANT_Methodref(const cp_info* constant_pool, const CONSTANT_Methodref_info *info);
 
 void printClassFile(const ClassFile *cf) {
     if (cf == NULL) {
@@ -43,7 +42,7 @@ static void printClassFileHeader(const ClassFile *cf) {
     printf("Magic Number: %#X\n", cf->magic);
     printf("Minor Version: %hu\n", cf->minor_version);
     printf("Major Version: %hu\n", cf->major_version);
-    printf("Constant Pool Count: %hu\n", cf->constant_pool_count);
+    printf("Constant Pool Count: %hu\n", cf->constant_pool_count - 1);
     printAccessFlags(cf->access_flags);
     printf("This Class: %hu\n", cf->this_class);
     printf("Super Class: %hu\n", cf->super_class);
@@ -58,25 +57,22 @@ static void printConstantPool(const ClassFile *cf) {
     if (cf->constant_pool == NULL) return;
     for (u2 i = 1; i < (u2)(cf->constant_pool_count); i++) {
         printf("[%hu] Tag: %hhu ", (u2)(i), cf->constant_pool[i].tag);
-        printCpEntry(cf->constant_pool, &cf->constant_pool[i]);
+        printCpEntry(&cf->constant_pool[i]);
     }
 }
 
-
-
-
-static void printCpEntry(const cp_info * constant_pool,const cp_info *entry) {
+static void printCpEntry(const cp_info *entry) {
     switch (entry->tag) {
     case CONSTANT_Class:
-        print_CONSTANT_Class(constant_pool,entry->constant_class_info); break;
+        print_CONSTANT_Class(entry->constant_class_info); break;
     case CONSTANT_Fieldref:
-        print_CONSTANT_Fieldref(constant_pool,entry->fieldRef_info); break;
+        print_CONSTANT_Fieldref(entry->fieldRef_info); break;
     case CONSTANT_Methodref:
-        print_CONSTANT_Methodref(constant_pool, entry->methodRef_info); break;
+        print_CONSTANT_Methodref(entry->methodRef_info); break;
     case CONSTANT_InterfaceMethodref:
-        print_CONSTANT_InterfaceMethodref(constant_pool,entry->interfaceMethod_info); break;
+        print_CONSTANT_InterfaceMethodref(entry->interfaceMethod_info); break;
     case CONSTANT_String:
-        print_CONSTANT_String(constant_pool,entry->string_info); break;
+        print_CONSTANT_String(entry->string_info); break;
     case CONSTANT_Integer:
         print_CONSTANT_Integer(entry->integer_info); break;
     case CONSTANT_Float:
@@ -86,7 +82,7 @@ static void printCpEntry(const cp_info * constant_pool,const cp_info *entry) {
     case CONSTANT_Double:
         print_CONSTANT_Double(entry->double_info); break;
     case CONSTANT_NameAndType:
-        print_CONSTANT_NameAndType(constant_pool,entry->nameAndType_info); break;
+        print_CONSTANT_NameAndType(entry->nameAndType_info); break;
     case CONSTANT_Utf8:
         print_CONSTANT_Utf8(entry->utf8_info); break;
     case CONSTANT_MethodHandle:
@@ -102,79 +98,50 @@ static void printCpEntry(const cp_info * constant_pool,const cp_info *entry) {
     }
 }
 
-static void print_CLASS_INFO_VALUE(const cp_info * constant_pool, const CONSTANT_Class_info * info){
-    u1 * class_name = constant_pool[info->name_index].utf8_info->bytes;
-    printf("\t%s.",class_name);
-}
-
-static void print_NAME_AND_TYPE_INFO_VALUE(const cp_info * constant_pool, const CONSTANT_NameAndType_info * info){
-    u2 name_index = info->name_index;
-    printf("%s:", constant_pool[name_index].utf8_info->bytes);
-    u2 descritor_index = info->descriptor_index;
-    printf("%s\n",constant_pool[descritor_index].utf8_info->bytes);
-}
-
-static void print_CONSTANT_Class(const cp_info* constant_pool,const CONSTANT_Class_info *info) {
+static void print_CONSTANT_Class(const CONSTANT_Class_info *info) {
     printf("<Class>\n");
     printf("\tname_index in constant_pool_table:%hu\n", info->name_index);
-    CONSTANT_Utf8_info * utf8_info   = constant_pool[info->name_index].utf8_info;
-    printf("\t%s\n",utf8_info->bytes);
 }
 
-static void print_CONSTANT_Fieldref(const cp_info* constant_pool, const CONSTANT_Fieldref_info *info) {
+static void print_CONSTANT_Fieldref(const CONSTANT_Fieldref_info *info) {
     printf("<Fieldref>\n");
     printf("\tclass_index:%hu\n", info->class_index);
     printf("\tname_and_type_index:%hu\n", info->name_and_type_index);
-    CONSTANT_Class_info * class_info   = constant_pool[info->class_index].constant_class_info;
-    print_CLASS_INFO_VALUE(constant_pool,class_info);
-    CONSTANT_NameAndType_info *name_and_type =  constant_pool[info->name_and_type_index].nameAndType_info;
-    print_NAME_AND_TYPE_INFO_VALUE(constant_pool,name_and_type);
-
 }
 
-static void print_CONSTANT_Methodref(const cp_info* constant_pool, const CONSTANT_Methodref_info *info) {
+static void print_CONSTANT_Methodref(const CONSTANT_Methodref_info *info) {
     printf("<Methodref>\n");
     printf("\tclass_index:%hu\n", info->class_index);
     printf("\tname_and_type_index:%hu\n", info->name_and_type_index);
-    CONSTANT_Class_info * class_info   = constant_pool[info->class_index].constant_class_info;
-    print_CLASS_INFO_VALUE(constant_pool,class_info);
-    CONSTANT_NameAndType_info *name_and_type =  constant_pool[info->name_and_type_index].nameAndType_info;
-    print_NAME_AND_TYPE_INFO_VALUE(constant_pool,name_and_type);
 }
 
-static void print_CONSTANT_InterfaceMethodref(const cp_info* constant_pool,const CONSTANT_InterfaceMethodref_info *info) {
+static void print_CONSTANT_InterfaceMethodref(const CONSTANT_InterfaceMethodref_info *info) {
     printf("<InterfaceMethodref>\n");
     printf("\tclass_index:%hu\n", info->class_index);
     printf("\tname_and_type_index:%hu\n", info->name_and_type_index);
-    CONSTANT_Class_info * class_info   = constant_pool[info->class_index].constant_class_info;
-    print_CLASS_INFO_VALUE(constant_pool,class_info);
-    CONSTANT_NameAndType_info *name_and_type =  constant_pool[info->name_and_type_index].nameAndType_info;
-    print_NAME_AND_TYPE_INFO_VALUE(constant_pool,name_and_type);
 }
 
-static void print_CONSTANT_String(const cp_info* constant_pool, const CONSTANT_String_info *info) {
+static void print_CONSTANT_String(const CONSTANT_String_info *info) {
     printf("<String>\n");
     printf("\tstring_index:%hu\n", info->string_index);
-    CONSTANT_Utf8_info * utf8_info   = constant_pool[info->string_index].utf8_info;
-    printf("\t%s\n",utf8_info->bytes);
 }
 
 static void print_CONSTANT_Integer(const CONSTANT_Integer_info *info) {
     printf("<Integer>\n");
-    printf("\tint_value:%u\n", info->bytes);
+    printf("\tbytes_value:%u\n", info->bytes);
 }
 
 static void print_CONSTANT_Float(const CONSTANT_Float_info *info) {
     float value;
     memcpy(&value, &info->bytes, sizeof(float));
     printf("<Float>\n");
-    printf("\tfloat_value: %f\n", value);
+    printf("\tbytes_value: %f\n", value);
 }
 
 static void print_CONSTANT_Long(const CONSTANT_Long_info *info) {
     printf("<Long>\n");
     u8 value = ((u8)info->high_bytes << 32) | info->low_bytes;
-    printf("\tlong_value:%llu\n", (unsigned long long)value);
+    printf("\tbytes_value:%llu\n", (unsigned long long)value);
 }
 
 static void print_CONSTANT_Double(const CONSTANT_Double_info *info) {
@@ -184,17 +151,14 @@ static void print_CONSTANT_Double(const CONSTANT_Double_info *info) {
     printf("<Double>\n");
     printf("\thigh_bytes: 0x%08X\n", info->high_bytes);
     printf("\tlow_bytes:  0x%08X\n", info->low_bytes);
-    printf("\tdouble_value: %f\n", value);
+    printf("\tbytes_value: %f\n", value);
 }
 
-static void print_CONSTANT_NameAndType(const cp_info * constant_pool, const CONSTANT_NameAndType_info *info) {
+static void print_CONSTANT_NameAndType(const CONSTANT_NameAndType_info *info) {
     printf("<NameAndType>\n");
     printf("\tname_index:%hu\n", info->name_index);
     printf("\tdescriptor_index:%hu\n", info->descriptor_index);
-    printf("\t");
-    print_NAME_AND_TYPE_INFO_VALUE(constant_pool,info);
 }
-
 
 static void print_CONSTANT_Utf8(const CONSTANT_Utf8_info *info) {
     printf("<Utf8>\n");

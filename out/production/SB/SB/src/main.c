@@ -17,8 +17,8 @@ int main(int argc, char *argv[]) {
 
     ClassFile *class_file_ptr = (ClassFile *)malloc(sizeof(ClassFile));
     classFilesSetup(class_file_ptr, file_ptr);
-    readInterfaces(class_file_ptr, file_ptr);
-    readFields(class_file_ptr, file_ptr);
+    //readInterfaces(class_file_ptr, file_ptr);
+    //readFields(class_file_ptr, file_ptr);
     printClassFile(class_file_ptr);
 
     return 0;
