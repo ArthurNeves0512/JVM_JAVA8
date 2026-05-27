@@ -143,8 +143,7 @@ static void constant_pool(cp_info *entry, u1 tag, FILE *fp) {
     case CONSTANT_MethodHandle:     read_CONSTANT_MethodHandle(entry, fp);     break;
     case CONSTANT_MethodType:       read_CONSTANT_MethodType(entry, fp);       break;
     case CONSTANT_InvokeDynamic:    read_CONSTANT_InvokeDynamic(entry, fp);    break;
-    default:         
-        printf("peguei algo estranho\n");                                                           break;
+    default:                                                                    break;
     }
 }
 
