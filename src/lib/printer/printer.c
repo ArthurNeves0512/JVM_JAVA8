@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
+#include <attribute.h>
 
 static void printClassFileHeader(const ClassFile *cf);
 static void printConstantPool(const ClassFile *cf);
@@ -19,7 +20,7 @@ static void print_CONSTANT_Float(const CONSTANT_Float_info *info);
 static void print_CONSTANT_Long(const CONSTANT_Long_info *info);
 static void print_CONSTANT_Double(const CONSTANT_Double_info *info);
 static void print_CONSTANT_NameAndType(const cp_info * constant_pool, const CONSTANT_NameAndType_info *info);
-static void print_CONSTANT_Utf8(const CONSTANT_Utf8_info *info);
+static void print_CONSTANT_Utf8(CONSTANT_Utf8_info *info);
 static void print_CONSTANT_MethodHandle(const CONSTANT_MethodHandle_info *info);
 static void print_CONSTANT_MethodType(const CONSTANT_MethodType_info *info);
 static void print_CONSTANT_InvokeDynamic(const CONSTANT_InvokeDynamic_info *info);
@@ -159,7 +160,19 @@ static void print_CONSTANT_String(const cp_info* constant_pool, const CONSTANT_S
     printf("<String>\n");
     printf("\tstring_index:%hu\n", info->string_index);
     CONSTANT_Utf8_info * utf8_info   = constant_pool[info->string_index].utf8_info;
-    printf("\t%s\n",utf8_info->bytes);
+
+    u1 * ptr = utf8_info->bytes;
+    printf("\t");
+    while (*ptr){
+        if(*ptr=='\n'){
+            printf("\\n");
+        }
+        else{
+            printf("%c",*ptr);
+        }
+        ptr++;
+    }
+    printf("\n");
 }
 
 static void print_CONSTANT_Integer(const CONSTANT_Integer_info *info) {
@@ -175,9 +188,13 @@ static void print_CONSTANT_Float(const CONSTANT_Float_info *info) {
 }
 
 static void print_CONSTANT_Long(const CONSTANT_Long_info *info) {
+    u8 bits = ((u8)info->high_bytes << 32) | info->low_bytes;
+    long long value;
+    memcpy(&value, &bits, sizeof(value));
     printf("<Long>\n");
-    u8 value = ((u8)info->high_bytes << 32) | info->low_bytes;
-    printf("\tlong_value:%llu\n", (unsigned long long)value);
+    printf("\thigh_bytes: 0x%08X\n", info->high_bytes);
+    printf("\tlow_bytes:  0x%08X\n", info->low_bytes);
+    printf("\tlong_value: %lld\n", value);
 }
 
 static void print_CONSTANT_Double(const CONSTANT_Double_info *info) {
@@ -199,10 +216,23 @@ static void print_CONSTANT_NameAndType(const cp_info * constant_pool, const CONS
 }
 
 
-static void print_CONSTANT_Utf8(const CONSTANT_Utf8_info *info) {
+static void print_CONSTANT_Utf8(CONSTANT_Utf8_info *info) {
+    u1 * ptr = info->bytes;
     printf("<Utf8>\n");
-    printf("\tlenght of array in bytes: %hu\n", info->length);
-    printf("\tthe word: %s\n", info->bytes);
+    printf("\tlength of array in bytes: %hu\n", info->length);
+    printf("\t");
+    while (*ptr)
+    {
+        if(*ptr=='\n'){
+            printf("\\n");
+        }
+        else{
+            printf("%c",*ptr);
+        }
+        ptr++;
+    }
+    printf("\n");
+    
 }
 
 static void print_CONSTANT_MethodHandle(const CONSTANT_MethodHandle_info *info) {
@@ -255,6 +285,186 @@ static void printAccessFlags(u2 flags) {
 static void printClassInfo(const ClassFile *cf) {
     printf("This class index at constant_pool table %d\n", cf->this_class);
     printf("This is the super class index at constant_pool table %d\n", cf->super_class);
+}
+
+void printMethods(const ClassFile *cf) {
+
+    printf("=== Methods ===\n");
+
+    if (cf->methods == NULL || cf->methods_count == 0) {
+
+        printf("No methods found\n");
+
+        return;
+    }
+
+    printf(
+        "Total methods: %hu\n",
+        cf->methods_count
+    );
+
+    for (
+        u2 i = 0;
+        i < cf->methods_count;
+        i++
+    ) {
+
+        printf(
+            "\n[Method %hu]\n",
+            i
+        );
+
+        /*
+         * ACCESS FLAGS
+         */
+
+        printf("  Access flags: ");
+
+        printAccessFlags(
+            cf->methods[i].access_flags
+        );
+
+        /*
+         * METHOD NAME
+         */
+
+        u2 name_index =
+            cf->methods[i].name_index;
+
+        printf(
+            "  Name index: %hu",
+            name_index
+        );
+
+        if (name_index < cf->constant_pool_count) {
+
+            CONSTANT_Utf8_info *method_name =
+
+                cf->constant_pool[name_index]
+                .utf8_info;
+
+            if (method_name != NULL) {
+
+                printf(
+                    " (%s)",
+                    method_name->bytes
+                );
+            }
+        }
+
+        printf("\n");
+
+        /*
+         * DESCRIPTOR
+         */
+
+        u2 desc_index =
+            cf->methods[i]
+            .descriptor_index;
+
+        printf(
+            "  Descriptor index: %hu",
+            desc_index
+        );
+
+        if (desc_index < cf->constant_pool_count) {
+
+            CONSTANT_Utf8_info *descriptor =
+
+                cf->constant_pool[desc_index]
+                .utf8_info;
+
+            if (descriptor != NULL) {
+
+                printf(
+                    " (%s)",
+                    descriptor->bytes
+                );
+            }
+        }
+
+        printf("\n");
+
+        /*
+         * ATTRIBUTES
+         */
+
+        printf(
+            "  Attributes count: %hu\n",
+            cf->methods[i]
+            .attributes_count
+        );
+
+        if (
+            cf->methods[i].attributes != NULL
+            &&
+            cf->methods[i].attributes_count > 0
+        ) {
+
+            for (
+                u2 j = 0;
+                j < cf->methods[i]
+                    .attributes_count;
+                j++
+            ) {
+
+                u2 attr_name_index =
+
+                    cf->methods[i]
+                    .attributes[j]
+                    .attribute_name_index;
+
+                char *attr_name =
+
+                    getUtf8(
+                        cf->constant_pool,
+                        attr_name_index
+                    );
+
+                if (attr_name == NULL) {
+
+                    printf(
+                        "    [Attribute %hu] <invalid>\n",
+                        j
+                    );
+
+                    continue;
+                }
+
+                printf(
+                    "    [Attribute %hu] %s\n",
+                    j,
+                    attr_name
+                );
+
+                /*
+                 * CODE ATTRIBUTE
+                 */
+
+                if (
+                    strcmp(
+                        attr_name,
+                        "Code"
+                    ) == 0
+                ) {
+
+                    Code_attribute *code_attr =
+
+                        (Code_attribute*)
+
+                        cf->methods[i]
+                        .attributes[j]
+                        .info;
+
+                    printCodeAttribute(
+                        code_attr
+                    );
+                }
+
+                free(attr_name);
+            }
+        }
+    }
 }
 
 void printFileToTerminal(int terminal_fd, const char *path) {

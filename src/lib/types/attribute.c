@@ -259,27 +259,42 @@ char *getUtf8(
     cp_info *constant_pool,
     u2 index
 ) {
+
     if(constant_pool == NULL || index == 0)
         return NULL;
 
-    cp_info *entry = &constant_pool[index - 1];
+    /*
+     * JVM constant_pool começa em 1
+     * array C começa em 0
+     */
+    cp_info *entry =
+        &constant_pool[index];
 
     if(entry->tag != CONSTANT_Utf8) {
-        fprintf(stderr, "Error: constant_pool[%u] is not a UTF8 constant\n", index);
+
+        fprintf(
+            stderr,
+            "Error: constant_pool[%u] is not UTF8\n",
+            index
+        );
+
         return NULL;
     }
 
-    CONSTANT_Utf8_info *utf8_info = entry->utf8_info;
-    if(utf8_info == NULL || utf8_info->bytes == NULL)
-        return NULL;
+    CONSTANT_Utf8_info *utf8_info =
+        entry->utf8_info;
 
-    char *result = (char *)malloc(utf8_info->length + 1);
-    if(result == NULL) {
-        fprintf(stderr, "Error: failed to allocate memory for UTF8 string\n");
-        return NULL;
-    }
+    char *result =
+        (char*) malloc(
+            utf8_info->length + 1
+        );
 
-    memcpy(result, utf8_info->bytes, utf8_info->length);
+    memcpy(
+        result,
+        utf8_info->bytes,
+        utf8_info->length
+    );
+
     result[utf8_info->length] = '\0';
 
     return result;
