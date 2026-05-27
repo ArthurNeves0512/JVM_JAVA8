@@ -19,7 +19,7 @@ static void print_CONSTANT_Float(const CONSTANT_Float_info *info);
 static void print_CONSTANT_Long(const CONSTANT_Long_info *info);
 static void print_CONSTANT_Double(const CONSTANT_Double_info *info);
 static void print_CONSTANT_NameAndType(const cp_info * constant_pool, const CONSTANT_NameAndType_info *info);
-static void print_CONSTANT_Utf8(const CONSTANT_Utf8_info *info);
+static void print_CONSTANT_Utf8(CONSTANT_Utf8_info *info);
 static void print_CONSTANT_MethodHandle(const CONSTANT_MethodHandle_info *info);
 static void print_CONSTANT_MethodType(const CONSTANT_MethodType_info *info);
 static void print_CONSTANT_InvokeDynamic(const CONSTANT_InvokeDynamic_info *info);
@@ -159,7 +159,19 @@ static void print_CONSTANT_String(const cp_info* constant_pool, const CONSTANT_S
     printf("<String>\n");
     printf("\tstring_index:%hu\n", info->string_index);
     CONSTANT_Utf8_info * utf8_info   = constant_pool[info->string_index].utf8_info;
-    printf("\t%s\n",utf8_info->bytes);
+
+    u1 * ptr = utf8_info->bytes;
+    printf("\t");
+    while (*ptr){
+        if(*ptr=='\n'){
+            printf("\\n");
+        }
+        else{
+            printf("%c",*ptr);
+        }
+        ptr++;
+    }
+    printf("\n");
 }
 
 static void print_CONSTANT_Integer(const CONSTANT_Integer_info *info) {
@@ -199,10 +211,23 @@ static void print_CONSTANT_NameAndType(const cp_info * constant_pool, const CONS
 }
 
 
-static void print_CONSTANT_Utf8(const CONSTANT_Utf8_info *info) {
+static void print_CONSTANT_Utf8(CONSTANT_Utf8_info *info) {
+    u1 * ptr = info->bytes;
     printf("<Utf8>\n");
-    printf("\tlenght of array in bytes: %hu\n", info->length);
-    printf("\tthe word: %s\n", info->bytes);
+    printf("\tlength of array in bytes: %hu\n", info->length);
+    printf("\t");
+    while (*ptr)
+    {
+        if(*ptr=='\n'){
+            printf("\\n");
+        }
+        else{
+            printf("%c",*ptr);
+        }
+        ptr++;
+    }
+    printf("\n");
+    
 }
 
 static void print_CONSTANT_MethodHandle(const CONSTANT_MethodHandle_info *info) {
