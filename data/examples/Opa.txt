@@ -1,0 +1,162 @@
+
+=== Interfaces ===
+interfaces_count: 1
+interface[0]:
+	index at constant_pool: #7
+	value: SB/A
+
+=== Fields ===
+fields_count: 0
+
+=== Methods ===
+methods_count: 2
+method[0]: name=#8 descriptor=#9
+method[1]: name=#12 descriptor=#13
+=== General Information ===
+Magic Number: 0XCAFEBABE
+Minor Version: 0
+Major Version: 52
+Constant Pool Count: 31
+Access flags (0x0021): ACC_PUBLIC | ACC_SUPER
+This Class: 5
+Super Class: 6
+Interfaces Count: 1
+Fields Count: 0
+Methods Count: 2
+Attributes Count: 0
+
+=== Constant Pool ===
+[1] Tag: 10 <Methodref>
+	class_index:6
+	name_and_type_index:16
+	java/lang/Object.<init>:()V
+[2] Tag: 9 <Fieldref>
+	class_index:17
+	name_and_type_index:18
+	java/lang/System.out:Ljava/io/PrintStream;
+[3] Tag: 8 <String>
+	string_index:19
+	opaa sera que deu certo
+[4] Tag: 10 <Methodref>
+	class_index:20
+	name_and_type_index:21
+	java/io/PrintStream.println:(Ljava/lang/String;)V
+[5] Tag: 7 <Class>
+	name_index in constant_pool_table:22
+	SB/Opa
+[6] Tag: 7 <Class>
+	name_index in constant_pool_table:23
+	java/lang/Object
+[7] Tag: 7 <Class>
+	name_index in constant_pool_table:24
+	SB/A
+[8] Tag: 1 <Utf8>
+	lenght of array in bytes: 6
+	the word: <init>
+[9] Tag: 1 <Utf8>
+	lenght of array in bytes: 3
+	the word: ()V
+[10] Tag: 1 <Utf8>
+	lenght of array in bytes: 4
+	the word: Code
+[11] Tag: 1 <Utf8>
+	lenght of array in bytes: 15
+	the word: LineNumberTable
+[12] Tag: 1 <Utf8>
+	lenght of array in bytes: 4
+	the word: main
+[13] Tag: 1 <Utf8>
+	lenght of array in bytes: 22
+	the word: ([Ljava/lang/String;)V
+[14] Tag: 1 <Utf8>
+	lenght of array in bytes: 10
+	the word: SourceFile
+[15] Tag: 1 <Utf8>
+	lenght of array in bytes: 8
+	the word: Opa.java
+[16] Tag: 12 <NameAndType>
+	name_index:8
+	descriptor_index:9
+	<init>:()V
+[17] Tag: 7 <Class>
+	name_index in constant_pool_table:25
+	java/lang/System
+[18] Tag: 12 <NameAndType>
+	name_index:26
+	descriptor_index:27
+	out:Ljava/io/PrintStream;
+[19] Tag: 1 <Utf8>
+	lenght of array in bytes: 23
+	the word: opaa sera que deu certo
+[20] Tag: 7 <Class>
+	name_index in constant_pool_table:28
+	java/io/PrintStream
+[21] Tag: 12 <NameAndType>
+	name_index:29
+	descriptor_index:30
+	println:(Ljava/lang/String;)V
+[22] Tag: 1 <Utf8>
+	lenght of array in bytes: 6
+	the word: SB/Opa
+[23] Tag: 1 <Utf8>
+	lenght of array in bytes: 16
+	the word: java/lang/Object
+[24] Tag: 1 <Utf8>
+	lenght of array in bytes: 4
+	the word: SB/A
+[25] Tag: 1 <Utf8>
+	lenght of array in bytes: 16
+	the word: java/lang/System
+[26] Tag: 1 <Utf8>
+	lenght of array in bytes: 3
+	the word: out
+[27] Tag: 1 <Utf8>
+	lenght of array in bytes: 21
+	the word: Ljava/io/PrintStream;
+[28] Tag: 1 <Utf8>
+	lenght of array in bytes: 19
+	the word: java/io/PrintStream
+[29] Tag: 1 <Utf8>
+	lenght of array in bytes: 7
+	the word: println
+[30] Tag: 1 <Utf8>
+	lenght of array in bytes: 21
+	the word: (Ljava/lang/String;)V
+
+This class index at constant_pool table 5
+This is the super class index at constant_pool table 6
+
+=== Methods ===
+Total methods: 2
+
+[Method 0]
+  Access flags: Access flags (0x0001): ACC_PUBLIC
+  Name index: 8 (<init>)
+  Descriptor index: 9 (()V)
+  Attributes count: 1
+    [Attribute 0] Code
+=== Code Attribute ===
+max_stack: 1
+max_locals: 1
+code_length: 5
+Bytecode:
+2A B7 00 01 B1 
+exception_table_length: 0
+attributes_count: 1
+[0] name_index=11 length=6
+
+[Method 1]
+  Access flags: Access flags (0x0009): ACC_PUBLIC
+  Name index: 12 (main)
+  Descriptor index: 13 (([Ljava/lang/String;)V)
+  Attributes count: 1
+    [Attribute 0] Code
+=== Code Attribute ===
+max_stack: 2
+max_locals: 1
+code_length: 9
+Bytecode:
+B2 00 02 12 03 B6 00 04 B1 
+exception_table_length: 0
+attributes_count: 1
+[0] name_index=11 length=10
