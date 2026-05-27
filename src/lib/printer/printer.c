@@ -187,9 +187,13 @@ static void print_CONSTANT_Float(const CONSTANT_Float_info *info) {
 }
 
 static void print_CONSTANT_Long(const CONSTANT_Long_info *info) {
+    u8 bits = ((u8)info->high_bytes << 32) | info->low_bytes;
+    long long value;
+    memcpy(&value, &bits, sizeof(value));
     printf("<Long>\n");
-    u8 value = ((u8)info->high_bytes << 32) | info->low_bytes;
-    printf("\tlong_value:%llu\n", (unsigned long long)value);
+    printf("\thigh_bytes: 0x%08X\n", info->high_bytes);
+    printf("\tlow_bytes:  0x%08X\n", info->low_bytes);
+    printf("\tlong_value: %lld\n", value);
 }
 
 static void print_CONSTANT_Double(const CONSTANT_Double_info *info) {
