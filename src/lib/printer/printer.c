@@ -428,7 +428,7 @@ void printMethods(const ClassFile *cf) {
                         j
                     );
 
-                    continue;
+                    continue;  
                 }
 
                 printf(
@@ -437,28 +437,21 @@ void printMethods(const ClassFile *cf) {
                     attr_name
                 );
 
-                /*
-                 * CODE ATTRIBUTE
-                 */
+                void *info = cf->methods[i].attributes[j].info;
 
-                if (
-                    strcmp(
-                        attr_name,
-                        "Code"
-                    ) == 0
-                ) {
-
-                    Code_attribute *code_attr =
-
-                        (Code_attribute*)
-
-                        cf->methods[i]
-                        .attributes[j]
-                        .info;
-
+                if (strcmp(attr_name, "Code") == 0) {
                     printCodeAttribute(
-                        code_attr
+                        (Code_attribute *) info,
+                        cf->constant_pool
                     );
+                } else if (strcmp(attr_name, "Exceptions") == 0) {
+                    printExceptionsAttribute(
+                        (Exceptions_attribute *) info,
+                        cf->constant_pool
+                    );
+                } else {
+                    printf("    (raw — %u bytes)\n",
+                        cf->methods[i].attributes[j].attribute_length);
                 }
 
                 free(attr_name);
