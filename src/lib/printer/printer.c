@@ -287,6 +287,36 @@ static void printClassInfo(const ClassFile *cf) {
     printf("This is the super class index at constant_pool table %d\n", cf->super_class);
 }
 
+void printClassFileAttributes(const ClassFile *cf) {
+    printf("=== Class Attributes ===\n");
+    printf("attributes_count: %hu\n", cf->attributes_count);
+
+    for (u2 i = 0; i < cf->attributes_count; i++) {
+        u2 attr_name_index = cf->attributes[i].attribute_name_index;
+        char *attr_name = getUtf8(cf->constant_pool, attr_name_index);
+        if (!attr_name) continue;
+
+        printf("  [Attribute %hu] %s\n", i, attr_name);
+        void *info = cf->attributes[i].info;
+
+        if (strcmp(attr_name, "SourceFile") == 0) {
+            printSourceFileAttribute(
+                (SourceFile_attribute *) info,
+                cf->constant_pool
+            );
+        } else if (strcmp(attr_name, "InnerClasses") == 0) {
+            printInnerClassesAttribute(
+                (InnerClasses_attribute *) info,
+                cf->constant_pool
+            );
+        } else {
+            printf("    (raw — %u bytes)\n",
+                   cf->attributes[i].attribute_length);
+        }
+        free(attr_name);
+    }
+}
+
 void printMethods(const ClassFile *cf) {
 
     printf("=== Methods ===\n");

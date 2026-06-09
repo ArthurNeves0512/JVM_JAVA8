@@ -212,6 +212,7 @@ void readFields(ClassFile *class_file_ptr, FILE *file_ptr)
                 }
 
                 case CONSTANT_Long:
+                {
                     uint64_t value =
                         ((uint64_t)cp->long_info->high_bytes << 32) |
                         (uint64_t)cp->long_info->low_bytes;
@@ -220,6 +221,7 @@ void readFields(ClassFile *class_file_ptr, FILE *file_ptr)
                            (long long)value);
 
                     break;
+                }    
 
                 case CONSTANT_Double:
                 {

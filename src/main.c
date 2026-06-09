@@ -39,8 +39,10 @@ int main(int argc, char *argv[]) {
     readFields(class_file_ptr, file_ptr);
     readMethodsCount(class_file_ptr, file_ptr);
     readMethods(class_file_ptr, file_ptr);
+    readClassFileAttributes(class_file_ptr, file_ptr);
     printClassFile(class_file_ptr);
     printMethods(class_file_ptr);
+    printClassFileAttributes(class_file_ptr);
     fflush(stdout);
 
     if (args.do_print && terminal_fd >= 0) {

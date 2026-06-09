@@ -4,6 +4,7 @@
 #define SKIP_LINE printf("\n")
 void printClassFile(const ClassFile *cf);
 void printMethods(const ClassFile *cf);
+void printClassFileAttributes(const ClassFile *cf);
 void printFileToTerminal(int terminal_fd, const char *path);
 
 #endif
