@@ -1,6 +1,7 @@
 #include "attribute.h"
 #include "../file/read_byte.h"
 #include <string.h>
+#include "opcodes.h"
 
 /* ─────────────────────────────────────────────
    imprime sub-atributos de Code
@@ -234,10 +235,11 @@ void printCodeAttribute(
     printf("  code_length: %u\n", code_attr->code_length);
 
     printf("  Bytecode (hex):\n  ");
-    for (u4 i = 0; i < code_attr->code_length; i++) {
+    /*for (u4 i = 0; i < code_attr->code_length; i++) {  implementação que mostra a saída em HEXA
         printf("%02X ", code_attr->code[i]);
         if ((i + 1) % 16 == 0) printf("\n  ");
-    }
+    }*/
+    printBytecode(code_attr ->code, code_attr->code_length, constant_pool);
     printf("\n");
 
     printf("  exception_table_length: %hu\n",
