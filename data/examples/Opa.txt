@@ -141,7 +141,10 @@ Total methods: 2
   max_locals: 1
   code_length: 5
   Bytecode (hex):
-  2A B7 00 01 B1 
+         0: aload_0         
+       1: invokespecial   #1    // java/lang/Object.<init>:()V
+       4: return          
+
   exception_table_length: 0
   sub-attributes_count: 2
   [0]   LineNumberTable  length=1
@@ -160,7 +163,11 @@ Total methods: 2
   max_locals: 1
   code_length: 9
   Bytecode (hex):
-  B2 00 02 12 03 B6 00 04 B1 
+         0: getstatic       #2    // java/lang/System.out:Ljava/io/PrintStream;
+       3: ldc             #3    // "opaa sera que deu certo"
+       5: invokevirtual   #4    // java/io/PrintStream.println:(Ljava/lang/String;)V
+       8: return          
+
   exception_table_length: 0
   sub-attributes_count: 2
   [0]   LineNumberTable  length=2
