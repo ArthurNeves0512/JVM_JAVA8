@@ -33,14 +33,17 @@ int main(int argc, char *argv[]) {
 
     FILE *file_ptr = readFile((char *)args.class_path);
 
-    ClassFile *class_file_ptr = (ClassFile *)malloc(sizeof(ClassFile));
+    ClassFile *class_file_ptr = allocClassFile();
     classFilesSetup(class_file_ptr, file_ptr);
     readInterfaces(class_file_ptr, file_ptr);
     readFields(class_file_ptr, file_ptr);
     readMethodsCount(class_file_ptr, file_ptr);
     readMethods(class_file_ptr, file_ptr);
     readClassFileAttributes(class_file_ptr, file_ptr);
+
     printClassFile(class_file_ptr);
+    printInterfaces(class_file_ptr);
+    printFields(class_file_ptr);
     printMethods(class_file_ptr);
     printClassFileAttributes(class_file_ptr);
     fflush(stdout);
@@ -49,6 +52,9 @@ int main(int argc, char *argv[]) {
         printFileToTerminal(terminal_fd, args.output_path);
         close(terminal_fd);
     }
+
+    freeClassFile(class_file_ptr);
+    fclose(file_ptr);
 
     return 0;
 }

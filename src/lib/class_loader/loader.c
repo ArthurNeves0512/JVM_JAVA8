@@ -183,10 +183,11 @@ void classFilesSetup(ClassFile *cf, FILE *fp) {
     readAccessFlags(cf, fp);
     readThisClass(cf, fp);
     readSuperClass(cf, fp);
-    }
-    void readClassFileAttributes(ClassFile *cf, FILE *fp) {
+}
+
+void readClassFileAttributes(ClassFile *cf, FILE *fp) {
     cf->attributes_count = u2Read(fp);
- 
+
     if (cf->attributes_count > 0) {
         cf->attributes =
             (attribute_info *) malloc(

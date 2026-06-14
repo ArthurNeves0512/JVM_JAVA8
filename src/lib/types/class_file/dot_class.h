@@ -24,5 +24,6 @@ typedef struct ClassFile_ {
 } ClassFile;
 
 ClassFile *allocClassFile();
+void freeClassFile(ClassFile *cf);
 
 #endif
