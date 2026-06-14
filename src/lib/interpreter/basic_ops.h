@@ -28,9 +28,11 @@ typedef struct {
     Slot pilha[MAX_PILHA];
     int  topo;
     Slot locais[MAX_LOCAIS];
+
     u1  *codigo;
     u4   tamanho;
     u4   pc;
+
 } Frame;
 
 Frame *criaFrame(Code_attribute *ca);

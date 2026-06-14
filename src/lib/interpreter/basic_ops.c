@@ -54,6 +54,8 @@ Frame *criaFrame(Code_attribute *ca) {
     f->topo    = -1;
     f->codigo  = ca->code;
     f->tamanho = ca->code_length;
+
+    f->code_attr = ca;
     return f;
 }
 
@@ -184,9 +186,6 @@ void executaFrame(Frame *f, ClassFile *cf) {
         case 0x6F: { double b = pop_double(f); push_double(f, pop_double(f) / b); break; }
         case 0x77: push_double(f, -pop_double(f)); break;
 
-        case 0x78: { int32_t s = pop_int(f) & 0x1F; push_int(f, pop_int(f) << s); break; } /* ishl */
-        case 0x7A: { int32_t s = pop_int(f) & 0x1F; push_int(f, pop_int(f) >> s); break; } /* ishr */
-        case 0x7C: { int32_t s = pop_int(f) & 0x1F; push_int(f, (int32_t)((uint32_t)pop_int(f) >> s)); break; } /* iushr */
         case 0x7E: { int32_t b = pop_int(f); push_int(f, pop_int(f) & b); break; } /* iand */
         case 0x80: { int32_t b = pop_int(f); push_int(f, pop_int(f) | b); break; } /* ior  */
         case 0x82: { int32_t b = pop_int(f); push_int(f, pop_int(f) ^ b); break; } /* ixor */
