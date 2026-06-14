@@ -153,15 +153,52 @@ void executaFrame(Frame *f, ClassFile *cf) {
         case 0x60: { int32_t b = pop_int(f); push_int(f, pop_int(f) + b); break; } /* iadd */
         case 0x64: { int32_t b = pop_int(f); push_int(f, pop_int(f) - b); break; } /* isub */
         case 0x68: { int32_t b = pop_int(f); push_int(f, pop_int(f) * b); break; } /* imul */
-        case 0x6C: { 
-            int32_t b = pop_int(f), a = pop_int(f);
-            if (b == 0) { fprintf(stderr, "divisao por zero\n"); exit(1); }
+        case 0x6C: {
+            int32_t b = pop_int(f);
+            int32_t a = pop_int(f);
+
+            if (b == 0) {
+
+                if (f->code_attr != NULL &&
+                    f->code_attr->exception_table_length > 0) {
+
+                    f->pc =
+                        f->code_attr
+                        ->exception_table[0]
+                        .handler_pc;
+
+                    break;
+                }
+
+                fprintf(stderr, "ArithmeticException: / by zero\n");
+                return;
+            }
+
             push_int(f, a / b);
             break;
         }
-        case 0x70: { 
-            int32_t b = pop_int(f), a = pop_int(f);
-            if (b == 0) { fprintf(stderr, "divisao por zero\n"); exit(1); }
+
+        case 0x70: {
+            int32_t b = pop_int(f);
+            int32_t a = pop_int(f);
+
+            if (b == 0) {
+
+                if (f->code_attr != NULL &&
+                    f->code_attr->exception_table_length > 0) {
+
+                    f->pc =
+                        f->code_attr
+                        ->exception_table[0]
+                        .handler_pc;
+
+                    break;
+                }
+
+                fprintf(stderr, "ArithmeticException: / by zero\n");
+                return;
+            }
+
             push_int(f, a % b);
             break;
         }
