@@ -1,9 +1,3 @@
-
-=== Interfaces ===
-interfaces_count: 0
-
-=== Fields ===
-fields_count: 0
 === General Information ===
 Magic Number: 0XCAFEBABE
 Minor Version: 0
@@ -127,6 +121,12 @@ Attributes Count: 1
 This class index at constant_pool table 5
 This is the super class index at constant_pool table 6
 
+
+=== Interfaces ===
+interfaces_count: 0
+
+=== Fields ===
+fields_count: 0
 === Methods ===
 Total methods: 2
 
@@ -153,7 +153,7 @@ Total methods: 2
     slot=0   start=0     len=5     this  LOpa;
 
 [Method 1]
-  Access flags: Access flags (0x0009): ACC_PUBLIC
+  Access flags: Access flags (0x0009): ACC_PUBLIC | ACC_STATIC
   Name index: 14 (main)
   Descriptor index: 15 (([Ljava/lang/String;)V)
   Attributes count: 1

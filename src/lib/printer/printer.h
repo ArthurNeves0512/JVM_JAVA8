@@ -3,6 +3,8 @@
 #include "lib/types/class_file/dot_class.h"
 #define SKIP_LINE printf("\n")
 void printClassFile(const ClassFile *cf);
+void printInterfaces(const ClassFile *cf);
+void printFields(const ClassFile *cf);
 void printMethods(const ClassFile *cf);
 void printClassFileAttributes(const ClassFile *cf);
 void printFileToTerminal(int terminal_fd, const char *path);
