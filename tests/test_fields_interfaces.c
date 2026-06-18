@@ -135,7 +135,7 @@ static void test_opa_interfaces_count(void) {
     readInterfaces(cf, f);
     assert(cf->interfaces_count == 1);
     fclose(f);
-    free(cf->interfaces);
+    if (cf->interfaces) free(cf->interfaces);
     free(cf);
 }
 
@@ -148,7 +148,7 @@ static void test_opa_fields_count_zero(void) {
     readFields(cf, f);
     assert(cf->fields_count == 0);
     fclose(f);
-    free(cf->interfaces);
+    if (cf->interfaces) free(cf->interfaces); 
     free(cf);
 }
 

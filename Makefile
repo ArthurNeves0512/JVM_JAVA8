@@ -6,7 +6,8 @@ CFLAGS  = -Wall -Wextra -std=c11 \
   -Isrc/lib/types/class_file \
   -Isrc/lib/class_loader \
   -Isrc/lib/file \
-  -Isrc/lib/printer
+  -Isrc/lib/printer \
+  -Isrc/lib/interpreter  
 LDFLAGS =
 
 TARGET   = main

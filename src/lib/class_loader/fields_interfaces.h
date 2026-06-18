@@ -12,11 +12,15 @@ void readInterfaces(ClassFile *class_file_ptr, FILE *file_ptr) {
     for (u2 i = 0; i < class_file_ptr->interfaces_count; i++) {
         u2 index = u2Read(file_ptr);
         class_file_ptr->interfaces[i] = index;
-        CONSTANT_Class_info * class_info = class_file_ptr->constant_pool[index].constant_class_info;
-        CONSTANT_Utf8_info * utf8_info = class_file_ptr->constant_pool[class_info->name_index].utf8_info;
+
         printf("interface[%hu]:\n", i);
-        printf("\tindex at constant_pool: #%hu\n",index);
-        printf("\tvalue: %s\n",utf8_info->bytes);
+        printf("\tindex at constant_pool: #%hu\n", index);
+
+        if (class_file_ptr->constant_pool != NULL) {  // <- guarda aqui
+            CONSTANT_Class_info *class_info = class_file_ptr->constant_pool[index].constant_class_info;
+            CONSTANT_Utf8_info  *utf8_info  = class_file_ptr->constant_pool[class_info->name_index].utf8_info;
+            printf("\tvalue: %s\n", utf8_info->bytes);
+        }
     }
 }
 
