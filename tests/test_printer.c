@@ -21,14 +21,14 @@ static int tests_passed = 0;
     printf("PASS\n"); \
 } while (0)
 
-/* Redirects stdout to a tmpfile, runs fn(cf), restores stdout.
+/* Redirects stdout to a tmpfile, runs print_fn(cf), restores stdout.
    Caller must free() the returned buffer. */
-static char *capture_print(const ClassFile *cf) {
+static char *capture(void (*print_fn)(const ClassFile *), const ClassFile *cf) {
     FILE *tmp = tmpfile();
     int saved = dup(STDOUT_FILENO);
     dup2(fileno(tmp), STDOUT_FILENO);
 
-    printClassFile(cf);
+    print_fn(cf);
     fflush(stdout);
 
     dup2(saved, STDOUT_FILENO);
@@ -43,6 +43,10 @@ static char *capture_print(const ClassFile *cf) {
     buf[size] = '\0';
     fclose(tmp);
     return buf;
+}
+
+static char *capture_print(const ClassFile *cf) {
+    return capture(printClassFile, cf);
 }
 
 static void test_null_does_not_crash(void) {
@@ -101,18 +105,84 @@ static void test_access_flag_public_is_printed(void) {
 
 static void test_constant_pool_class_entry_is_printed(void) {
     CONSTANT_Class_info class_info = { .tag = CONSTANT_Class, .name_index = 7 };
-    cp_info entries[2] = {0}; /* index 0 unused; constant pool é 1-indexed */
+    CONSTANT_Utf8_info name_info = { .tag = CONSTANT_Utf8, .length = 4, .bytes = (u1 *) "Test" };
+
+    cp_info entries[8] = {0}; /* index 0 unused; constant pool é 1-indexed */
     entries[1].tag                  = CONSTANT_Class;
     entries[1].constant_class_info  = &class_info;
+    entries[7].tag                  = CONSTANT_Utf8;
+    entries[7].utf8_info            = &name_info;
 
     ClassFile cf = {0};
     cf.magic               = 0xCAFEBABE;
-    cf.constant_pool_count = 2; /* 1 entry */
+    cf.constant_pool_count = 8; /* entries[1] (Class) references entries[7] (Utf8) */
     cf.constant_pool       = entries;
 
     char *out = capture_print(&cf);
     assert(strstr(out, "<Class>") != NULL);
     assert(strstr(out, "7") != NULL);
+    assert(strstr(out, "Test") != NULL);
+    free(out);
+}
+
+static void test_print_interfaces(void) {
+    CONSTANT_Class_info class_info = { .tag = CONSTANT_Class, .name_index = 2 };
+    CONSTANT_Utf8_info name_info = {
+        .tag = CONSTANT_Utf8, .length = 13, .bytes = (u1 *) "TestInterface"
+    };
+
+    cp_info entries[3] = {0};
+    entries[1].tag                 = CONSTANT_Class;
+    entries[1].constant_class_info = &class_info;
+    entries[2].tag                 = CONSTANT_Utf8;
+    entries[2].utf8_info           = &name_info;
+
+    u2 interfaces[] = { 1 };
+
+    ClassFile cf = {0};
+    cf.constant_pool_count = 3;
+    cf.constant_pool       = entries;
+    cf.interfaces_count    = 1;
+    cf.interfaces          = interfaces;
+
+    char *out = capture(printInterfaces, &cf);
+    assert(strstr(out, "interfaces_count: 1") != NULL);
+    assert(strstr(out, "TestInterface") != NULL);
+    free(out);
+}
+
+static void test_print_fields(void) {
+    CONSTANT_Utf8_info field_name = {
+        .tag = CONSTANT_Utf8, .length = 5, .bytes = (u1 *) "count"
+    };
+    CONSTANT_Utf8_info field_descriptor = {
+        .tag = CONSTANT_Utf8, .length = 1, .bytes = (u1 *) "I"
+    };
+
+    cp_info entries[3] = {0};
+    entries[1].tag       = CONSTANT_Utf8;
+    entries[1].utf8_info = &field_name;
+    entries[2].tag       = CONSTANT_Utf8;
+    entries[2].utf8_info = &field_descriptor;
+
+    field_info field = {0};
+    field.access_flags     = ACC_PRIVATE | ACC_STATIC;
+    field.name_index       = 1;
+    field.descriptor_index = 2;
+    field.attributes_count = 0;
+    field.attributes       = NULL;
+
+    ClassFile cf = {0};
+    cf.constant_pool_count = 3;
+    cf.constant_pool       = entries;
+    cf.fields_count        = 1;
+    cf.fields              = &field;
+
+    char *out = capture(printFields, &cf);
+    assert(strstr(out, "fields_count: 1") != NULL);
+    assert(strstr(out, "count") != NULL);
+    assert(strstr(out, "ACC_PRIVATE") != NULL);
+    assert(strstr(out, "ACC_STATIC") != NULL);
     free(out);
 }
 
@@ -123,6 +193,8 @@ int main(void) {
     RUN_TEST(test_version_is_printed);
     RUN_TEST(test_access_flag_public_is_printed);
     RUN_TEST(test_constant_pool_class_entry_is_printed);
+    RUN_TEST(test_print_interfaces);
+    RUN_TEST(test_print_fields);
     printf("\nResult: %d/%d tests passed.\n", tests_passed, tests_run);
     return (tests_passed == tests_run) ? 0 : 1;
 }

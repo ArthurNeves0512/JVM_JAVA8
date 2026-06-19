@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
-#include <attribute.h>
+#include "attribute.h"
 
 static void printClassFileHeader(const ClassFile *cf);
 static void printConstantPool(const ClassFile *cf);
@@ -27,6 +27,57 @@ static void print_CONSTANT_InvokeDynamic(const CONSTANT_InvokeDynamic_info *info
 static void print_NAME_AND_TYPE_INFO_VALUE(const cp_info * constant_pool, const CONSTANT_NameAndType_info * info);
 static void print_CONSTANT_Methodref(const cp_info* constant_pool, const CONSTANT_Methodref_info *info);
 static int isKnownConstantTag(u1 tag);
+
+void printInterfaces(const ClassFile *cf) {
+    printf("\n=== Interfaces ===\n");
+    printf("interfaces_count: %hu\n", cf->interfaces_count);
+
+    for (u2 i = 0; i < cf->interfaces_count; i++) {
+        u2 index = cf->interfaces[i];
+        CONSTANT_Class_info *class_info = cf->constant_pool[index].constant_class_info;
+        CONSTANT_Utf8_info *utf8_info = cf->constant_pool[class_info->name_index].utf8_info;
+
+        printf("interface[%hu]:\n", i);
+        printf("\tindex at constant_pool: #%hu\n", index);
+        printf("\tvalue: %s\n", utf8_info->bytes);
+    }
+}
+
+void printFields(const ClassFile *cf) {
+    printf("\n=== Fields ===\n");
+    printf("fields_count: %hu\n", cf->fields_count);
+
+    for (u2 i = 0; i < cf->fields_count; i++) {
+        const field_info *field = &cf->fields[i];
+
+        printf("\nfield[%hu]:\n", i);
+        printf("\tname=#%hu (%s)\n", field->name_index,
+               field->name_index > 0
+                   ? (char *) cf->constant_pool[field->name_index].utf8_info->bytes
+                   : "INVALID");
+        printf("\tdescriptor=#%hu (%s)\n", field->descriptor_index,
+               field->descriptor_index > 0
+                   ? (char *) cf->constant_pool[field->descriptor_index].utf8_info->bytes
+                   : "INVALID");
+        printf("\t");
+        printAccessFlags(field->access_flags);
+        printf("\tattributes_count: %hu\n", field->attributes_count);
+
+        for (u2 j = 0; j < field->attributes_count; j++) {
+            const attribute_info *attr = &field->attributes[j];
+            char *attr_name = getUtf8(cf->constant_pool, attr->attribute_name_index);
+
+            printf("\n\tattribute[%hu]: %s\n", j, attr_name ? attr_name : "<invalid>");
+
+            if (attr_name && strcmp(attr_name, "ConstantValue") == 0) {
+                printConstantValueAttribute((ConstantValue_attribute *) attr->info, cf->constant_pool);
+            } else {
+                printf("\t\t(raw - %u bytes)\n", attr->attribute_length);
+            }
+            free(attr_name);
+        }
+    }
+}
 
 void printClassFile(const ClassFile *cf) {
     if (cf == NULL) {
@@ -258,7 +309,12 @@ static void printAccessFlags(u2 flags) {
         const char *name;
     } FLAG_TABLE[] = {
         { ACC_PUBLIC,     "ACC_PUBLIC"     },
+        { ACC_PRIVATE,    "ACC_PRIVATE"    },
+        { ACC_PROTECTED,  "ACC_PROTECTED"  },
+        { ACC_STATIC,     "ACC_STATIC"     },
         { ACC_FINAL,      "ACC_FINAL"      },
+        { ACC_VOLATILE,   "ACC_VOLATILE"   },
+        { ACC_TRANSIENT,  "ACC_TRANSIENT"  },
         { ACC_SUPER,      "ACC_SUPER"      },
         { ACC_INTERFACE,  "ACC_INTERFACE"  },
         { ACC_ABSTRACT,   "ACC_ABSTRACT"   },
@@ -285,6 +341,36 @@ static void printAccessFlags(u2 flags) {
 static void printClassInfo(const ClassFile *cf) {
     printf("This class index at constant_pool table %d\n", cf->this_class);
     printf("This is the super class index at constant_pool table %d\n", cf->super_class);
+}
+
+void printClassFileAttributes(const ClassFile *cf) {
+    printf("=== Class Attributes ===\n");
+    printf("attributes_count: %hu\n", cf->attributes_count);
+
+    for (u2 i = 0; i < cf->attributes_count; i++) {
+        u2 attr_name_index = cf->attributes[i].attribute_name_index;
+        char *attr_name = getUtf8(cf->constant_pool, attr_name_index);
+        if (!attr_name) continue;
+
+        printf("  [Attribute %hu] %s\n", i, attr_name);
+        void *info = cf->attributes[i].info;
+
+        if (strcmp(attr_name, "SourceFile") == 0) {
+            printSourceFileAttribute(
+                (SourceFile_attribute *) info,
+                cf->constant_pool
+            );
+        } else if (strcmp(attr_name, "InnerClasses") == 0) {
+            printInnerClassesAttribute(
+                (InnerClasses_attribute *) info,
+                cf->constant_pool
+            );
+        } else {
+            printf("    (raw — %u bytes)\n",
+                   cf->attributes[i].attribute_length);
+        }
+        free(attr_name);
+    }
 }
 
 void printMethods(const ClassFile *cf) {
@@ -428,7 +514,7 @@ void printMethods(const ClassFile *cf) {
                         j
                     );
 
-                    continue;
+                    continue;  
                 }
 
                 printf(
@@ -437,28 +523,21 @@ void printMethods(const ClassFile *cf) {
                     attr_name
                 );
 
-                /*
-                 * CODE ATTRIBUTE
-                 */
+                void *info = cf->methods[i].attributes[j].info;
 
-                if (
-                    strcmp(
-                        attr_name,
-                        "Code"
-                    ) == 0
-                ) {
-
-                    Code_attribute *code_attr =
-
-                        (Code_attribute*)
-
-                        cf->methods[i]
-                        .attributes[j]
-                        .info;
-
+                if (strcmp(attr_name, "Code") == 0) {
                     printCodeAttribute(
-                        code_attr
+                        (Code_attribute *) info,
+                        cf->constant_pool
                     );
+                } else if (strcmp(attr_name, "Exceptions") == 0) {
+                    printExceptionsAttribute(
+                        (Exceptions_attribute *) info,
+                        cf->constant_pool
+                    );
+                } else {
+                    printf("    (raw — %u bytes)\n",
+                        cf->methods[i].attributes[j].attribute_length);
                 }
 
                 free(attr_name);

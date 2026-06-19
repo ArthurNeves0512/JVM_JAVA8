@@ -1,162 +1,182 @@
-
-=== Interfaces ===
-interfaces_count: 1
-interface[0]:
-	index at constant_pool: #7
-	value: SB/A
-
-=== Fields ===
-fields_count: 0
-
-=== Methods ===
-methods_count: 2
-method[0]: name=#8 descriptor=#9
-method[1]: name=#12 descriptor=#13
 === General Information ===
 Magic Number: 0XCAFEBABE
 Minor Version: 0
-Major Version: 52
-Constant Pool Count: 31
+Major Version: 55
+Constant Pool Count: 34
 Access flags (0x0021): ACC_PUBLIC | ACC_SUPER
 This Class: 5
 Super Class: 6
-Interfaces Count: 1
+Interfaces Count: 0
 Fields Count: 0
 Methods Count: 2
-Attributes Count: 0
+Attributes Count: 1
 
 === Constant Pool ===
 [1] Tag: 10 <Methodref>
 	class_index:6
-	name_and_type_index:16
+	name_and_type_index:20
 	java/lang/Object.<init>:()V
 [2] Tag: 9 <Fieldref>
-	class_index:17
-	name_and_type_index:18
+	class_index:21
+	name_and_type_index:22
 	java/lang/System.out:Ljava/io/PrintStream;
 [3] Tag: 8 <String>
-	string_index:19
+	string_index:23
 	opaa sera que deu certo
 [4] Tag: 10 <Methodref>
-	class_index:20
-	name_and_type_index:21
+	class_index:24
+	name_and_type_index:25
 	java/io/PrintStream.println:(Ljava/lang/String;)V
 [5] Tag: 7 <Class>
-	name_index in constant_pool_table:22
-	SB/Opa
+	name_index in constant_pool_table:26
+	Opa
 [6] Tag: 7 <Class>
-	name_index in constant_pool_table:23
+	name_index in constant_pool_table:27
 	java/lang/Object
-[7] Tag: 7 <Class>
-	name_index in constant_pool_table:24
-	SB/A
+[7] Tag: 1 <Utf8>
+	length of array in bytes: 6
+	<init>
 [8] Tag: 1 <Utf8>
-	lenght of array in bytes: 6
-	the word: <init>
+	length of array in bytes: 3
+	()V
 [9] Tag: 1 <Utf8>
-	lenght of array in bytes: 3
-	the word: ()V
+	length of array in bytes: 4
+	Code
 [10] Tag: 1 <Utf8>
-	lenght of array in bytes: 4
-	the word: Code
+	length of array in bytes: 15
+	LineNumberTable
 [11] Tag: 1 <Utf8>
-	lenght of array in bytes: 15
-	the word: LineNumberTable
+	length of array in bytes: 18
+	LocalVariableTable
 [12] Tag: 1 <Utf8>
-	lenght of array in bytes: 4
-	the word: main
+	length of array in bytes: 4
+	this
 [13] Tag: 1 <Utf8>
-	lenght of array in bytes: 22
-	the word: ([Ljava/lang/String;)V
+	length of array in bytes: 5
+	LOpa;
 [14] Tag: 1 <Utf8>
-	lenght of array in bytes: 10
-	the word: SourceFile
+	length of array in bytes: 4
+	main
 [15] Tag: 1 <Utf8>
-	lenght of array in bytes: 8
-	the word: Opa.java
-[16] Tag: 12 <NameAndType>
-	name_index:8
-	descriptor_index:9
-	<init>:()V
-[17] Tag: 7 <Class>
-	name_index in constant_pool_table:25
-	java/lang/System
-[18] Tag: 12 <NameAndType>
-	name_index:26
-	descriptor_index:27
-	out:Ljava/io/PrintStream;
+	length of array in bytes: 22
+	([Ljava/lang/String;)V
+[16] Tag: 1 <Utf8>
+	length of array in bytes: 4
+	args
+[17] Tag: 1 <Utf8>
+	length of array in bytes: 19
+	[Ljava/lang/String;
+[18] Tag: 1 <Utf8>
+	length of array in bytes: 10
+	SourceFile
 [19] Tag: 1 <Utf8>
-	lenght of array in bytes: 23
-	the word: opaa sera que deu certo
-[20] Tag: 7 <Class>
+	length of array in bytes: 8
+	Opa.java
+[20] Tag: 12 <NameAndType>
+	name_index:7
+	descriptor_index:8
+	<init>:()V
+[21] Tag: 7 <Class>
 	name_index in constant_pool_table:28
-	java/io/PrintStream
-[21] Tag: 12 <NameAndType>
+	java/lang/System
+[22] Tag: 12 <NameAndType>
 	name_index:29
 	descriptor_index:30
-	println:(Ljava/lang/String;)V
-[22] Tag: 1 <Utf8>
-	lenght of array in bytes: 6
-	the word: SB/Opa
+	out:Ljava/io/PrintStream;
 [23] Tag: 1 <Utf8>
-	lenght of array in bytes: 16
-	the word: java/lang/Object
-[24] Tag: 1 <Utf8>
-	lenght of array in bytes: 4
-	the word: SB/A
-[25] Tag: 1 <Utf8>
-	lenght of array in bytes: 16
-	the word: java/lang/System
+	length of array in bytes: 23
+	opaa sera que deu certo
+[24] Tag: 7 <Class>
+	name_index in constant_pool_table:31
+	java/io/PrintStream
+[25] Tag: 12 <NameAndType>
+	name_index:32
+	descriptor_index:33
+	println:(Ljava/lang/String;)V
 [26] Tag: 1 <Utf8>
-	lenght of array in bytes: 3
-	the word: out
+	length of array in bytes: 3
+	Opa
 [27] Tag: 1 <Utf8>
-	lenght of array in bytes: 21
-	the word: Ljava/io/PrintStream;
+	length of array in bytes: 16
+	java/lang/Object
 [28] Tag: 1 <Utf8>
-	lenght of array in bytes: 19
-	the word: java/io/PrintStream
+	length of array in bytes: 16
+	java/lang/System
 [29] Tag: 1 <Utf8>
-	lenght of array in bytes: 7
-	the word: println
+	length of array in bytes: 3
+	out
 [30] Tag: 1 <Utf8>
-	lenght of array in bytes: 21
-	the word: (Ljava/lang/String;)V
+	length of array in bytes: 21
+	Ljava/io/PrintStream;
+[31] Tag: 1 <Utf8>
+	length of array in bytes: 19
+	java/io/PrintStream
+[32] Tag: 1 <Utf8>
+	length of array in bytes: 7
+	println
+[33] Tag: 1 <Utf8>
+	length of array in bytes: 21
+	(Ljava/lang/String;)V
 
 This class index at constant_pool table 5
 This is the super class index at constant_pool table 6
 
+
+=== Interfaces ===
+interfaces_count: 0
+
+=== Fields ===
+fields_count: 0
 === Methods ===
 Total methods: 2
 
 [Method 0]
   Access flags: Access flags (0x0001): ACC_PUBLIC
-  Name index: 8 (<init>)
-  Descriptor index: 9 (()V)
+  Name index: 7 (<init>)
+  Descriptor index: 8 (()V)
   Attributes count: 1
     [Attribute 0] Code
 === Code Attribute ===
-max_stack: 1
-max_locals: 1
-code_length: 5
-Bytecode:
-2A B7 00 01 B1 
-exception_table_length: 0
-attributes_count: 1
-[0] name_index=11 length=6
+  max_stack:  1
+  max_locals: 1
+  code_length: 5
+  Bytecode (hex):
+         0: aload_0         
+       1: invokespecial   #1    // java/lang/Object.<init>:()V
+       4: return          
+
+  exception_table_length: 0
+  sub-attributes_count: 2
+  [0]   LineNumberTable  length=1
+    start_pc=0     line=5
+  [1]   LocalVariableTable  length=1
+    slot=0   start=0     len=5     this  LOpa;
 
 [Method 1]
-  Access flags: Access flags (0x0009): ACC_PUBLIC
-  Name index: 12 (main)
-  Descriptor index: 13 (([Ljava/lang/String;)V)
+  Access flags: Access flags (0x0009): ACC_PUBLIC | ACC_STATIC
+  Name index: 14 (main)
+  Descriptor index: 15 (([Ljava/lang/String;)V)
   Attributes count: 1
     [Attribute 0] Code
 === Code Attribute ===
-max_stack: 2
-max_locals: 1
-code_length: 9
-Bytecode:
-B2 00 02 12 03 B6 00 04 B1 
-exception_table_length: 0
+  max_stack:  2
+  max_locals: 1
+  code_length: 9
+  Bytecode (hex):
+         0: getstatic       #2    // java/lang/System.out:Ljava/io/PrintStream;
+       3: ldc             #3    // "opaa sera que deu certo"
+       5: invokevirtual   #4    // java/io/PrintStream.println:(Ljava/lang/String;)V
+       8: return          
+
+  exception_table_length: 0
+  sub-attributes_count: 2
+  [0]   LineNumberTable  length=2
+    start_pc=0     line=9
+    start_pc=8     line=10
+  [1]   LocalVariableTable  length=1
+    slot=0   start=0     len=9     args  [Ljava/lang/String;
+=== Class Attributes ===
 attributes_count: 1
-[0] name_index=11 length=10
+  [Attribute 0] SourceFile
+=== SourceFile Attribute ===
+  sourcefile: Opa.java  (#19)
