@@ -9,6 +9,7 @@
 #include "lib/file/read_file.h"
 #include "lib/printer/printer.h"
 #include "lib/utils/args.h"
+#include "lib/interpreter/interpreter.h"
 
 int main(int argc, char *argv[]) {
     Args args;
@@ -21,9 +22,8 @@ int main(int argc, char *argv[]) {
         args.output_path = default_output;
     }
 
-    int terminal_fd = -1;
-    if (args.do_print)
-        terminal_fd = dup(STDOUT_FILENO);
+    /* Salva fd do terminal antes de redirecionar stdout para o arquivo */
+    int terminal_fd = dup(STDOUT_FILENO);
 
     if (freopen(args.output_path, "w", stdout) == NULL) {
         fprintf(stderr, "Error: could not open output file '%s'\n", args.output_path);
@@ -48,10 +48,16 @@ int main(int argc, char *argv[]) {
     printClassFileAttributes(class_file_ptr);
     fflush(stdout);
 
-    if (args.do_print && terminal_fd >= 0) {
+    if (args.do_print && terminal_fd >= 0)
         printFileToTerminal(terminal_fd, args.output_path);
+
+    /* Restaura stdout para o terminal antes de executar o bytecode */
+    if (terminal_fd >= 0) {
+        dup2(terminal_fd, STDOUT_FILENO);
         close(terminal_fd);
     }
+
+    executaJVM(class_file_ptr);
 
     freeClassFile(class_file_ptr);
     fclose(file_ptr);
