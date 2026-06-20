@@ -1,7 +1,10 @@
 #include "basic_ops.h"
+#include "attribute.h"
+#include "consts.h"
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 
 #define PUSH_INT(f, val) do { \
@@ -43,9 +46,89 @@ void liberaFrame(Frame *f) {
 }
 
 
-void executaFrame(Frame *f, ClassFile *cf) {
-    (void)cf;
+/* ── helpers para ldc ──────────────────────────────────────────────── */
 
+static void ldc_push(Frame *f, cp_info *cp, u2 idx) {
+    u1 tag = cp[idx].tag;
+    if (tag == CONSTANT_Integer) {
+        PUSH_INT(f, (int32_t)cp[idx].integer_info->bytes);
+    } else if (tag == CONSTANT_Float) {
+        float val;
+        uint32_t bits = cp[idx].float_info->bytes;
+        memcpy(&val, &bits, sizeof(float));
+        f->pilha[++f->topo].flutuante = val;
+        f->pilha[f->topo].tipo        = TIPO_FLOAT;
+    } else if (tag == CONSTANT_String) {
+        u2 str_idx = cp[idx].string_info->string_index;
+        char *bytes = (char *)cp[str_idx].utf8_info->bytes;
+        f->pilha[++f->topo].longo = (int64_t)(uintptr_t)bytes;
+        f->pilha[f->topo].tipo    = TIPO_REF;
+    } else {
+        fprintf(stderr, "ldc: tag %u nao suportado no indice %u\n", tag, idx);
+        PUSH_INT(f, 0);
+    }
+}
+
+static void ldc2_push(Frame *f, cp_info *cp, u2 idx) {
+    u1 tag = cp[idx].tag;
+    if (tag == CONSTANT_Long) {
+        uint64_t hi  = cp[idx].long_info->high_bytes;
+        uint64_t lo  = cp[idx].long_info->low_bytes;
+        f->pilha[++f->topo].longo = (int64_t)((hi << 32) | lo);
+        f->pilha[f->topo].tipo    = TIPO_LONG;
+    } else if (tag == CONSTANT_Double) {
+        uint64_t hi   = cp[idx].double_info->high_bytes;
+        uint64_t lo   = cp[idx].double_info->low_bytes;
+        uint64_t bits = (hi << 32) | lo;
+        double val;
+        memcpy(&val, &bits, sizeof(double));
+        f->pilha[++f->topo].duplo = val;
+        f->pilha[f->topo].tipo    = TIPO_DOUBLE;
+    } else {
+        fprintf(stderr, "ldc2_w: tag %u nao suportado no indice %u\n", tag, idx);
+        PUSH_INT(f, 0);
+    }
+}
+
+
+/* ── intercepção de System.out.println ─────────────────────────────── */
+
+static int resolve_class_name(cp_info *cp, u2 class_index, const char *expected) {
+    char *name = getUtf8(cp, cp[class_index].constant_class_info->name_index);
+    int match  = name && strcmp(name, expected) == 0;
+    free(name);
+    return match;
+}
+
+static int resolve_member_name(cp_info *cp, u2 nat_index, const char *expected) {
+    char *name = getUtf8(cp, cp[nat_index].nameAndType_info->name_index);
+    int match  = name && strcmp(name, expected) == 0;
+    free(name);
+    return match;
+}
+
+static void exec_println(Frame *f, cp_info *cp, u2 nat_index) {
+    char *descriptor = getUtf8(cp, cp[nat_index].nameAndType_info->descriptor_index);
+    Slot  arg        = f->pilha[f->topo--]; /* pop argument */
+    f->topo--;                              /* pop PrintStream objectref */
+
+    if (arg.tipo == TIPO_INT)
+        printf("%d\n", arg.inteiro);
+    else if (arg.tipo == TIPO_REF)
+        printf("%s\n", (char *)(uintptr_t)arg.longo);
+    else if (arg.tipo == TIPO_FLOAT)
+        printf("%g\n", (double)arg.flutuante);
+    else if (arg.tipo == TIPO_LONG)
+        printf("%lld\n", (long long)arg.longo);
+    else
+        printf("%g\n", arg.duplo);
+
+    (void)descriptor;
+    free(descriptor);
+}
+
+
+void executaFrame(Frame *f, ClassFile *cf) {
     while (f->pc < f->tamanho) {
         u4  instr_pc = f->pc;
         u1  op       = READ_U1(f);
@@ -70,6 +153,28 @@ void executaFrame(Frame *f, ClassFile *cf) {
         case 0x11: {                         /* sipush    */
             int16_t val = read_i2(f);
             PUSH_INT(f, (int32_t)val);
+            break;
+        }
+
+        /* ── ldc / ldc_w / ldc2_w ─────────────────────── */
+        case 0x12: {                         /* ldc      */
+            u1 idx = READ_U1(f);
+            if (cf) ldc_push(f, cf->constant_pool, (u2)idx);
+            else    PUSH_INT(f, 0);
+            break;
+        }
+
+        case 0x13: {                         /* ldc_w    */
+            u2 idx = read_u2(f);
+            if (cf) ldc_push(f, cf->constant_pool, idx);
+            else    PUSH_INT(f, 0);
+            break;
+        }
+
+        case 0x14: {                         /* ldc2_w   */
+            u2 idx = read_u2(f);
+            if (cf) ldc2_push(f, cf->constant_pool, idx);
+            else    PUSH_INT(f, 0);
             break;
         }
 
@@ -146,6 +251,42 @@ void executaFrame(Frame *f, ClassFile *cf) {
             u1      index = READ_U1(f);
             int8_t  cst   = (int8_t)READ_U1(f);
             f->locais[index].inteiro += (int32_t)cst;
+            break;
+        }
+
+        /* ── getstatic / invokevirtual ─────────────────── */
+        case 0xB2: {                         /* getstatic */
+            u2 idx = read_u2(f);
+            if (!cf) { PUSH_INT(f, 0); break; }
+            CONSTANT_Fieldref_info *fref = cf->constant_pool[idx].fieldRef_info;
+            int is_out = resolve_class_name(cf->constant_pool, fref->class_index,
+                                            "java/lang/System") &&
+                         resolve_member_name(cf->constant_pool, fref->name_and_type_index,
+                                             "out");
+            if (is_out) {
+                f->pilha[++f->topo].longo = 0; /* marcador de PrintStream */
+                f->pilha[f->topo].tipo    = TIPO_REF;
+            } else {
+                fprintf(stderr, "getstatic: campo nao suportado (idx=%u)\n", idx);
+                PUSH_INT(f, 0);
+            }
+            break;
+        }
+
+        case 0xB6: {                         /* invokevirtual */
+            u2 idx = read_u2(f);
+            if (!cf) { return; }
+            CONSTANT_Methodref_info *mref = cf->constant_pool[idx].methodRef_info;
+            int is_println = resolve_class_name(cf->constant_pool, mref->class_index,
+                                                "java/io/PrintStream") &&
+                             resolve_member_name(cf->constant_pool, mref->name_and_type_index,
+                                                 "println");
+            if (is_println) {
+                exec_println(f, cf->constant_pool, mref->name_and_type_index);
+            } else {
+                fprintf(stderr, "invokevirtual: metodo nao suportado (idx=%u)\n", idx);
+                return;
+            }
             break;
         }
 

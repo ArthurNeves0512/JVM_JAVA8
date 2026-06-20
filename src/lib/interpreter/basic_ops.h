@@ -14,6 +14,7 @@
 #define TIPO_FLOAT  1
 #define TIPO_LONG   2
 #define TIPO_DOUBLE 3
+#define TIPO_REF    4
 
 
 #define MAX_PILHA  64
