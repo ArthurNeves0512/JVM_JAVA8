@@ -195,23 +195,37 @@ void execInvokespecial(Frame *caller, ClassFile *cf, u2 idx) {
     char *descriptor  = getUtf8(cf->constant_pool, nat->descriptor_index);
 
     if (method_name && strcmp(method_name, "<init>") == 0) {
-        method_info *m = encontraMetodo(cf, "<init>", descriptor);
+        /* Resolve a classe-alvo do methodref e a classe do ClassFile carregado.
+         * Só busca em cf->methods se for a mesma classe — caso contrário seria
+         * recursão infinita ao chamar super.<init>() de dentro de <init>.
+         * Se this_class == 0 (ClassFile sintético de teste), assume mesma classe. */
+        char *target_class = getUtf8(cf->constant_pool,
+            cf->constant_pool[mref->class_index].constant_class_info->name_index);
+        char *this_class = (cf->this_class != 0)
+            ? getUtf8(cf->constant_pool,
+                cf->constant_pool[cf->this_class].constant_class_info->name_index)
+            : NULL;
+        int same_class = (this_class == NULL)   /* this_class desconhecido: assume igual */
+                         || (target_class && strcmp(target_class, this_class) == 0);
+        free(this_class);
+
+        method_info *m = same_class ? encontraMetodo(cf, "<init>", descriptor) : NULL;
         if (m) {
             Code_attribute *ca = encontraCodeAttr(m, cf->constant_pool);
             if (ca) {
+                free(target_class);
                 executa_chamada(caller, cf, ca, descriptor, 1 /* instance */);
                 free(method_name);
                 free(descriptor);
                 return;
             }
         }
-        /* tenta native antes de descartar */
-        char *class_name = getUtf8(cf->constant_pool,
-            cf->constant_pool[mref->class_index].constant_class_info->name_index);
+
+        /* classe externa ou <init> sem Code_attribute: tenta native */
         int n_args = conta_args(descriptor);
-        NativeFn fn = lookupNative(class_name ? class_name : "",
+        NativeFn fn = lookupNative(target_class ? target_class : "",
                                    "<init>", descriptor);
-        free(class_name);
+        free(target_class);
         if (fn) {
             fn(caller, n_args);
         } else {
