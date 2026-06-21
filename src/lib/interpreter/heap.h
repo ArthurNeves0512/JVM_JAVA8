@@ -9,6 +9,7 @@ typedef struct {
     u2     num_fields;
     char **field_names;
     Slot  *fields;
+    void  *native_data;  /* buffer para classes nativas (ex: StringBuilder) */
 } HeapObject;
 
 HeapObject *alocaObjeto(ClassFile *cf, const char *class_name);

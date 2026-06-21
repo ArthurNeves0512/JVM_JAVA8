@@ -1,6 +1,7 @@
 #include "basic_ops.h"
 #include "heap.h"
 #include "method_invoke.h"
+#include "native_methods.h"
 #include "attribute.h"
 #include "consts.h"
 #include <stdint.h>
@@ -144,26 +145,6 @@ static int resolve_member_name(cp_info *cp, u2 nat_index, const char *expected) 
     int match  = name && strcmp(name, expected) == 0;
     free(name);
     return match;
-}
-
-static void exec_println(Frame *f, cp_info *cp, u2 nat_index) {
-    char *descriptor = getUtf8(cp, cp[nat_index].nameAndType_info->descriptor_index);
-    Slot  arg        = f->pilha[f->topo--]; /* pop argument */
-    f->topo--;                              /* pop PrintStream objectref */
-
-    if (arg.tipo == TIPO_INT)
-        printf("%d\n", arg.inteiro);
-    else if (arg.tipo == TIPO_REF)
-        printf("%s\n", (char *)(uintptr_t)arg.longo);
-    else if (arg.tipo == TIPO_FLOAT)
-        printf("%g\n", (double)arg.flutuante);
-    else if (arg.tipo == TIPO_LONG)
-        printf("%lld\n", (long long)arg.longo);
-    else
-        printf("%g\n", arg.duplo);
-
-    (void)descriptor;
-    free(descriptor);
 }
 
 
@@ -382,7 +363,9 @@ void executaFrame(Frame *f, ClassFile *cf) {
             if (!cf) { PUSH_INT(f, 0); break; }
             char *cname = getUtf8(cf->constant_pool,
                 cf->constant_pool[idx].constant_class_info->name_index);
-            HeapObject *obj = alocaObjeto(cf, cname);
+            /* Classes nativas não têm campos definidos no ClassFile do usuário */
+            ClassFile *obj_cf = (cname && isNativeClass(cname)) ? NULL : cf;
+            HeapObject *obj = alocaObjeto(obj_cf, cname);
             free(cname);
             f->pilha[++f->topo].longo = (int64_t)(uintptr_t)obj;
             f->pilha[f->topo].tipo    = TIPO_OBJECT;
@@ -443,15 +426,7 @@ void executaFrame(Frame *f, ClassFile *cf) {
         case 0xB6: {                         /* invokevirtual */
             u2 idx = read_u2(f);
             if (!cf) { return; }
-            CONSTANT_Methodref_info *mref = cf->constant_pool[idx].methodRef_info;
-            int is_println = resolve_class_name(cf->constant_pool, mref->class_index,
-                                                "java/io/PrintStream") &&
-                             resolve_member_name(cf->constant_pool, mref->name_and_type_index,
-                                                 "println");
-            if (is_println)
-                exec_println(f, cf->constant_pool, mref->name_and_type_index);
-            else
-                execInvokevirtual(f, cf, idx);
+            execInvokevirtual(f, cf, idx);
             break;
         }
 

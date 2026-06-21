@@ -1,5 +1,6 @@
 #include "interpreter.h"
 #include "method_invoke.h"
+#include "native_methods.h"
 #include "basic_ops.h"
 #include "heap.h"
 #include <stdio.h>
@@ -8,6 +9,7 @@
 
 
 void executaJVM(ClassFile *cf) {
+    initNativeMethods();
     for (u2 i = 0; i < cf->methods_count; i++) {
         char *name    = getUtf8(cf->constant_pool, cf->methods[i].name_index);
         int   is_main = name && strcmp(name, "main") == 0;

@@ -33,6 +33,8 @@ HeapObject *alocaObjeto(ClassFile *cf, const char *class_name) {
         obj->fields      = NULL;
     }
 
+    obj->native_data = NULL;
+
     if (heap_count < MAX_OBJECTS)
         heap_pool[heap_count++] = obj;
 
@@ -57,6 +59,7 @@ void liberaHeap(void) {
             free(obj->field_names[j]);
         free(obj->field_names);
         free(obj->fields);
+        free(obj->native_data);
         free(obj);
     }
     heap_count = 0;

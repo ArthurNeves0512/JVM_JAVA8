@@ -1,4 +1,5 @@
 #include "method_invoke.h"
+#include "native_methods.h"
 #include "attribute.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -111,14 +112,21 @@ void execInvokestatic(Frame *caller, ClassFile *cf, u2 idx) {
 
     method_info *m = encontraMetodo(cf, method_name, descriptor);
     if (!m) {
-        /* Método externo (ex: java/lang/Math) — pula com aviso */
         char *class_name = getUtf8(cf->constant_pool,
             cf->constant_pool[mref->class_index].constant_class_info->name_index);
+        int n_args = conta_args(descriptor);
+        NativeFn fn = lookupNative(class_name ? class_name : "",
+                                   method_name, descriptor);
+        if (fn) {
+            fn(caller, n_args);
+            free(class_name);
+            free(method_name);
+            free(descriptor);
+            return;
+        }
         fprintf(stderr, "invokestatic: metodo externo '%s.%s%s' ignorado\n",
                 class_name ? class_name : "?", method_name, descriptor);
         free(class_name);
-        /* Descarta argumentos da pilha para manter consistência */
-        int n_args = conta_args(descriptor);
         for (int i = 0; i < n_args; i++) caller->topo--;
         free(method_name);
         free(descriptor);
@@ -148,11 +156,19 @@ void execInvokevirtual(Frame *caller, ClassFile *cf, u2 idx) {
     if (!m) {
         char *class_name = getUtf8(cf->constant_pool,
             cf->constant_pool[mref->class_index].constant_class_info->name_index);
+        int n_args = conta_args(descriptor);
+        NativeFn fn = lookupNative(class_name ? class_name : "",
+                                   method_name, descriptor);
+        if (fn) {
+            fn(caller, n_args);
+            free(class_name);
+            free(method_name);
+            free(descriptor);
+            return;
+        }
         fprintf(stderr, "invokevirtual: metodo '%s.%s%s' nao encontrado\n",
                 class_name ? class_name : "?", method_name, descriptor);
         free(class_name);
-        /* Descarta args + objectref */
-        int n_args = conta_args(descriptor);
         for (int i = 0; i < n_args + 1; i++) caller->topo--;
         free(method_name);
         free(descriptor);
@@ -183,16 +199,24 @@ void execInvokespecial(Frame *caller, ClassFile *cf, u2 idx) {
         if (m) {
             Code_attribute *ca = encontraCodeAttr(m, cf->constant_pool);
             if (ca) {
-                /* executa o construtor com objectref em locais[0] */
                 executa_chamada(caller, cf, ca, descriptor, 1 /* instance */);
                 free(method_name);
                 free(descriptor);
                 return;
             }
         }
-        /* <init> nao encontrado: descarta args + objectref */
+        /* tenta native antes de descartar */
+        char *class_name = getUtf8(cf->constant_pool,
+            cf->constant_pool[mref->class_index].constant_class_info->name_index);
         int n_args = conta_args(descriptor);
-        for (int i = 0; i < n_args + 1; i++) caller->topo--;
+        NativeFn fn = lookupNative(class_name ? class_name : "",
+                                   "<init>", descriptor);
+        free(class_name);
+        if (fn) {
+            fn(caller, n_args);
+        } else {
+            for (int i = 0; i < n_args + 1; i++) caller->topo--;
+        }
         free(method_name);
         free(descriptor);
         return;
