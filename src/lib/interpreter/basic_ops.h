@@ -15,6 +15,23 @@
 #define TIPO_LONG   2
 #define TIPO_DOUBLE 3
 #define TIPO_REF    4
+#define TIPO_ARRAY  5
+
+/* atype para newarray (JVM spec §6.5 newarray) */
+#define T_BOOLEAN 4
+#define T_CHAR    5
+#define T_FLOAT   6
+#define T_DOUBLE  7
+#define T_BYTE    8
+#define T_SHORT   9
+#define T_INT     10
+#define T_LONG    11
+
+typedef struct {
+    int32_t  length;
+    int      atype;
+    void    *data;
+} JVMArray;
 
 
 #define MAX_PILHA  64
@@ -43,6 +60,7 @@ typedef struct {
 Frame *criaFrame(Code_attribute *ca);
 void   liberaFrame(Frame *f);
 void   executaFrame(Frame *f, ClassFile *cf);
+void   liberaArrays(void);
 
 
 #endif

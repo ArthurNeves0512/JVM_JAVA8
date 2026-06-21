@@ -27,6 +27,43 @@ static inline int16_t read_i2(Frame *f) {
 }
 
 
+/* ── pool de arrays (liberado ao final de cada execucao) ───────────── */
+
+#define MAX_ARRAYS 1024
+
+static JVMArray *jvm_arrays[MAX_ARRAYS];
+static int       jvm_array_count = 0;
+
+static JVMArray *aloca_array(int32_t length, int atype) {
+    size_t elem_size;
+    switch (atype) {
+        case T_BOOLEAN: case T_BYTE:           elem_size = sizeof(int8_t);   break;
+        case T_CHAR:    case T_SHORT:          elem_size = sizeof(int16_t);  break;
+        case T_FLOAT:   case T_INT:            elem_size = sizeof(int32_t);  break;
+        case T_DOUBLE:  case T_LONG:           elem_size = sizeof(int64_t);  break;
+        default:                               elem_size = sizeof(int32_t);  break;
+    }
+    JVMArray *arr = malloc(sizeof(JVMArray));
+    if (!arr) { fprintf(stderr, "aloca_array: sem memoria\n"); exit(1); }
+    arr->length = length;
+    arr->atype  = atype;
+    arr->data   = calloc((size_t)(length > 0 ? length : 1), elem_size);
+    if (jvm_array_count < MAX_ARRAYS)
+        jvm_arrays[jvm_array_count++] = arr;
+    return arr;
+}
+
+void liberaArrays(void) {
+    for (int i = 0; i < jvm_array_count; i++) {
+        free(jvm_arrays[i]->data);
+        free(jvm_arrays[i]);
+    }
+    jvm_array_count = 0;
+}
+
+#define ARR(slot)  ((JVMArray *)(uintptr_t)(slot).longo)
+
+
 Frame *criaFrame(Code_attribute *ca) {
     Frame *f = malloc(sizeof(Frame));
     if (!f) {
@@ -153,6 +190,78 @@ void executaFrame(Frame *f, ClassFile *cf) {
         case 0x11: {                         /* sipush    */
             int16_t val = read_i2(f);
             PUSH_INT(f, (int32_t)val);
+            break;
+        }
+
+        /* ── aload / astore (referências) ─────────────── */
+        case 0x2A: f->pilha[++f->topo] = f->locais[0]; break; /* aload_0 */
+        case 0x2B: f->pilha[++f->topo] = f->locais[1]; break; /* aload_1 */
+        case 0x2C: f->pilha[++f->topo] = f->locais[2]; break; /* aload_2 */
+        case 0x2D: f->pilha[++f->topo] = f->locais[3]; break; /* aload_3 */
+
+        case 0x4B: f->locais[0] = f->pilha[f->topo--]; break; /* astore_0 */
+        case 0x4C: f->locais[1] = f->pilha[f->topo--]; break; /* astore_1 */
+        case 0x4D: f->locais[2] = f->pilha[f->topo--]; break; /* astore_2 */
+        case 0x4E: f->locais[3] = f->pilha[f->topo--]; break; /* astore_3 */
+
+        /* ── arrays de primitivos ─────────────────────── */
+        case 0x2E: {                         /* iaload  */
+            int32_t   idx = POP_INT(f);
+            JVMArray *arr = ARR(f->pilha[f->topo--]);
+            PUSH_INT(f, ((int32_t *)arr->data)[idx]);
+            break;
+        }
+
+        case 0x33: {                         /* baload (byte/boolean) */
+            int32_t   idx = POP_INT(f);
+            JVMArray *arr = ARR(f->pilha[f->topo--]);
+            PUSH_INT(f, (int32_t)((int8_t *)arr->data)[idx]);
+            break;
+        }
+
+        case 0x34: {                         /* caload (char) */
+            int32_t   idx = POP_INT(f);
+            JVMArray *arr = ARR(f->pilha[f->topo--]);
+            PUSH_INT(f, (int32_t)((uint16_t *)arr->data)[idx]);
+            break;
+        }
+
+        case 0x4F: {                         /* iastore */
+            int32_t   val = POP_INT(f);
+            int32_t   idx = POP_INT(f);
+            JVMArray *arr = ARR(f->pilha[f->topo--]);
+            ((int32_t *)arr->data)[idx] = val;
+            break;
+        }
+
+        case 0x54: {                         /* bastore (byte/boolean) */
+            int32_t   val = POP_INT(f);
+            int32_t   idx = POP_INT(f);
+            JVMArray *arr = ARR(f->pilha[f->topo--]);
+            ((int8_t *)arr->data)[idx] = (int8_t)val;
+            break;
+        }
+
+        case 0x55: {                         /* castore (char) */
+            int32_t   val = POP_INT(f);
+            int32_t   idx = POP_INT(f);
+            JVMArray *arr = ARR(f->pilha[f->topo--]);
+            ((uint16_t *)arr->data)[idx] = (uint16_t)val;
+            break;
+        }
+
+        case 0xBC: {                         /* newarray */
+            u1        atype  = READ_U1(f);
+            int32_t   length = POP_INT(f);
+            JVMArray *arr    = aloca_array(length, (int)atype);
+            f->pilha[++f->topo].longo = (int64_t)(uintptr_t)arr;
+            f->pilha[f->topo].tipo    = TIPO_ARRAY;
+            break;
+        }
+
+        case 0xBE: {                         /* arraylength */
+            JVMArray *arr = ARR(f->pilha[f->topo--]);
+            PUSH_INT(f, arr->length);
             break;
         }
 

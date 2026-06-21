@@ -35,6 +35,7 @@ void executaJVM(ClassFile *cf) {
         Frame *f = criaFrame(ca);
         executaFrame(f, cf);
         liberaFrame(f);
+        liberaArrays();
         return;
     }
 
