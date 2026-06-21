@@ -1,4 +1,5 @@
 #include "basic_ops.h"
+#include "method_invoke.h"
 #include "attribute.h"
 #include "consts.h"
 #include <stdint.h>
@@ -390,30 +391,52 @@ void executaFrame(Frame *f, ClassFile *cf) {
                                                 "java/io/PrintStream") &&
                              resolve_member_name(cf->constant_pool, mref->name_and_type_index,
                                                  "println");
-            if (is_println) {
+            if (is_println)
                 exec_println(f, cf->constant_pool, mref->name_and_type_index);
-            } else {
-                fprintf(stderr, "invokevirtual: metodo nao suportado (idx=%u)\n", idx);
-                return;
-            }
+            else
+                execInvokevirtual(f, cf, idx);
             break;
         }
 
-        /* ── desvios ───────────────────────────────────── */
-        case 0x99: {                         /* ifeq */
-            int16_t offset = read_i2(f);
-            int32_t v1     = POP_INT(f);
-            if (v1 == 0) f->pc = instr_pc + (u4)(int32_t)offset;
+        case 0xB7: {                         /* invokespecial */
+            u2 idx = read_u2(f);
+            if (!cf) { return; }
+            execInvokespecial(f, cf, idx);
             break;
         }
 
-        case 0x9F: {                         /* if_icmpeq */
-            int16_t offset = read_i2(f);
-            int32_t v2     = POP_INT(f);
-            int32_t v1     = POP_INT(f);
-            if (v1 == v2) f->pc = instr_pc + (u4)(int32_t)offset;
+        case 0xB8: {                         /* invokestatic */
+            u2 idx = read_u2(f);
+            if (!cf) { return; }
+            execInvokestatic(f, cf, idx);
             break;
         }
+
+        /* ── desvios unários (compara com 0) ──────────────────── */
+#define BRANCH_IF1(cond) \
+    { int16_t o = read_i2(f); int32_t v = POP_INT(f); \
+      if (cond) { f->pc = instr_pc + (u4)(int32_t)o; } break; }
+
+        case 0x99: BRANCH_IF1(v == 0)   /* ifeq */
+        case 0x9A: BRANCH_IF1(v != 0)   /* ifne */
+        case 0x9B: BRANCH_IF1(v <  0)   /* iflt */
+        case 0x9C: BRANCH_IF1(v >= 0)   /* ifge */
+        case 0x9D: BRANCH_IF1(v >  0)   /* ifgt */
+        case 0x9E: BRANCH_IF1(v <= 0)   /* ifle */
+#undef BRANCH_IF1
+
+        /* ── desvios binários (compara dois ints) ──────────────── */
+#define BRANCH_IF2(cond) \
+    { int16_t o = read_i2(f); int32_t v2 = POP_INT(f); int32_t v1 = POP_INT(f); \
+      if (cond) { f->pc = instr_pc + (u4)(int32_t)o; } break; }
+
+        case 0x9F: BRANCH_IF2(v1 == v2) /* if_icmpeq */
+        case 0xA0: BRANCH_IF2(v1 != v2) /* if_icmpne */
+        case 0xA1: BRANCH_IF2(v1 <  v2) /* if_icmplt */
+        case 0xA2: BRANCH_IF2(v1 >= v2) /* if_icmpge */
+        case 0xA3: BRANCH_IF2(v1 >  v2) /* if_icmpgt */
+        case 0xA4: BRANCH_IF2(v1 <= v2) /* if_icmple */
+#undef BRANCH_IF2
 
         case 0xA7: {                         /* goto */
             int16_t offset = read_i2(f);
@@ -422,8 +445,12 @@ void executaFrame(Frame *f, ClassFile *cf) {
         }
 
         /* ── retorno ───────────────────────────────────── */
-        case 0xAC: /* ireturn — mantém valor no topo, encerra o frame */
-        case 0xB1: /* return  — encerra sem valor de retorno          */
+        case 0xAC: /* ireturn — int    */
+        case 0xAD: /* lreturn — long   */
+        case 0xAE: /* freturn — float  */
+        case 0xAF: /* dreturn — double */
+        case 0xB0: /* areturn — ref    */
+        case 0xB1: /* return  — void   */
             return;
 
         default:

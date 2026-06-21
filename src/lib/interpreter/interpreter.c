@@ -1,21 +1,9 @@
 #include "interpreter.h"
+#include "method_invoke.h"
 #include "basic_ops.h"
-#include "attribute.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-
-static Code_attribute *encontraCodeAttr(method_info *m, cp_info *cp) {
-    for (u2 i = 0; i < m->attributes_count; i++) {
-        char *name    = getUtf8(cp, m->attributes[i].attribute_name_index);
-        int   is_code = name && strcmp(name, "Code") == 0;
-        free(name);
-        if (is_code)
-            return (Code_attribute *)m->attributes[i].info;
-    }
-    return NULL;
-}
 
 
 void executaJVM(ClassFile *cf) {
