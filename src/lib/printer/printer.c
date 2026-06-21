@@ -34,8 +34,8 @@ void printInterfaces(const ClassFile *cf) {
 
     for (u2 i = 0; i < cf->interfaces_count; i++) {
         u2 index = cf->interfaces[i];
-        CONSTANT_Class_info *class_info = cf->constant_pool[index].constant_class_info;
-        CONSTANT_Utf8_info *utf8_info = cf->constant_pool[class_info->name_index].utf8_info;
+        const CONSTANT_Class_info *class_info = cf->constant_pool[index].constant_class_info;
+        const CONSTANT_Utf8_info *utf8_info = cf->constant_pool[class_info->name_index].utf8_info;
 
         printf("interface[%hu]:\n", i);
         printf("\tindex at constant_pool: #%hu\n", index);
@@ -158,7 +158,7 @@ static void printCpEntry(const cp_info * constant_pool,const cp_info *entry) {
 }
 
 static void print_CLASS_INFO_VALUE(const cp_info * constant_pool, const CONSTANT_Class_info * info){
-    u1 * class_name = constant_pool[info->name_index].utf8_info->bytes;
+    const u1 * class_name = constant_pool[info->name_index].utf8_info->bytes;
     printf("\t%s.",class_name);
 }
 
@@ -172,7 +172,7 @@ static void print_NAME_AND_TYPE_INFO_VALUE(const cp_info * constant_pool, const 
 static void print_CONSTANT_Class(const cp_info* constant_pool,const CONSTANT_Class_info *info) {
     printf("<Class>\n");
     printf("\tname_index in constant_pool_table:%hu\n", info->name_index);
-    CONSTANT_Utf8_info * utf8_info   = constant_pool[info->name_index].utf8_info;
+    const CONSTANT_Utf8_info * utf8_info   = constant_pool[info->name_index].utf8_info;
     printf("\t%s\n",utf8_info->bytes);
 }
 
@@ -180,9 +180,9 @@ static void print_CONSTANT_Fieldref(const cp_info* constant_pool, const CONSTANT
     printf("<Fieldref>\n");
     printf("\tclass_index:%hu\n", info->class_index);
     printf("\tname_and_type_index:%hu\n", info->name_and_type_index);
-    CONSTANT_Class_info * class_info   = constant_pool[info->class_index].constant_class_info;
+    const CONSTANT_Class_info * class_info   = constant_pool[info->class_index].constant_class_info;
     print_CLASS_INFO_VALUE(constant_pool,class_info);
-    CONSTANT_NameAndType_info *name_and_type =  constant_pool[info->name_and_type_index].nameAndType_info;
+    const CONSTANT_NameAndType_info *name_and_type =  constant_pool[info->name_and_type_index].nameAndType_info;
     print_NAME_AND_TYPE_INFO_VALUE(constant_pool,name_and_type);
 
 }
@@ -191,9 +191,9 @@ static void print_CONSTANT_Methodref(const cp_info* constant_pool, const CONSTAN
     printf("<Methodref>\n");
     printf("\tclass_index:%hu\n", info->class_index);
     printf("\tname_and_type_index:%hu\n", info->name_and_type_index);
-    CONSTANT_Class_info * class_info   = constant_pool[info->class_index].constant_class_info;
+    const CONSTANT_Class_info * class_info   = constant_pool[info->class_index].constant_class_info;
     print_CLASS_INFO_VALUE(constant_pool,class_info);
-    CONSTANT_NameAndType_info *name_and_type =  constant_pool[info->name_and_type_index].nameAndType_info;
+    const CONSTANT_NameAndType_info *name_and_type =  constant_pool[info->name_and_type_index].nameAndType_info;
     print_NAME_AND_TYPE_INFO_VALUE(constant_pool,name_and_type);
 }
 
@@ -201,18 +201,18 @@ static void print_CONSTANT_InterfaceMethodref(const cp_info* constant_pool,const
     printf("<InterfaceMethodref>\n");
     printf("\tclass_index:%hu\n", info->class_index);
     printf("\tname_and_type_index:%hu\n", info->name_and_type_index);
-    CONSTANT_Class_info * class_info   = constant_pool[info->class_index].constant_class_info;
+    const CONSTANT_Class_info * class_info   = constant_pool[info->class_index].constant_class_info;
     print_CLASS_INFO_VALUE(constant_pool,class_info);
-    CONSTANT_NameAndType_info *name_and_type =  constant_pool[info->name_and_type_index].nameAndType_info;
+    const CONSTANT_NameAndType_info *name_and_type =  constant_pool[info->name_and_type_index].nameAndType_info;
     print_NAME_AND_TYPE_INFO_VALUE(constant_pool,name_and_type);
 }
 
 static void print_CONSTANT_String(const cp_info* constant_pool, const CONSTANT_String_info *info) {
     printf("<String>\n");
     printf("\tstring_index:%hu\n", info->string_index);
-    CONSTANT_Utf8_info * utf8_info   = constant_pool[info->string_index].utf8_info;
+    const CONSTANT_Utf8_info * utf8_info   = constant_pool[info->string_index].utf8_info;
 
-    u1 * ptr = utf8_info->bytes;
+    const u1 * ptr = utf8_info->bytes;
     printf("\t");
     while (*ptr){
         if(*ptr=='\n'){
@@ -424,7 +424,7 @@ void printMethods(const ClassFile *cf) {
 
         if (name_index < cf->constant_pool_count) {
 
-            CONSTANT_Utf8_info *method_name =
+            const CONSTANT_Utf8_info *method_name =
 
                 cf->constant_pool[name_index]
                 .utf8_info;
@@ -455,7 +455,7 @@ void printMethods(const ClassFile *cf) {
 
         if (desc_index < cf->constant_pool_count) {
 
-            CONSTANT_Utf8_info *descriptor =
+            const CONSTANT_Utf8_info *descriptor =
 
                 cf->constant_pool[desc_index]
                 .utf8_info;

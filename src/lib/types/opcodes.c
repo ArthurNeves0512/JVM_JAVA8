@@ -280,11 +280,11 @@ static void printCpRef(cp_info *cp, u2 idx) {
                 ci = entry->interfaceMethod_info->class_index;
                 ni = entry->interfaceMethod_info->name_and_type_index;
             }
-            u1 *class_name =
+            const u1 *class_name =
                 cp[cp[ci].constant_class_info->name_index].utf8_info->bytes;
-            u1 *mname =
+            const u1 *mname =
                 cp[cp[ni].nameAndType_info->name_index].utf8_info->bytes;
-            u1 *desc  =
+            const u1 *desc  =
                 cp[cp[ni].nameAndType_info->descriptor_index].utf8_info->bytes;
             printf("%s.%s:%s", class_name, mname, desc);
             break;
@@ -315,8 +315,8 @@ static void printCpRef(cp_info *cp, u2 idx) {
             break;
         }
         case CONSTANT_NameAndType: {
-            u1 *n = cp[entry->nameAndType_info->name_index].utf8_info->bytes;
-            u1 *d = cp[entry->nameAndType_info->descriptor_index].utf8_info->bytes;
+            const u1 *n = cp[entry->nameAndType_info->name_index].utf8_info->bytes;
+            const u1 *d = cp[entry->nameAndType_info->descriptor_index].utf8_info->bytes;
             printf("%s:%s", n, d);
             break;
         }

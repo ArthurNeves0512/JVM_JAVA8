@@ -257,8 +257,8 @@ void printCodeAttribute(
 }
 
 void printConstantValueAttribute(
-    ConstantValue_attribute *attr,
-    cp_info                 *constant_pool
+    const ConstantValue_attribute *attr,
+    cp_info                       *constant_pool
 ) {
     printf("=== ConstantValue Attribute ===\n");
     u2 idx = attr->constantvalue_index;
@@ -324,8 +324,8 @@ void printExceptionsAttribute(
 }
 
 void printSourceFileAttribute(
-    SourceFile_attribute *attr,
-    cp_info              *constant_pool
+    const SourceFile_attribute *attr,
+    cp_info                    *constant_pool
 ) {
     char *name = getUtf8(constant_pool, attr->sourcefile_index);
     printf("=== SourceFile Attribute ===\n");
@@ -341,7 +341,7 @@ void printInnerClassesAttribute(
     printf("=== InnerClasses Attribute ===\n");
     printf("  number_of_classes: %hu\n", attr->number_of_classes);
     for (u2 i = 0; i < attr->number_of_classes; i++) {
-        inner_class_entry *e = &attr->classes[i];
+        const inner_class_entry *e = &attr->classes[i];
 
         char *inner_name = NULL;
         if (e->inner_name_index != 0)
@@ -359,7 +359,7 @@ void printInnerClassesAttribute(
     }
 }
 
-void printLineNumberTableAttribute(LineNumberTable_attribute *attr) {
+void printLineNumberTableAttribute(const LineNumberTable_attribute *attr) {
     printf("  LineNumberTable  length=%hu\n",
            attr->line_number_table_length);
     for (u2 i = 0; i < attr->line_number_table_length; i++) {
@@ -376,7 +376,7 @@ void printLocalVariableTableAttribute(
     printf("  LocalVariableTable  length=%hu\n",
            attr->local_variable_table_length);
     for (u2 i = 0; i < attr->local_variable_table_length; i++) {
-        local_variable_table_entry *e = &attr->local_variable_table[i];
+        const local_variable_table_entry *e = &attr->local_variable_table[i];
         char *var_name   = getUtf8(constant_pool, e->name_index);
         char *descriptor = getUtf8(constant_pool, e->descriptor_index);
         printf(
@@ -479,7 +479,7 @@ void freeAttribute(attribute_info *attr, cp_info *constant_pool) {
 char *getUtf8(cp_info *constant_pool, u2 index) {
     if (!constant_pool || index == 0) return NULL;
 
-    cp_info *entry = &constant_pool[index];
+    const cp_info *entry = &constant_pool[index];
     if (entry->tag != CONSTANT_Utf8) {
         fprintf(stderr,
                 "Error: constant_pool[%u] is not UTF8 (tag=%u)\n",
@@ -487,7 +487,7 @@ char *getUtf8(cp_info *constant_pool, u2 index) {
         return NULL;
     }
 
-    CONSTANT_Utf8_info *utf8 = entry->utf8_info;
+    const CONSTANT_Utf8_info *utf8 = entry->utf8_info;
     char *result = (char *) malloc(utf8->length + 1);
     memcpy(result, utf8->bytes, utf8->length);
     result[utf8->length] = '\0';

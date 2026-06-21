@@ -13,7 +13,7 @@ typedef struct {
 } HeapObject;
 
 HeapObject *alocaObjeto(ClassFile *cf, const char *class_name);
-int         buscaCampo(HeapObject *obj, const char *name);
+int         buscaCampo(const HeapObject *obj, const char *name);
 void        liberaHeap(void);
 
 #endif

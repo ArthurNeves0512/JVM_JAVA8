@@ -243,7 +243,7 @@ void executaFrame(Frame *f, ClassFile *cf) {
         }
 
         case 0xBE: {                         /* arraylength */
-            JVMArray *arr = ARR(f->pilha[f->topo--]);
+            const JVMArray *arr = ARR(f->pilha[f->topo--]);
             PUSH_INT(f, arr->length);
             break;
         }
@@ -376,8 +376,8 @@ void executaFrame(Frame *f, ClassFile *cf) {
             u2 idx = read_u2(f);
             if (!cf) { PUSH_INT(f, 0); break; }
             HeapObject *obj = (HeapObject *)(uintptr_t)f->pilha[f->topo--].longo;
-            CONSTANT_Fieldref_info    *fref = cf->constant_pool[idx].fieldRef_info;
-            CONSTANT_NameAndType_info *nat  =
+            const CONSTANT_Fieldref_info    *fref = cf->constant_pool[idx].fieldRef_info;
+            const CONSTANT_NameAndType_info *nat  =
                 cf->constant_pool[fref->name_and_type_index].nameAndType_info;
             char *fname = getUtf8(cf->constant_pool, nat->name_index);
             int   fi    = buscaCampo(obj, fname);
@@ -394,8 +394,8 @@ void executaFrame(Frame *f, ClassFile *cf) {
             if (!cf) { f->topo -= 2; break; }
             Slot        val  = f->pilha[f->topo--];
             HeapObject *obj  = (HeapObject *)(uintptr_t)f->pilha[f->topo--].longo;
-            CONSTANT_Fieldref_info    *fref = cf->constant_pool[idx].fieldRef_info;
-            CONSTANT_NameAndType_info *nat  =
+            const CONSTANT_Fieldref_info    *fref = cf->constant_pool[idx].fieldRef_info;
+            const CONSTANT_NameAndType_info *nat  =
                 cf->constant_pool[fref->name_and_type_index].nameAndType_info;
             char *fname = getUtf8(cf->constant_pool, nat->name_index);
             int   fi    = buscaCampo(obj, fname);
@@ -408,7 +408,7 @@ void executaFrame(Frame *f, ClassFile *cf) {
         case 0xB2: {                         /* getstatic */
             u2 idx = read_u2(f);
             if (!cf) { PUSH_INT(f, 0); break; }
-            CONSTANT_Fieldref_info *fref = cf->constant_pool[idx].fieldRef_info;
+            const CONSTANT_Fieldref_info *fref = cf->constant_pool[idx].fieldRef_info;
             int is_out = resolve_class_name(cf->constant_pool, fref->class_index,
                                             "java/lang/System") &&
                          resolve_member_name(cf->constant_pool, fref->name_and_type_index,

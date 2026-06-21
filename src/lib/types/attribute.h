@@ -90,11 +90,11 @@ LocalVariableTable_attribute *readLocalVariableTableAttribute(FILE *fp);
 /* ───────────────────────────────────────────── */
 
 void printCodeAttribute(Code_attribute *code_attr, cp_info *constant_pool);
-void printConstantValueAttribute(ConstantValue_attribute *attr, cp_info *constant_pool);
+void printConstantValueAttribute(const ConstantValue_attribute *attr, cp_info *constant_pool);
 void printExceptionsAttribute(Exceptions_attribute *attr, cp_info *constant_pool);
-void printSourceFileAttribute(SourceFile_attribute *attr, cp_info *constant_pool);
+void printSourceFileAttribute(const SourceFile_attribute *attr, cp_info *constant_pool);
 void printInnerClassesAttribute(InnerClasses_attribute *attr, cp_info *constant_pool);
-void printLineNumberTableAttribute(LineNumberTable_attribute *attr);
+void printLineNumberTableAttribute(const LineNumberTable_attribute *attr);
 void printLocalVariableTableAttribute(LocalVariableTable_attribute *attr, cp_info *constant_pool);
 
 /* ───────────────────────────────────────────── */

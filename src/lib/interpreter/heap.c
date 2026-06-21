@@ -42,7 +42,7 @@ HeapObject *alocaObjeto(ClassFile *cf, const char *class_name) {
 }
 
 
-int buscaCampo(HeapObject *obj, const char *name) {
+int buscaCampo(const HeapObject *obj, const char *name) {
     for (u2 i = 0; i < obj->num_fields; i++) {
         if (obj->field_names[i] && strcmp(obj->field_names[i], name) == 0)
             return (int)i;

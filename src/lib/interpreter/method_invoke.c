@@ -104,8 +104,8 @@ static void executa_chamada(Frame *caller, ClassFile *cf,
 /* ── handlers de opcode ─────────────────────────────────────────────── */
 
 void execInvokestatic(Frame *caller, ClassFile *cf, u2 idx) {
-    CONSTANT_Methodref_info  *mref = cf->constant_pool[idx].methodRef_info;
-    CONSTANT_NameAndType_info *nat = cf->constant_pool[mref->name_and_type_index].nameAndType_info;
+    const CONSTANT_Methodref_info  *mref = cf->constant_pool[idx].methodRef_info;
+    const CONSTANT_NameAndType_info *nat = cf->constant_pool[mref->name_and_type_index].nameAndType_info;
 
     char *method_name = getUtf8(cf->constant_pool, nat->name_index);
     char *descriptor  = getUtf8(cf->constant_pool, nat->descriptor_index);
@@ -146,8 +146,8 @@ void execInvokestatic(Frame *caller, ClassFile *cf, u2 idx) {
 
 
 void execInvokevirtual(Frame *caller, ClassFile *cf, u2 idx) {
-    CONSTANT_Methodref_info  *mref = cf->constant_pool[idx].methodRef_info;
-    CONSTANT_NameAndType_info *nat = cf->constant_pool[mref->name_and_type_index].nameAndType_info;
+    const CONSTANT_Methodref_info  *mref = cf->constant_pool[idx].methodRef_info;
+    const CONSTANT_NameAndType_info *nat = cf->constant_pool[mref->name_and_type_index].nameAndType_info;
 
     char *method_name = getUtf8(cf->constant_pool, nat->name_index);
     char *descriptor  = getUtf8(cf->constant_pool, nat->descriptor_index);
@@ -188,8 +188,8 @@ void execInvokevirtual(Frame *caller, ClassFile *cf, u2 idx) {
 
 
 void execInvokespecial(Frame *caller, ClassFile *cf, u2 idx) {
-    CONSTANT_Methodref_info  *mref = cf->constant_pool[idx].methodRef_info;
-    CONSTANT_NameAndType_info *nat = cf->constant_pool[mref->name_and_type_index].nameAndType_info;
+    const CONSTANT_Methodref_info  *mref = cf->constant_pool[idx].methodRef_info;
+    const CONSTANT_NameAndType_info *nat = cf->constant_pool[mref->name_and_type_index].nameAndType_info;
 
     char *method_name = getUtf8(cf->constant_pool, nat->name_index);
     char *descriptor  = getUtf8(cf->constant_pool, nat->descriptor_index);

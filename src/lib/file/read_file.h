@@ -3,6 +3,6 @@
 #include<stdio.h>
 #include<stdlib.h>
 
-FILE * readFile(char * file_path);
+FILE * readFile(const char * file_path);
 
 #endif
