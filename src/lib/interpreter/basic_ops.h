@@ -16,6 +16,7 @@
 #define TIPO_DOUBLE 3
 #define TIPO_REF    4
 #define TIPO_ARRAY  5
+#define TIPO_OBJECT 6
 
 /* atype para newarray (JVM spec §6.5 newarray) */
 #define T_BOOLEAN 4

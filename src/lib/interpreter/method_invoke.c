@@ -178,10 +178,21 @@ void execInvokespecial(Frame *caller, ClassFile *cf, u2 idx) {
     char *method_name = getUtf8(cf->constant_pool, nat->name_index);
     char *descriptor  = getUtf8(cf->constant_pool, nat->descriptor_index);
 
-    /* <init> requer modelo de objetos (Fase 5) — descarta e segue */
     if (method_name && strcmp(method_name, "<init>") == 0) {
+        method_info *m = encontraMetodo(cf, "<init>", descriptor);
+        if (m) {
+            Code_attribute *ca = encontraCodeAttr(m, cf->constant_pool);
+            if (ca) {
+                /* executa o construtor com objectref em locais[0] */
+                executa_chamada(caller, cf, ca, descriptor, 1 /* instance */);
+                free(method_name);
+                free(descriptor);
+                return;
+            }
+        }
+        /* <init> nao encontrado: descarta args + objectref */
         int n_args = conta_args(descriptor);
-        for (int i = 0; i < n_args + 1; i++) caller->topo--; /* args + objectref */
+        for (int i = 0; i < n_args + 1; i++) caller->topo--;
         free(method_name);
         free(descriptor);
         return;

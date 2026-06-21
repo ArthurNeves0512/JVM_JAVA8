@@ -1,6 +1,7 @@
 #include "interpreter.h"
 #include "method_invoke.h"
 #include "basic_ops.h"
+#include "heap.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -24,6 +25,7 @@ void executaJVM(ClassFile *cf) {
         executaFrame(f, cf);
         liberaFrame(f);
         liberaArrays();
+        liberaHeap();
         return;
     }
 

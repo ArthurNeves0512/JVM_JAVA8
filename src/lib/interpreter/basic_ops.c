@@ -1,4 +1,5 @@
 #include "basic_ops.h"
+#include "heap.h"
 #include "method_invoke.h"
 #include "attribute.h"
 #include "consts.h"
@@ -361,6 +362,62 @@ void executaFrame(Frame *f, ClassFile *cf) {
             u1      index = READ_U1(f);
             int8_t  cst   = (int8_t)READ_U1(f);
             f->locais[index].inteiro += (int32_t)cst;
+            break;
+        }
+
+        /* ── manipulação de pilha ─────────────────────── */
+        case 0x57:                           /* pop */
+            f->topo--;
+            break;
+
+        case 0x59: {                         /* dup */
+            f->pilha[f->topo + 1] = f->pilha[f->topo];
+            f->topo++;
+            break;
+        }
+
+        /* ── objetos ───────────────────────────────────── */
+        case 0xBB: {                         /* new */
+            u2 idx = read_u2(f);
+            if (!cf) { PUSH_INT(f, 0); break; }
+            char *cname = getUtf8(cf->constant_pool,
+                cf->constant_pool[idx].constant_class_info->name_index);
+            HeapObject *obj = alocaObjeto(cf, cname);
+            free(cname);
+            f->pilha[++f->topo].longo = (int64_t)(uintptr_t)obj;
+            f->pilha[f->topo].tipo    = TIPO_OBJECT;
+            break;
+        }
+
+        case 0xB4: {                         /* getfield */
+            u2 idx = read_u2(f);
+            if (!cf) { PUSH_INT(f, 0); break; }
+            HeapObject *obj = (HeapObject *)(uintptr_t)f->pilha[f->topo--].longo;
+            CONSTANT_Fieldref_info    *fref = cf->constant_pool[idx].fieldRef_info;
+            CONSTANT_NameAndType_info *nat  =
+                cf->constant_pool[fref->name_and_type_index].nameAndType_info;
+            char *fname = getUtf8(cf->constant_pool, nat->name_index);
+            int   fi    = buscaCampo(obj, fname);
+            free(fname);
+            if (fi >= 0)
+                f->pilha[++f->topo] = obj->fields[fi];
+            else
+                PUSH_INT(f, 0);
+            break;
+        }
+
+        case 0xB5: {                         /* putfield */
+            u2 idx = read_u2(f);
+            if (!cf) { f->topo -= 2; break; }
+            Slot        val  = f->pilha[f->topo--];
+            HeapObject *obj  = (HeapObject *)(uintptr_t)f->pilha[f->topo--].longo;
+            CONSTANT_Fieldref_info    *fref = cf->constant_pool[idx].fieldRef_info;
+            CONSTANT_NameAndType_info *nat  =
+                cf->constant_pool[fref->name_and_type_index].nameAndType_info;
+            char *fname = getUtf8(cf->constant_pool, nat->name_index);
+            int   fi    = buscaCampo(obj, fname);
+            free(fname);
+            if (fi >= 0) obj->fields[fi] = val;
             break;
         }
 
