@@ -11,26 +11,62 @@
 static HeapObject *heap_pool[MAX_OBJECTS];
 static int         heap_count = 0;
 
+static u2 conta_campos_total(ClassFile *cf) {
+    u2 total = 0;
+    while (cf) { total += cf->fields_count; cf = cf->super_class_file; }
+    return total;
+}
 
-HeapObject *alocaObjeto(ClassFile *cf, const char *class_name) {
+
+HeapObject *alocaObjeto(ClassFile *cf, const char *class_name)
+{
     HeapObject *obj = malloc(sizeof(HeapObject));
-    if (!obj) { fprintf(stderr, "alocaObjeto: sem memoria\n"); exit(1); }
+
+    if (!obj)
+    {
+        fprintf(stderr, "alocaObjeto: sem memoria\n");
+        exit(1);
+    }
 
     obj->class_name = strdup(class_name);
-    obj->num_fields = cf ? cf->fields_count : 0;
+    obj->class_file = cf;
 
-    if (obj->num_fields > 0) {
-        obj->field_names = malloc(obj->num_fields * sizeof(char *));
-        obj->fields      = calloc(obj->num_fields, sizeof(Slot));
-        for (u2 i = 0; i < obj->num_fields; i++) {
-            obj->field_names[i] = getUtf8(cf->constant_pool,
-                                          cf->fields[i].name_index);
-            obj->fields[i].tipo    = TIPO_INT;
-            obj->fields[i].inteiro = 0;
+    obj->num_fields =
+        cf ? conta_campos_total(cf) : 0;
+
+    if (obj->num_fields > 0)
+    {
+        obj->field_names =
+            malloc(obj->num_fields * sizeof(char *));
+
+        obj->fields =
+            calloc(obj->num_fields, sizeof(Slot));
+
+        u2 idx = 0;
+
+        ClassFile *cur = cf;
+
+        while (cur)
+        {
+            for (u2 i = 0; i < cur->fields_count; i++, idx++)
+            {
+                obj->field_names[idx] =
+                    getUtf8(
+                        cur->constant_pool,
+                        cur->fields[i].name_index
+                    );
+
+                obj->fields[idx].tipo = TIPO_INT;
+                obj->fields[idx].inteiro = 0;
+            }
+
+            cur = cur->super_class_file;
         }
-    } else {
+    }
+    else
+    {
         obj->field_names = NULL;
-        obj->fields      = NULL;
+        obj->fields = NULL;
     }
 
     obj->native_data = NULL;

@@ -1,0 +1,173 @@
+=== General Information ===
+Magic Number: 0XCAFEBABE
+Minor Version: 0
+Major Version: 55
+Constant Pool Count: 31
+Access flags (0x0021): ACC_PUBLIC | ACC_SUPER
+This Class: 5
+Super Class: 6
+Interfaces Count: 0
+Fields Count: 0
+Methods Count: 2
+Attributes Count: 1
+
+=== Constant Pool ===
+[1] Tag: 10 <Methodref>
+	class_index:6
+	name_and_type_index:17
+	java/lang/Object.<init>:()V
+[2] Tag: 9 <Fieldref>
+	class_index:18
+	name_and_type_index:19
+	java/lang/System.out:Ljava/io/PrintStream;
+[3] Tag: 8 <String>
+	string_index:20
+	respirando
+[4] Tag: 10 <Methodref>
+	class_index:21
+	name_and_type_index:22
+	java/io/PrintStream.println:(Ljava/lang/String;)V
+[5] Tag: 7 <Class>
+	name_index in constant_pool_table:23
+	Animal
+[6] Tag: 7 <Class>
+	name_index in constant_pool_table:24
+	java/lang/Object
+[7] Tag: 1 <Utf8>
+	length of array in bytes: 6
+	<init>
+[8] Tag: 1 <Utf8>
+	length of array in bytes: 3
+	()V
+[9] Tag: 1 <Utf8>
+	length of array in bytes: 4
+	Code
+[10] Tag: 1 <Utf8>
+	length of array in bytes: 15
+	LineNumberTable
+[11] Tag: 1 <Utf8>
+	length of array in bytes: 18
+	LocalVariableTable
+[12] Tag: 1 <Utf8>
+	length of array in bytes: 4
+	this
+[13] Tag: 1 <Utf8>
+	length of array in bytes: 8
+	LAnimal;
+[14] Tag: 1 <Utf8>
+	length of array in bytes: 8
+	respirar
+[15] Tag: 1 <Utf8>
+	length of array in bytes: 10
+	SourceFile
+[16] Tag: 1 <Utf8>
+	length of array in bytes: 11
+	Animal.java
+[17] Tag: 12 <NameAndType>
+	name_index:7
+	descriptor_index:8
+	<init>:()V
+[18] Tag: 7 <Class>
+	name_index in constant_pool_table:25
+	java/lang/System
+[19] Tag: 12 <NameAndType>
+	name_index:26
+	descriptor_index:27
+	out:Ljava/io/PrintStream;
+[20] Tag: 1 <Utf8>
+	length of array in bytes: 10
+	respirando
+[21] Tag: 7 <Class>
+	name_index in constant_pool_table:28
+	java/io/PrintStream
+[22] Tag: 12 <NameAndType>
+	name_index:29
+	descriptor_index:30
+	println:(Ljava/lang/String;)V
+[23] Tag: 1 <Utf8>
+	length of array in bytes: 6
+	Animal
+[24] Tag: 1 <Utf8>
+	length of array in bytes: 16
+	java/lang/Object
+[25] Tag: 1 <Utf8>
+	length of array in bytes: 16
+	java/lang/System
+[26] Tag: 1 <Utf8>
+	length of array in bytes: 3
+	out
+[27] Tag: 1 <Utf8>
+	length of array in bytes: 21
+	Ljava/io/PrintStream;
+[28] Tag: 1 <Utf8>
+	length of array in bytes: 19
+	java/io/PrintStream
+[29] Tag: 1 <Utf8>
+	length of array in bytes: 7
+	println
+[30] Tag: 1 <Utf8>
+	length of array in bytes: 21
+	(Ljava/lang/String;)V
+
+This class index at constant_pool table 5
+This is the super class index at constant_pool table 6
+
+
+=== Interfaces ===
+interfaces_count: 0
+
+=== Fields ===
+fields_count: 0
+=== Methods ===
+Total methods: 2
+
+[Method 0]
+  Access flags: Access flags (0x0001): ACC_PUBLIC
+  Name index: 7 (<init>)
+  Descriptor index: 8 (()V)
+  Attributes count: 1
+    [Attribute 0] Code
+=== Code Attribute ===
+  max_stack:  1
+  max_locals: 1
+  code_length: 5
+  Bytecode (hex):
+         0: aload_0         
+       1: invokespecial   #1    // java/lang/Object.<init>:()V
+       4: return          
+
+  exception_table_length: 0
+  sub-attributes_count: 2
+  [0]   LineNumberTable  length=1
+    start_pc=0     line=1
+  [1]   LocalVariableTable  length=1
+    slot=0   start=0     len=5     this  LAnimal;
+
+[Method 1]
+  Access flags: Access flags (0x0001): ACC_PUBLIC
+  Name index: 14 (respirar)
+  Descriptor index: 8 (()V)
+  Attributes count: 1
+    [Attribute 0] Code
+=== Code Attribute ===
+  max_stack:  2
+  max_locals: 1
+  code_length: 9
+  Bytecode (hex):
+         0: getstatic       #2    // java/lang/System.out:Ljava/io/PrintStream;
+       3: ldc             #3    // "respirando"
+       5: invokevirtual   #4    // java/io/PrintStream.println:(Ljava/lang/String;)V
+       8: return          
+
+  exception_table_length: 0
+  sub-attributes_count: 2
+  [0]   LineNumberTable  length=2
+    start_pc=0     line=4
+    start_pc=8     line=5
+  [1]   LocalVariableTable  length=1
+    slot=0   start=0     len=9     this  LAnimal;
+=== Class Attributes ===
+attributes_count: 1
+  [Attribute 0] SourceFile
+=== SourceFile Attribute ===
+  sourcefile: Animal.java  (#16)

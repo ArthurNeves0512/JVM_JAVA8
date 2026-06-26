@@ -357,50 +357,112 @@ void executaFrame(Frame *f, ClassFile *cf) {
             break;
         }
 
-        /* ── objetos ───────────────────────────────────── */
+                /* ── objetos ───────────────────────────────────── */
         case 0xBB: {                         /* new */
             u2 idx = read_u2(f);
-            if (!cf) { PUSH_INT(f, 0); break; }
-            char *cname = getUtf8(cf->constant_pool,
-                cf->constant_pool[idx].constant_class_info->name_index);
-            /* Classes nativas não têm campos definidos no ClassFile do usuário */
-            ClassFile *obj_cf = (cname && isNativeClass(cname)) ? NULL : cf;
+
+            if (!cf) {
+                PUSH_INT(f, 0);
+                break;
+            }
+
+            /* nome da classe a ser instanciada */
+            char *cname = getUtf8(
+                cf->constant_pool,
+                cf->constant_pool[idx].constant_class_info->name_index
+            );
+
+            /* carrega a classe real do objeto */
+            ClassFile *obj_cf = NULL;
+
+            if (cname && !isNativeClass(cname)) {
+                char filename[256];
+                snprintf(filename, sizeof(filename), "%s.class", cname);
+                obj_cf = loadClassFile(filename);
+            }
+
+            /* cria o objeto */
             HeapObject *obj = alocaObjeto(obj_cf, cname);
+
+            /* empilha referência */
+            f->topo++;
+            f->pilha[f->topo].tipo = TIPO_OBJECT;
+            f->pilha[f->topo].ref  = obj;
+
             free(cname);
-            f->pilha[++f->topo].longo = (int64_t)(uintptr_t)obj;
-            f->pilha[f->topo].tipo    = TIPO_OBJECT;
+
             break;
         }
 
         case 0xB4: {                         /* getfield */
             u2 idx = read_u2(f);
-            if (!cf) { PUSH_INT(f, 0); break; }
-            HeapObject *obj = (HeapObject *)(uintptr_t)f->pilha[f->topo--].longo;
-            const CONSTANT_Fieldref_info    *fref = cf->constant_pool[idx].fieldRef_info;
-            const CONSTANT_NameAndType_info *nat  =
-                cf->constant_pool[fref->name_and_type_index].nameAndType_info;
-            char *fname = getUtf8(cf->constant_pool, nat->name_index);
-            int   fi    = buscaCampo(obj, fname);
+
+            if (!cf) {
+                PUSH_INT(f, 0);
+                break;
+            }
+
+            HeapObject *obj =
+                (HeapObject *)f->pilha[f->topo--].ref;
+
+            const CONSTANT_Fieldref_info *fref =
+                cf->constant_pool[idx].fieldRef_info;
+
+            const CONSTANT_NameAndType_info *nat =
+                cf->constant_pool[fref->name_and_type_index]
+                    .nameAndType_info;
+
+            char *fname =
+                getUtf8(cf->constant_pool,
+                        nat->name_index);
+
+            int fi =
+                buscaCampo(obj, fname);
+
             free(fname);
+
             if (fi >= 0)
-                f->pilha[++f->topo] = obj->fields[fi];
+                f->pilha[++f->topo] =
+                    obj->fields[fi];
             else
                 PUSH_INT(f, 0);
+
             break;
         }
 
         case 0xB5: {                         /* putfield */
             u2 idx = read_u2(f);
-            if (!cf) { f->topo -= 2; break; }
-            Slot        val  = f->pilha[f->topo--];
-            HeapObject *obj  = (HeapObject *)(uintptr_t)f->pilha[f->topo--].longo;
-            const CONSTANT_Fieldref_info    *fref = cf->constant_pool[idx].fieldRef_info;
-            const CONSTANT_NameAndType_info *nat  =
-                cf->constant_pool[fref->name_and_type_index].nameAndType_info;
-            char *fname = getUtf8(cf->constant_pool, nat->name_index);
-            int   fi    = buscaCampo(obj, fname);
+
+            if (!cf) {
+                f->topo -= 2;
+                break;
+            }
+
+            Slot val =
+                f->pilha[f->topo--];
+
+            HeapObject *obj =
+                (HeapObject *)f->pilha[f->topo--].ref;
+
+            const CONSTANT_Fieldref_info *fref =
+                cf->constant_pool[idx].fieldRef_info;
+
+            const CONSTANT_NameAndType_info *nat =
+                cf->constant_pool[fref->name_and_type_index]
+                    .nameAndType_info;
+
+            char *fname =
+                getUtf8(cf->constant_pool,
+                        nat->name_index);
+
+            int fi =
+                buscaCampo(obj, fname);
+
             free(fname);
-            if (fi >= 0) obj->fields[fi] = val;
+
+            if (fi >= 0)
+                obj->fields[fi] = val;
+
             break;
         }
 

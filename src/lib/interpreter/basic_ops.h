@@ -45,6 +45,7 @@ typedef struct {
    int64_t longo;
    double  duplo;
    int     tipo;
+   void  *ref;
 } Slot;
 
 

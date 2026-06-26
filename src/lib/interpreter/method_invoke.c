@@ -1,6 +1,7 @@
 #include "method_invoke.h"
 #include "native_methods.h"
 #include "attribute.h"
+#include "interpreter/heap.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -49,18 +50,66 @@ Code_attribute *encontraCodeAttr(method_info *m, cp_info *cp) {
     return NULL;
 }
 
-method_info *encontraMetodo(ClassFile *cf, const char *name, const char *desc) {
-    for (u2 i = 0; i < cf->methods_count; i++) {
-        char *mname = getUtf8(cf->constant_pool, cf->methods[i].name_index);
-        char *mdesc = getUtf8(cf->constant_pool, cf->methods[i].descriptor_index);
-        int   match = mname && mdesc
-                      && strcmp(mname, name) == 0
-                      && strcmp(mdesc, desc) == 0;
+method_info *buscaMetodoClasse(ClassFile *cf,
+                               const char *name,
+                               const char *desc,
+                               ClassFile **owner)
+{
+    if (!cf)
+        return NULL;
+
+    printf("Buscando %s em %s\n",
+           name,
+           getClassName(cf));
+
+    for (u2 i = 0; i < cf->methods_count; i++)
+    {
+        char *mname =
+            getUtf8(cf->constant_pool,
+                    cf->methods[i].name_index);
+
+        char *mdesc =
+            getUtf8(cf->constant_pool,
+                    cf->methods[i].descriptor_index);
+
+        int match =
+            mname &&
+            mdesc &&
+            strcmp(mname, name) == 0 &&
+            strcmp(mdesc, desc) == 0;
+
         free(mname);
         free(mdesc);
-        if (match) return &cf->methods[i];
+
+        if (match)
+        {
+            if (owner)
+                *owner = cf;
+
+            return &cf->methods[i];
+        }
     }
-    return NULL;
+
+    return buscaMetodoClasse(
+        cf->super_class_file,
+        name,
+        desc,
+        owner
+    );
+}
+
+method_info *encontraMetodo(ClassFile *cf,
+                            const char *name,
+                            const char *desc)
+{
+    ClassFile *owner = NULL;
+
+    return buscaMetodoClasse(
+        cf,
+        name,
+        desc,
+        &owner
+    );
 }
 
 
@@ -145,42 +194,127 @@ void execInvokestatic(Frame *caller, ClassFile *cf, u2 idx) {
 }
 
 
-void execInvokevirtual(Frame *caller, ClassFile *cf, u2 idx) {
-    const CONSTANT_Methodref_info  *mref = cf->constant_pool[idx].methodRef_info;
-    const CONSTANT_NameAndType_info *nat = cf->constant_pool[mref->name_and_type_index].nameAndType_info;
+void execInvokevirtual(Frame *caller,
+                       ClassFile *cf,
+                       u2 idx)
+{
+    const CONSTANT_Methodref_info *mref =
+        cf->constant_pool[idx].methodRef_info;
 
-    char *method_name = getUtf8(cf->constant_pool, nat->name_index);
-    char *descriptor  = getUtf8(cf->constant_pool, nat->descriptor_index);
+    const CONSTANT_NameAndType_info *nat =
+        cf->constant_pool[mref->name_and_type_index]
+            .nameAndType_info;
 
-    method_info *m = encontraMetodo(cf, method_name, descriptor);
-    if (!m) {
-        char *class_name = getUtf8(cf->constant_pool,
-            cf->constant_pool[mref->class_index].constant_class_info->name_index);
-        int n_args = conta_args(descriptor);
-        NativeFn fn = lookupNative(class_name ? class_name : "",
-                                   method_name, descriptor);
-        if (fn) {
+    char *method_name =
+        getUtf8(cf->constant_pool,
+                nat->name_index);
+
+    char *descriptor =
+        getUtf8(cf->constant_pool,
+                nat->descriptor_index);
+
+    int n_args = conta_args(descriptor);
+
+    HeapObject *obj = NULL;
+
+    int obj_pos = caller->topo - n_args;
+
+    if (obj_pos >= 0 &&
+        caller->pilha[obj_pos].tipo == TIPO_OBJECT)
+    {
+        obj =
+            (HeapObject *)caller->pilha[obj_pos].ref;
+    }
+
+    ClassFile *target_cf = cf;
+
+    if (obj && obj->class_file)
+        target_cf = obj->class_file;
+
+    printf("Classe alvo = %s\n", getClassName(target_cf));
+
+    if (target_cf->super_class_file)
+    {
+        printf("Superclasse = %s\n",
+            getClassName(target_cf->super_class_file));
+    }
+    else
+    {
+        printf("Superclasse = NULL\n");
+    }
+    ClassFile *owner = NULL;
+    
+    method_info *m =
+        buscaMetodoClasse(
+            target_cf,
+            method_name,
+            descriptor,
+            &owner
+        );
+
+    if (!m)
+    {
+        char *class_name =
+            getUtf8(
+                cf->constant_pool,
+                cf->constant_pool[mref->class_index]
+                    .constant_class_info->name_index
+            );
+
+        NativeFn fn =
+            lookupNative(
+                class_name ? class_name : "",
+                method_name,
+                descriptor
+            );
+
+        if (fn)
+        {
             fn(caller, n_args);
+
             free(class_name);
             free(method_name);
             free(descriptor);
+
             return;
         }
-        fprintf(stderr, "invokevirtual: metodo '%s.%s%s' nao encontrado\n",
-                class_name ? class_name : "?", method_name, descriptor);
+
+        fprintf(stderr,
+            "invokevirtual: metodo '%s.%s%s' nao encontrado\n",
+            class_name ? class_name : "?",
+            method_name,
+            descriptor);
+
         free(class_name);
-        for (int i = 0; i < n_args + 1; i++) caller->topo--;
         free(method_name);
         free(descriptor);
+
         return;
     }
 
-    Code_attribute *ca = encontraCodeAttr(m, cf->constant_pool);
+    Code_attribute *ca =
+        encontraCodeAttr(
+            m,
+            owner->constant_pool
+        );
+
     if (ca)
-        executa_chamada(caller, cf, ca, descriptor, 1 /* instance */);
+    {
+        executa_chamada(
+            caller,
+            owner,
+            ca,
+            descriptor,
+            1
+        );
+    }
     else
-        fprintf(stderr, "invokevirtual: '%s%s' sem Code_attribute\n",
-                method_name, descriptor);
+    {
+        fprintf(stderr,
+            "invokevirtual: '%s%s' sem Code_attribute\n",
+            method_name,
+            descriptor);
+    }
 
     free(method_name);
     free(descriptor);
@@ -188,6 +322,10 @@ void execInvokevirtual(Frame *caller, ClassFile *cf, u2 idx) {
 
 
 void execInvokespecial(Frame *caller, ClassFile *cf, u2 idx) {
+    if (idx >= cf->constant_pool_count || !cf->constant_pool) {
+        fprintf(stderr, "ERROR: invalid idx %u (pool_count=%u)\n", idx, cf->constant_pool_count);
+        return;
+    }
     const CONSTANT_Methodref_info  *mref = cf->constant_pool[idx].methodRef_info;
     const CONSTANT_NameAndType_info *nat = cf->constant_pool[mref->name_and_type_index].nameAndType_info;
 
