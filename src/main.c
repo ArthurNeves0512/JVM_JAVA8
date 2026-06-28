@@ -31,6 +31,7 @@ int main(int argc, char *argv[]) {
         return EXIT_FAILURE;
     }
 
+    setClassDir(args.class_path);
     FILE *file_ptr = readFile((char *)args.class_path);
 
     ClassFile *class_file_ptr = allocClassFile();

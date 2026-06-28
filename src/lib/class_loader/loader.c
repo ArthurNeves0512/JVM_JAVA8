@@ -1,6 +1,24 @@
 #include "loader.h"
 #include <stdlib.h>
 
+/* Diretório base para busca de .class dependentes */
+static char g_class_dir[512] = "";
+
+void setClassDir(const char *path) {
+    if (!path) { g_class_dir[0] = '\0'; return; }
+    const char *last_sep = NULL;
+    for (const char *p = path; *p; p++)
+        if (*p == '/' || *p == '\\') last_sep = p;
+    if (last_sep) {
+        size_t len = (size_t)(last_sep - path + 1);
+        if (len >= sizeof(g_class_dir)) len = sizeof(g_class_dir) - 1;
+        memcpy(g_class_dir, path, len);
+        g_class_dir[len] = '\0';
+    } else {
+        g_class_dir[0] = '\0';
+    }
+}
+
 u4 readCafeBabe(FILE *ptr_file) {
     u4 magic = u4Read(ptr_file);
     if (magic != 0xCAFEBABE) {
@@ -233,10 +251,18 @@ ClassFile *loadClassFile(const char *filename)
     if(isNativeClass(filename))
         return NULL;
 
-    FILE *fp = fopen(filename, "rb");
+    char resolved[768];
+    if (g_class_dir[0] != '\0')
+        snprintf(resolved, sizeof(resolved), "%s%s", g_class_dir, filename);
+    else
+        snprintf(resolved, sizeof(resolved), "%s", filename);
+
+    FILE *fp = fopen(resolved, "rb");
+    if (!fp && g_class_dir[0] != '\0')
+        fp = fopen(filename, "rb"); /* fallback sem prefixo */
 
     if (!fp) {
-        printf("Nao foi possivel abrir %s\n", filename);
+        printf("Nao foi possivel abrir %s\n", resolved);
         return NULL;
     }
 
@@ -312,15 +338,24 @@ ClassFile *loadSuperClass(ClassFile *cf)
         return NULL;
     }
     char filename[256];
-    sprintf(filename, "%s.class", superName);
+    snprintf(filename, sizeof(filename), "%s.class", superName);
 
-    FILE *fp = fopen(filename, "rb");
+    char resolved[768];
+    if (g_class_dir[0] != '\0')
+        snprintf(resolved, sizeof(resolved), "%s%s", g_class_dir, filename);
+    else
+        snprintf(resolved, sizeof(resolved), "%s", filename);
+
+    FILE *fp = fopen(resolved, "rb");
+    if (!fp && g_class_dir[0] != '\0')
+        fp = fopen(filename, "rb");
 
     if (!fp)
     {
         fprintf(stderr,
                 "Nao foi possivel abrir %s\n",
-                filename);
+                resolved);
+        free(superName);
         return NULL;
     }
 

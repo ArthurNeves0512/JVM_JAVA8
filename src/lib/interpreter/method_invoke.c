@@ -58,10 +58,6 @@ method_info *buscaMetodoClasse(ClassFile *cf,
     if (!cf)
         return NULL;
 
-    printf("Buscando %s em %s\n",
-           name,
-           getClassName(cf));
-
     for (u2 i = 0; i < cf->methods_count; i++)
     {
         char *mname =
@@ -231,17 +227,6 @@ void execInvokevirtual(Frame *caller,
     if (obj && obj->class_file)
         target_cf = obj->class_file;
 
-    printf("Classe alvo = %s\n", getClassName(target_cf));
-
-    if (target_cf->super_class_file)
-    {
-        printf("Superclasse = %s\n",
-            getClassName(target_cf->super_class_file));
-    }
-    else
-    {
-        printf("Superclasse = NULL\n");
-    }
     ClassFile *owner = NULL;
     
     method_info *m =

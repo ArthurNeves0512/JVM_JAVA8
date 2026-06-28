@@ -19,6 +19,7 @@ void classFilesSetup(ClassFile *cf, FILE *fp);
 void readClassFileAttributes(ClassFile *cf, FILE *fp);
 char *getClassName(ClassFile *cf);
 char *getSuperClassName(ClassFile *cf);
+void setClassDir(const char *path);
 ClassFile *loadClassFile(const char *filename);
 ClassFile *loadSuperClass(ClassFile *cf);
 

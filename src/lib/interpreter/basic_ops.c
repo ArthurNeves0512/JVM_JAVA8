@@ -381,6 +381,16 @@ void executaFrame(Frame *f, ClassFile *cf) {
                 obj_cf = loadClassFile(filename);
             }
 
+            /* fallback: usa cf se o arquivo não existe no disco e cf é a própria
+             * classe (this_class == 0 em ClassFiles sintéticos de teste, ou mesmo
+             * nome de classe) */
+            if (obj_cf == NULL) {
+                char *self_name = getClassName(cf);
+                if (self_name == NULL ||
+                    (cname && strcmp(self_name, cname) == 0))
+                    obj_cf = cf;
+            }
+
             /* cria o objeto */
             HeapObject *obj = alocaObjeto(obj_cf, cname);
 
