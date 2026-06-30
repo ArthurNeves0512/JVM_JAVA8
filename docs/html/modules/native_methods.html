@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>native_methods.c — JVM Java 8 em C</title>
+<link rel="stylesheet" href="../style.css">
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+  mermaid.initialize({ startOnLoad: true, theme: 'default' });
+</script>
+</head>
+<body><nav id="sidebar">
+  <div id="sidebar-header">
+    <a href="../index.html"><div class="logo">JVM</div> JVM Java 8</a>
+  </div>
+  <div id="sidebar-search">
+    <input type="text" placeholder="Filtrar..." id="sidebar-filter">
+  </div>
+  <nav id="sidebar-nav">
+    <div class="nav-section">Visão Geral</div>
+    <a href="../index.html" class="nav-item">Início</a>
+    <a href="../diagram.html" class="nav-item">Diagrama Geral</a>
+    <a href="../structs.html" class="nav-item">Estruturas de Dados</a>
+    <div class="nav-section">Módulos</div>
+    <a href="main.html" class="nav-item ">main.c <span class="tag tag-module">main</span></a>
+    <a href="read_file.html" class="nav-item ">read_file.c <span class="tag tag-module">file</span></a>
+    <a href="dot_class.html" class="nav-item ">dot_class.c <span class="tag tag-module">types</span></a>
+    <a href="attribute.html" class="nav-item ">attribute.c <span class="tag tag-module">types</span></a>
+    <a href="opcodes.html" class="nav-item ">opcodes.c <span class="tag tag-module">types</span></a>
+    <a href="loader.html" class="nav-item ">loader.c <span class="tag tag-module">class_loader</span></a>
+    <a href="fields_interfaces.html" class="nav-item ">fields_interfaces.c <span class="tag tag-module">class_loader</span></a>
+    <a href="methods.html" class="nav-item ">methods.c <span class="tag tag-module">class_loader</span></a>
+    <a href="interpreter.html" class="nav-item ">interpreter.c <span class="tag tag-module">interpreter</span></a>
+    <a href="basic_ops.html" class="nav-item ">basic_ops.c <span class="tag tag-module">interpreter</span></a>
+    <a href="jvm_stack.html" class="nav-item ">jvm_stack.c <span class="tag tag-module">interpreter</span></a>
+    <a href="heap.html" class="nav-item ">heap.c <span class="tag tag-module">interpreter</span></a>
+    <a href="method_invoke.html" class="nav-item ">method_invoke.c <span class="tag tag-module">interpreter</span></a>
+    <a href="native_methods.html" class="nav-item active">native_methods.c <span class="tag tag-module">interpreter</span></a>
+    <a href="printer.html" class="nav-item ">printer.c <span class="tag tag-module">printer</span></a>
+    <a href="args.html" class="nav-item ">args.c <span class="tag tag-module">utils</span></a>
+  </nav>
+</nav>
+<div id="main">
+  <header class="page-header">
+    <div class="breadcrumb"><a href="../index.html">JVM</a> <span>›</span> Módulos</div>
+    <h1>native_methods.c <span class="badge badge-module">native_methods</span></h1>
+    <div class="subtitle">Registro e despacho de métodos nativos Java simulados em C.</div>
+  </header>
+  <div class="page-content">
+    <div class="section">
+      <div class="section-title">Papel no projeto</div>
+      <p class="text-muted">Implementa uma tabela de métodos nativos (max 128 entradas) que mapeia triplos (classe, método, descritor) para funções C. Cada função nativa desempilha os argumentos do Frame chamador e empilha o valor de retorno quando aplicável. O StringBuilder usa o campo native_data do HeapObject para acumular a string.</p>
+    </div>
+    <div class="section">
+      <div class="section-title">Funções</div>
+      <div class="fn-card" id="fn-initNativeMethods">
+  <div class="fn-card-header">
+    <span class="fn-name">initNativeMethods()</span>
+    <span class="fn-line">linha 397</span>
+  </div>
+  <div class="fn-signature"><code>void initNativeMethods(void)</code></div>
+  <div class="fn-body">
+    <p class="fn-summary">Registra todos os métodos nativos suportados na tabela estática interna. Cobre: PrintStream.print/println (int, String, boolean, char, long, float, double, Object), StringBuilder.&lt;init&gt;/append (todos tipos)/toString, String.valueOf (todos tipos), String.length e Object.&lt;init&gt;. Idempotente: ignora chamadas repetidas.</p>
+    
+    <div class="return-row"><strong>Retorno:</strong> void</div>
+    <div class="label mt-8">Chama</div><div class="calls-list"><a href="native_methods.html#fn-reg" class="call-link">reg()</a></div>
+  </div>
+</div><div class="fn-card" id="fn-lookupNative">
+  <div class="fn-card-header">
+    <span class="fn-name">lookupNative()</span>
+    <span class="fn-line">linha 31</span>
+  </div>
+  <div class="fn-signature"><code>NativeFn lookupNative(const char *class_name, const char *method_name, const char *descriptor)</code></div>
+  <div class="fn-body">
+    <p class="fn-summary">Busca linearmente na tabela de métodos nativos e retorna o handler NativeFn para o triplo (classe, método, descritor). Retorna NULL se não encontrado.</p>
+    <div class="label mt-8">Parâmetros</div>
+<table class="param-table">
+  <tr><th>Nome</th><th>Tipo</th><th>Descrição</th></tr>
+  <tr><td class="param-name">class_name</td><td><code>const char *</code></td><td class="param-desc">Nome da classe JVM, ex: 'java/io/PrintStream'</td></tr>
+<tr><td class="param-name">method_name</td><td><code>const char *</code></td><td class="param-desc">Nome do método</td></tr>
+<tr><td class="param-name">descriptor</td><td><code>const char *</code></td><td class="param-desc">Descritor do método</td></tr>
+
+</table>
+    <div class="return-row"><strong>Retorno:</strong> NativeFn (ponteiro de função) ou NULL</div>
+    
+  </div>
+</div><div class="fn-card" id="fn-isNativeClass">
+  <div class="fn-card-header">
+    <span class="fn-name">isNativeClass()</span>
+    <span class="fn-line">linha 51</span>
+  </div>
+  <div class="fn-signature"><code>int isNativeClass(const char *class_name)</code></div>
+  <div class="fn-body">
+    <p class="fn-summary">Verifica se um nome de classe pertence ao conjunto de classes tratadas nativamente: java/lang/Object, java/lang/StringBuilder, java/lang/String, java/io/PrintStream. Usado pelo opcode new para não tentar carregar ClassFiles inexistentes.</p>
+    <div class="label mt-8">Parâmetros</div>
+<table class="param-table">
+  <tr><th>Nome</th><th>Tipo</th><th>Descrição</th></tr>
+  <tr><td class="param-name">class_name</td><td><code>const char *</code></td><td class="param-desc">Nome da classe a verificar</td></tr>
+
+</table>
+    <div class="return-row"><strong>Retorno:</strong> 1 se for classe nativa, 0 caso contrário</div>
+    
+  </div>
+</div><div class="fn-card" id="fn-reg">
+  <div class="fn-card-header">
+    <span class="fn-name">reg [static]()</span>
+    <span class="fn-line">linha 22</span>
+  </div>
+  <div class="fn-signature"><code>static void reg(const char *cn, const char *mn, const char *desc, NativeFn fn)</code></div>
+  <div class="fn-body">
+    <p class="fn-summary">Registra um método nativo na tabela estática. Chamada apenas por initNativeMethods. Ignora silenciosamente se a tabela atingir MAX_NATIVES (128).</p>
+    <div class="label mt-8">Parâmetros</div>
+<table class="param-table">
+  <tr><th>Nome</th><th>Tipo</th><th>Descrição</th></tr>
+  <tr><td class="param-name">cn</td><td><code>const char *</code></td><td class="param-desc">Nome da classe</td></tr>
+<tr><td class="param-name">mn</td><td><code>const char *</code></td><td class="param-desc">Nome do método</td></tr>
+<tr><td class="param-name">desc</td><td><code>const char *</code></td><td class="param-desc">Descritor do método</td></tr>
+<tr><td class="param-name">fn</td><td><code>NativeFn</code></td><td class="param-desc">Função C que implementa o método</td></tr>
+
+</table>
+    <div class="return-row"><strong>Retorno:</strong> void</div>
+    
+  </div>
+</div><div class="section">
+  <div class="section-title">Métodos nativos registrados</div>
+  <table class="param-table">
+    <tr><th>Classe</th><th>Método</th><th>Tipos suportados</th></tr>
+    <tr><td class="param-name">java/io/PrintStream</td><td><code>print</code></td><td class="param-desc">int, String, boolean, char, long, float, double, Object</td></tr>
+    <tr><td class="param-name">java/io/PrintStream</td><td><code>println</code></td><td class="param-desc">void, int, String, boolean, char, long, float, double, Object</td></tr>
+    <tr><td class="param-name">java/lang/StringBuilder</td><td><code>&lt;init&gt;</code></td><td class="param-desc">()</td></tr>
+    <tr><td class="param-name">java/lang/StringBuilder</td><td><code>append</code></td><td class="param-desc">int, long, float, double, boolean, char, String, Object</td></tr>
+    <tr><td class="param-name">java/lang/StringBuilder</td><td><code>toString</code></td><td class="param-desc">() → String</td></tr>
+    <tr><td class="param-name">java/lang/String</td><td><code>valueOf</code></td><td class="param-desc">int, long, float, double, boolean, char (estático)</td></tr>
+    <tr><td class="param-name">java/lang/String</td><td><code>length</code></td><td class="param-desc">() → int</td></tr>
+    <tr><td class="param-name">java/lang/Object</td><td><code>&lt;init&gt;</code></td><td class="param-desc">() — descarta objectref</td></tr>
+  </table>
+</div>
+    </div>
+    <div class="section">
+      <div class="section-title">Diagrama de chamadas</div>
+      <div class="diagram-container">
+        <pre class="mermaid">flowchart TD
+    initNativeMethods["initNativeMethods()"]
+    lookupNative["lookupNative()"]
+    isNativeClass["isNativeClass()"]
+    reg["reg() [static]"]
+
+    native_print_int["native_print_int()"]
+    native_print_string["native_print_string()"]
+    native_println_void["native_println_void()"]
+    native_println_int["native_println_int()"]
+    native_sb_init["native_sb_init()"]
+    native_sb_append_int["native_sb_append_int()"]
+    native_sb_tostring["native_sb_tostring()"]
+    native_string_valueof_int["native_string_valueof_int()"]
+    native_string_length["native_string_length()"]
+    native_object_init["native_object_init()"]
+
+    initNativeMethods --> reg
+    reg -.->|registra| native_print_int
+    reg -.->|registra| native_print_string
+    reg -.->|registra| native_println_void
+    reg -.->|registra| native_println_int
+    reg -.->|registra| native_sb_init
+    reg -.->|registra| native_sb_append_int
+    reg -.->|registra| native_sb_tostring
+    reg -.->|registra| native_string_valueof_int
+    reg -.->|registra| native_string_length
+    reg -.->|registra| native_object_init
+
+    lookupNative -->|retorna NativeFn| native_print_int
+    lookupNative -->|retorna NativeFn| native_sb_tostring
+</pre>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+document.getElementById('sidebar-filter').addEventListener('input', function() {
+  const q = this.value.toLowerCase();
+  document.querySelectorAll('#sidebar-nav .nav-item').forEach(el => {
+    el.style.display = el.textContent.toLowerCase().includes(q) ? '' : 'none';
+  });
+});
+document.querySelectorAll('.fn-card-header').forEach(h => {
+  h.addEventListener('click', () => { h.nextElementSibling?.nextElementSibling?.classList.toggle('open'); });
+});
+</script>
+</body>
+</html>

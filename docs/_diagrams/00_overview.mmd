@@ -1,0 +1,42 @@
+flowchart TD
+    main["main\n(src/main.c)"]
+    utils["utils\nparse_args\nbuild_default_output_path"]
+    file["file\nreadFile"]
+    class_loader["class_loader\nclassFilesSetup\nreadInterfaces / readFields\nreadMethods\nloadClassFile"]
+    types["types\nallocClassFile / freeClassFile\nreadAttribute\ngetUtf8\nprintBytecode"]
+    printer["printer\nprintClassFile\nprintMethods\nprintFields..."]
+    interpreter["interpreter\nexecutaJVM\nexecutaFrame"]
+    heap["heap\nalocaObjeto\nbuscaCampo\nliberaHeap"]
+    jvm_stack["jvm_stack\ncriaJVMStack\nempilhaFrame\ndesempilhaFrame"]
+    method_invoke["method_invoke\nexecInvokestatic\nexecInvokevirtual\nexecInvokespecial"]
+    native_methods["native_methods\ninitNativeMethods\nlookupNative"]
+
+    main --> utils
+    main --> file
+    main --> class_loader
+    main --> printer
+    main --> interpreter
+
+    class_loader --> types
+    class_loader --> file
+
+    printer --> types
+
+    interpreter --> method_invoke
+    interpreter --> heap
+    interpreter --> native_methods
+    interpreter --> types
+
+    method_invoke --> heap
+    method_invoke --> native_methods
+    method_invoke --> class_loader
+    method_invoke --> types
+
+    style main fill:#4a6fa5,color:#fff
+    style interpreter fill:#2d6a4f,color:#fff
+    style class_loader fill:#6b4226,color:#fff
+    style types fill:#555,color:#fff
+    style method_invoke fill:#2d6a4f,color:#fff
+    style heap fill:#2d6a4f,color:#fff
+    style native_methods fill:#2d6a4f,color:#fff
+    style printer fill:#6b4226,color:#fff

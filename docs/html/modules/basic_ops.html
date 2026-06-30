@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>basic_ops.c — JVM Java 8 em C</title>
+<link rel="stylesheet" href="../style.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+  mermaid.initialize({ startOnLoad: true, theme: 'default' });
+</script>
+</head>
+<body>
+<nav id="sidebar">
+  <div id="sidebar-header">
+    <a href="../index.html"><div class="logo">JVM</div> JVM Java 8</a>
+  </div>
+  <div id="sidebar-search">
+    <input type="text" placeholder="Filtrar..." id="sidebar-filter">
+  </div>
+  <nav id="sidebar-nav">
+    <div class="nav-section">Visão Geral</div>
+    <a href="../index.html" class="nav-item">Início</a>
+    <a href="../diagram.html" class="nav-item">Diagrama Geral</a>
+    <a href="../structs.html" class="nav-item">Estruturas de Dados</a>
+    <div class="nav-section">Módulos</div>
+    <a href="main.html" class="nav-item">main.c <span class="tag tag-module">main</span></a>
+    <a href="read_file.html" class="nav-item">read_file.c <span class="tag tag-module">file</span></a>
+    <a href="dot_class.html" class="nav-item">dot_class.c <span class="tag tag-module">types</span></a>
+    <a href="attribute.html" class="nav-item">attribute.c <span class="tag tag-module">types</span></a>
+    <a href="opcodes.html" class="nav-item">opcodes.c <span class="tag tag-module">types</span></a>
+    <a href="loader.html" class="nav-item">loader.c <span class="tag tag-module">class_loader</span></a>
+    <a href="fields_interfaces.html" class="nav-item">fields_interfaces.c <span class="tag tag-module">class_loader</span></a>
+    <a href="methods.html" class="nav-item">methods.c <span class="tag tag-module">class_loader</span></a>
+    <a href="interpreter.html" class="nav-item">interpreter.c <span class="tag tag-module">interpreter</span></a>
+    <a href="basic_ops.html" class="nav-item active">basic_ops.c <span class="tag tag-module">interpreter</span></a>
+    <a href="jvm_stack.html" class="nav-item">jvm_stack.c <span class="tag tag-module">interpreter</span></a>
+    <a href="heap.html" class="nav-item">heap.c <span class="tag tag-module">interpreter</span></a>
+    <a href="method_invoke.html" class="nav-item">method_invoke.c <span class="tag tag-module">interpreter</span></a>
+    <a href="native_methods.html" class="nav-item">native_methods.c <span class="tag tag-module">interpreter</span></a>
+    <a href="printer.html" class="nav-item">printer.c <span class="tag tag-module">printer</span></a>
+    <a href="args.html" class="nav-item">args.c <span class="tag tag-module">utils</span></a>
+  </nav>
+</nav>
+<div id="main">
+  <header class="page-header">
+    <div class="breadcrumb"><a href="../index.html">JVM</a> <span>›</span> Módulos</div>
+    <h1>basic_ops.c <span class="badge badge-module">interpreter</span></h1>
+    <div class="subtitle">Motor de execução de bytecodes — o grande loop de interpretação da JVM</div>
+  </header>
+  <div class="page-content">
+
+    <div class="section">
+      <div class="section-title">Papel no projeto</div>
+      <p>O arquivo mais extenso do projeto (1148 linhas). Implementa <code>executaFrame()</code>, o núcleo do interpretador: um <code>while</code> + <code>switch</code> que despacha todos os opcodes JVM suportados. Cobre aritmética inteira, long, float e double; load/store de variáveis locais e pilha; controle de fluxo (if, goto, tableswitch, lookupswitch); criação de objetos e arrays; acesso a campos de instância e estáticos; e despacho de chamadas de método para <code>execInvokestatic</code>, <code>execInvokevirtual</code>, <code>execInvokespecial</code>. Também gerencia a tabela de campos estáticos e o pool de arrays.</p>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Funções</div>
+
+      <div class="fn-card" id="fn-criaFrame">
+        <div class="fn-card-header"><span class="fn-name">criaFrame()</span><span class="fn-line">linha 132</span></div>
+        <div class="fn-signature"><code>Frame *criaFrame(Code_attribute *ca)</code></div>
+        <div class="fn-body">
+          <p class="fn-summary">Aloca e inicializa um <a href="../structs.html#struct-Frame"><code>Frame</code></a> de execução: pilha de operandos vazia (<code>topo=-1</code>), PC=0, e aponta o código e tamanho para o <code>Code_attribute</code> fornecido.</p>
+          <div class="label mt-8">Parâmetros</div>
+          <table class="param-table">
+            <tr><th>Nome</th><th>Tipo</th><th>Descrição</th></tr>
+            <tr><td class="param-name">ca</td><td><code>Code_attribute *</code></td><td class="param-desc">Atributo Code do método a executar</td></tr>
+          </table>
+          <div class="return-row"><strong>Retorno:</strong> Ponteiro para o Frame criado</div>
+        </div>
+      </div>
+
+      <div class="fn-card" id="fn-liberaFrame">
+        <div class="fn-card-header"><span class="fn-name">liberaFrame()</span><span class="fn-line">linha 146</span></div>
+        <div class="fn-signature"><code>void liberaFrame(Frame *f)</code></div>
+        <div class="fn-body">
+          <p class="fn-summary">Libera a memória do Frame. O bytecode (<code>f->codigo</code>) não é liberado aqui pois pertence ao <code>Code_attribute</code>.</p>
+          <div class="return-row"><strong>Retorno:</strong> void</div>
+        </div>
+      </div>
+
+      <div class="fn-card" id="fn-liberaArrays">
+        <div class="fn-card-header"><span class="fn-name">liberaArrays()</span><span class="fn-line">linha 121</span></div>
+        <div class="fn-signature"><code>void liberaArrays(void)</code></div>
+        <div class="fn-body">
+          <p class="fn-summary">Libera todos os <code>JVMArray</code>s alocados durante a execução (pool estático de até 1024 arrays).</p>
+          <div class="return-row"><strong>Retorno:</strong> void</div>
+        </div>
+      </div>
+
+      <div class="fn-card" id="fn-liberaStaticFields">
+        <div class="fn-card-header"><span class="fn-name">liberaStaticFields()</span><span class="fn-line">linha 89</span></div>
+        <div class="fn-signature"><code>void liberaStaticFields(void)</code></div>
+        <div class="fn-body">
+          <p class="fn-summary">Zera o contador de campos estáticos, efetivamente descartando toda a tabela de campos estáticos acumulada durante a execução.</p>
+          <div class="return-row"><strong>Retorno:</strong> void</div>
+        </div>
+      </div>
+
+      <div class="fn-card" id="fn-executaFrame">
+        <div class="fn-card-header"><span class="fn-name">executaFrame()</span><span class="fn-line">linha 218</span></div>
+        <div class="fn-signature"><code>void executaFrame(Frame *f, ClassFile *cf)</code></div>
+        <div class="fn-body">
+          <p class="fn-summary">Loop principal de interpretação. A cada iteração lê o opcode no PC e executa via <code>switch</code>. Cobre: aritmética (iadd, ladd, fadd, dadd, ...), conversões (i2l, d2f, ...), load/store (iload, astore, ...), arrays (newarray, aaload, aastore, ...), controle de fluxo (ifeq, goto, tableswitch, lookupswitch), criação de objetos (new), acesso a campos (getfield, putfield, getstatic, putstatic), e chamadas de método (invokestatic, invokevirtual, invokespecial).</p>
+          <div class="label mt-8">Parâmetros</div>
+          <table class="param-table">
+            <tr><th>Nome</th><th>Tipo</th><th>Descrição</th></tr>
+            <tr><td class="param-name">f</td><td><code>Frame *</code></td><td class="param-desc">Frame de execução atual (pilha, locais, PC)</td></tr>
+            <tr><td class="param-name">cf</td><td><code>ClassFile *</code></td><td class="param-desc">ClassFile do método em execução</td></tr>
+          </table>
+          <div class="return-row"><strong>Retorno:</strong> void</div>
+          <div class="label mt-8">Chama</div>
+          <div class="calls-list">
+            <a href="method_invoke.html#fn-execInvokestatic" class="call-link">execInvokestatic()</a>
+            <a href="method_invoke.html#fn-execInvokevirtual" class="call-link">execInvokevirtual()</a>
+            <a href="method_invoke.html#fn-execInvokespecial" class="call-link">execInvokespecial()</a>
+            <a href="heap.html#fn-alocaObjeto" class="call-link">alocaObjeto()</a>
+            <a href="heap.html#fn-buscaCampo" class="call-link">buscaCampo()</a>
+            <a href="loader.html#fn-loadClassFile" class="call-link">loadClassFile()</a>
+            <a href="#fn-aloca_array" class="call-link">aloca_array()</a>
+            <a href="#fn-find_static_field" class="call-link">find_static_field()</a>
+            <a href="#fn-alloc_static_field" class="call-link">alloc_static_field()</a>
+            <a href="attribute.html#fn-getUtf8" class="call-link">getUtf8()</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="fn-card" id="fn-find_static_field">
+        <div class="fn-card-header"><span class="fn-name">find_static_field() <span style="font-size:11px;color:var(--text-dim)">[static]</span></span><span class="fn-line">linha 72</span></div>
+        <div class="fn-signature"><code>static int find_static_field(const char *cls, const char *fld)</code></div>
+        <div class="fn-body">
+          <p class="fn-summary">Busca um campo estático na tabela interna pelo par (nome de classe, nome de campo). Retorna o índice ou -1 se não encontrado.</p>
+          <div class="return-row"><strong>Retorno:</strong> Índice na tabela ou -1</div>
+        </div>
+      </div>
+
+      <div class="fn-card" id="fn-alloc_static_field">
+        <div class="fn-card-header"><span class="fn-name">alloc_static_field() <span style="font-size:11px;color:var(--text-dim)">[static]</span></span><span class="fn-line">linha 80</span></div>
+        <div class="fn-signature"><code>static int alloc_static_field(const char *cls, const char *fld)</code></div>
+        <div class="fn-body">
+          <p class="fn-summary">Aloca uma nova entrada na tabela de campos estáticos (máximo 256), inicializando o valor com zero. Retorna -1 se a tabela estiver cheia.</p>
+          <div class="return-row"><strong>Retorno:</strong> Índice da nova entrada, ou -1</div>
+        </div>
+      </div>
+
+      <div class="fn-card" id="fn-aloca_array">
+        <div class="fn-card-header"><span class="fn-name">aloca_array() <span style="font-size:11px;color:var(--text-dim)">[static]</span></span><span class="fn-line">linha 101</span></div>
+        <div class="fn-signature"><code>static JVMArray *aloca_array(int32_t length, int atype)</code></div>
+        <div class="fn-body">
+          <p class="fn-summary">Aloca um <a href="../structs.html#struct-JVMArray"><code>JVMArray</code></a> com o comprimento e tipo dados. Escolhe o tamanho do elemento conforme <code>atype</code> (T_INT=4 bytes, T_LONG=8 bytes, T_OBJECT=ponteiro, etc.) e inicializa os dados com zero.</p>
+          <div class="label mt-8">Parâmetros</div>
+          <table class="param-table">
+            <tr><th>Nome</th><th>Tipo</th><th>Descrição</th></tr>
+            <tr><td class="param-name">length</td><td><code>int32_t</code></td><td class="param-desc">Número de elementos</td></tr>
+            <tr><td class="param-name">atype</td><td><code>int</code></td><td class="param-desc">Tipo dos elementos (T_INT, T_LONG, T_OBJECT, etc.)</td></tr>
+          </table>
+          <div class="return-row"><strong>Retorno:</strong> Ponteiro para o JVMArray alocado</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+<script>
+document.getElementById('sidebar-filter').addEventListener('input', function() {
+  const q = this.value.toLowerCase();
+  document.querySelectorAll('#sidebar-nav .nav-item').forEach(el => {
+    el.style.display = el.textContent.toLowerCase().includes(q) ? '' : 'none';
+  });
+});
+document.querySelectorAll('.fn-card-header').forEach(h => {
+  h.addEventListener('click', () => { h.nextElementSibling?.classList.toggle('open'); });
+});
+hljs.highlightAll();
+</script>
+</body>
+</html>

@@ -1,0 +1,255 @@
+{
+  "structs": [
+    {
+      "name": "ClassFile",
+      "typedef": "ClassFile",
+      "file": "src/lib/types/class_file/dot_class.h",
+      "description": "Representa um arquivo .class completamente decodificado. É a estrutura raiz que agrega todos os componentes: cabeçalho, constant pool, flags de acesso, campos, métodos, atributos e um ponteiro para a superclasse carregada.",
+      "fields": [
+        { "name": "magic", "type": "u4", "desc": "Número mágico do arquivo .class (deve ser 0xCAFEBABE)" },
+        { "name": "minor_version", "type": "u2", "desc": "Versão menor do formato .class" },
+        { "name": "major_version", "type": "u2", "desc": "Versão maior do formato .class (ex: 52 = Java 8)" },
+        { "name": "constant_pool_count", "type": "u2", "desc": "Número de entradas no constant pool + 1" },
+        { "name": "constant_pool", "type": "cp_info *", "desc": "Array de entradas do constant pool (índices 1..constant_pool_count-1)" },
+        { "name": "access_flags", "type": "u2", "desc": "Flags de acesso da classe (ACC_PUBLIC, ACC_ABSTRACT, ACC_INTERFACE, etc.)" },
+        { "name": "this_class", "type": "u2", "desc": "Índice no CP para a entrada CONSTANT_Class desta classe" },
+        { "name": "super_class", "type": "u2", "desc": "Índice no CP para a entrada CONSTANT_Class da superclasse (0 se java/lang/Object)" },
+        { "name": "interfaces_count", "type": "u2", "desc": "Número de interfaces implementadas" },
+        { "name": "interfaces", "type": "u2 *", "desc": "Array de índices no CP para cada interface" },
+        { "name": "fields_count", "type": "u2", "desc": "Número de campos da classe" },
+        { "name": "fields", "type": "field_info *", "desc": "Array de estruturas field_info" },
+        { "name": "methods_count", "type": "u2", "desc": "Número de métodos da classe" },
+        { "name": "methods", "type": "method_info *", "desc": "Array de estruturas method_info" },
+        { "name": "attributes_count", "type": "u2", "desc": "Número de atributos de nível de classe" },
+        { "name": "attributes", "type": "attribute_info *", "desc": "Array de atributos genéricos (SourceFile, InnerClasses, etc.)" },
+        { "name": "super_class_file", "type": "struct ClassFile_ *", "desc": "Ponteiro para o ClassFile da superclasse carregado em runtime; NULL se não houver ou for nativa" }
+      ],
+      "references": ["cp_info", "field_info", "method_info", "attribute_info"]
+    },
+
+    {
+      "name": "cp_info",
+      "typedef": "cp_info",
+      "file": "src/lib/types/constant_pool.h",
+      "description": "Entrada do constant pool. Usa uma tagged union onde o campo 'tag' indica qual membro da union está ativo. Representa qualquer tipo de constante JVM (classe, método, campo, string, inteiro, float, etc.).",
+      "fields": [
+        { "name": "tag", "type": "u1", "desc": "Tag do tipo de constante (valores definidos em CONSTANT_POOL_TAGS)" },
+        { "name": "constant_class_info", "type": "CONSTANT_Class_info *", "desc": "Ativo quando tag == CONSTANT_Class (7)" },
+        { "name": "fieldRef_info", "type": "CONSTANT_Fieldref_info *", "desc": "Ativo quando tag == CONSTANT_Fieldref (9)" },
+        { "name": "methodRef_info", "type": "CONSTANT_Methodref_info *", "desc": "Ativo quando tag == CONSTANT_Methodref (10)" },
+        { "name": "interfaceMethod_info", "type": "CONSTANT_InterfaceMethodref_info *", "desc": "Ativo quando tag == CONSTANT_InterfaceMethodref (11)" },
+        { "name": "string_info", "type": "CONSTANT_String_info *", "desc": "Ativo quando tag == CONSTANT_String (8)" },
+        { "name": "integer_info", "type": "CONSTANT_Integer_info *", "desc": "Ativo quando tag == CONSTANT_Integer (3)" },
+        { "name": "float_info", "type": "CONSTANT_Float_info *", "desc": "Ativo quando tag == CONSTANT_Float (4)" },
+        { "name": "long_info", "type": "CONSTANT_Long_info *", "desc": "Ativo quando tag == CONSTANT_Long (5); ocupa 2 slots no CP" },
+        { "name": "double_info", "type": "CONSTANT_Double_info *", "desc": "Ativo quando tag == CONSTANT_Double (6); ocupa 2 slots no CP" },
+        { "name": "nameAndType_info", "type": "CONSTANT_NameAndType_info *", "desc": "Ativo quando tag == CONSTANT_NameAndType (12)" },
+        { "name": "utf8_info", "type": "CONSTANT_Utf8_info *", "desc": "Ativo quando tag == CONSTANT_Utf8 (1)" },
+        { "name": "methodHandle_info", "type": "CONSTANT_MethodHandle_info *", "desc": "Ativo quando tag == CONSTANT_MethodHandle (15)" },
+        { "name": "methodType_info", "type": "CONSTANT_MethodType_info *", "desc": "Ativo quando tag == CONSTANT_MethodType (16)" },
+        { "name": "invokeDynamic_info", "type": "CONSTANT_InvokeDynamic_info *", "desc": "Ativo quando tag == CONSTANT_InvokeDynamic (18)" }
+      ],
+      "references": ["CONSTANT_Class_info", "CONSTANT_Methodref_info", "CONSTANT_Fieldref_info", "CONSTANT_Utf8_info", "CONSTANT_NameAndType_info"]
+    },
+
+    {
+      "name": "field_info",
+      "typedef": "field_info",
+      "file": "src/lib/types/class_file/methods_info.h",
+      "description": "Representa um campo da classe conforme a especificação JVM. Contém flags de acesso, índices para o nome e descritor no CP, e seus atributos (ex: ConstantValue para constantes compiladas).",
+      "fields": [
+        { "name": "access_flags", "type": "u2", "desc": "Flags de acesso do campo (ACC_PUBLIC, ACC_STATIC, ACC_FINAL, etc.)" },
+        { "name": "name_index", "type": "u2", "desc": "Índice no CP para a string CONSTANT_Utf8 com o nome do campo" },
+        { "name": "descriptor_index", "type": "u2", "desc": "Índice no CP para o descritor de tipo (ex: 'I' para int, 'Ljava/lang/String;')" },
+        { "name": "attributes_count", "type": "u2", "desc": "Número de atributos do campo" },
+        { "name": "attributes", "type": "attribute_info *", "desc": "Array de atributos do campo" }
+      ],
+      "references": ["attribute_info"]
+    },
+
+    {
+      "name": "method_info",
+      "typedef": "method_info",
+      "file": "src/lib/types/class_file/methods_info.h",
+      "description": "Representa um método da classe. Contém flags de acesso, nome, descritor e seus atributos — o mais importante sendo o atributo Code, que contém os bytecodes.",
+      "fields": [
+        { "name": "access_flags", "type": "u2", "desc": "Flags de acesso do método (ACC_PUBLIC, ACC_STATIC, ACC_ABSTRACT, etc.)" },
+        { "name": "name_index", "type": "u2", "desc": "Índice no CP para o nome do método" },
+        { "name": "descriptor_index", "type": "u2", "desc": "Índice no CP para o descritor de método (assinatura)" },
+        { "name": "attributes_count", "type": "u2", "desc": "Número de atributos do método" },
+        { "name": "attributes", "type": "attribute_info *", "desc": "Array de atributos (Code, Exceptions, etc.)" }
+      ],
+      "references": ["attribute_info", "Code_attribute"]
+    },
+
+    {
+      "name": "attribute_info",
+      "typedef": "attribute_info",
+      "file": "src/lib/types/class_file/attributes_info.h",
+      "description": "Cabeçalho genérico de qualquer atributo JVM. O campo 'info' aponta para a struct específica decodificada (ex: Code_attribute, ConstantValue_attribute) ou para bytes raw.",
+      "fields": [
+        { "name": "attribute_name_index", "type": "u2", "desc": "Índice no CP para o nome do atributo (CONSTANT_Utf8)" },
+        { "name": "attribute_length", "type": "u4", "desc": "Comprimento em bytes do corpo do atributo" },
+        { "name": "info", "type": "u1 *", "desc": "Ponteiro para os dados decodificados do atributo (cast para a struct específica)" }
+      ],
+      "references": ["Code_attribute", "ConstantValue_attribute", "Exceptions_attribute"]
+    },
+
+    {
+      "name": "Code_attribute",
+      "typedef": "Code_attribute",
+      "file": "src/lib/types/attribute.h",
+      "description": "Atributo Code de um método JVM: contém os bytecodes executáveis, limites de pilha e variáveis locais, tabela de exceções e sub-atributos de depuração (LineNumberTable, LocalVariableTable).",
+      "fields": [
+        { "name": "max_stack", "type": "u2", "desc": "Profundidade máxima da pilha de operandos durante a execução" },
+        { "name": "max_locals", "type": "u2", "desc": "Número máximo de variáveis locais (incluindo parâmetros)" },
+        { "name": "code_length", "type": "u4", "desc": "Comprimento do bytecode em bytes" },
+        { "name": "code", "type": "u1 *", "desc": "Buffer com os bytecodes do método" },
+        { "name": "exception_table_length", "type": "u2", "desc": "Número de entradas na tabela de exceções" },
+        { "name": "exception_table", "type": "exception_table_entry *", "desc": "Tabela de handlers de exceção" },
+        { "name": "attributes_count", "type": "u2", "desc": "Número de sub-atributos" },
+        { "name": "attributes", "type": "attribute_info *", "desc": "Sub-atributos (LineNumberTable, LocalVariableTable)" }
+      ],
+      "references": ["exception_table_entry", "attribute_info"]
+    },
+
+    {
+      "name": "Frame",
+      "typedef": "Frame",
+      "file": "src/lib/interpreter/basic_ops.h",
+      "description": "Frame de ativação JVM. Cada chamada de método cria um Frame com sua própria pilha de operandos, variáveis locais, ponteiro para o bytecode e um PC (program counter).",
+      "fields": [
+        { "name": "pilha", "type": "Slot[MAX_PILHA]", "desc": "Pilha de operandos (máximo 64 slots)" },
+        { "name": "topo", "type": "int", "desc": "Índice do topo da pilha (-1 = vazia)" },
+        { "name": "locais", "type": "Slot[MAX_LOCAIS]", "desc": "Variáveis locais (máximo 64, inclui parâmetros e 'this')" },
+        { "name": "codigo", "type": "u1 *", "desc": "Ponteiro para o bytecode do método (apontado pelo Code_attribute)" },
+        { "name": "tamanho", "type": "u4", "desc": "Comprimento total do bytecode" },
+        { "name": "pc", "type": "u4", "desc": "Program Counter: posição da próxima instrução a executar" }
+      ],
+      "references": ["Slot", "Code_attribute"]
+    },
+
+    {
+      "name": "Slot",
+      "typedef": "Slot",
+      "file": "src/lib/interpreter/basic_ops.h",
+      "description": "Valor genérico da pilha de operandos ou variável local. Usa campos sobrepostos para armazenar qualquer tipo primitivo JVM ou referência. O campo 'tipo' discrimina qual campo está em uso.",
+      "fields": [
+        { "name": "inteiro", "type": "int32_t", "desc": "Valor inteiro (TIPO_INT)" },
+        { "name": "flutuante", "type": "float", "desc": "Valor float (TIPO_FLOAT)" },
+        { "name": "longo", "type": "int64_t", "desc": "Valor long (TIPO_LONG) ou ponteiro para string/objeto codificado como inteiro" },
+        { "name": "duplo", "type": "double", "desc": "Valor double (TIPO_DOUBLE)" },
+        { "name": "tipo", "type": "int", "desc": "Discriminador: TIPO_INT=0, TIPO_FLOAT=1, TIPO_LONG=2, TIPO_DOUBLE=3, TIPO_REF=4, TIPO_ARRAY=5, TIPO_OBJECT=6" },
+        { "name": "ref", "type": "void *", "desc": "Ponteiro genérico para HeapObject ou array" }
+      ],
+      "references": ["HeapObject", "JVMArray"]
+    },
+
+    {
+      "name": "JVMStack",
+      "typedef": "JVMStack",
+      "file": "src/lib/interpreter/jvm_stack.h",
+      "description": "Pilha de frames de ativação da JVM. Armazena até MAX_FRAMES (256) frames simultâneos, simulando a call stack.",
+      "fields": [
+        { "name": "frames", "type": "Frame *[MAX_FRAMES]", "desc": "Array de ponteiros para frames (máximo 256)" },
+        { "name": "topo", "type": "int", "desc": "Índice do frame atual no topo da pilha (-1 = vazia)" }
+      ],
+      "references": ["Frame"]
+    },
+
+    {
+      "name": "HeapObject",
+      "typedef": "HeapObject",
+      "file": "src/lib/interpreter/heap.h",
+      "description": "Representa um objeto Java alocado em runtime na heap simulada. Armazena o nome da classe, o ClassFile associado, os campos de instância (com nomes e valores), e um ponteiro para dados nativos usados por classes como StringBuilder.",
+      "fields": [
+        { "name": "class_name", "type": "char *", "desc": "Nome da classe do objeto (ex: 'MinhaClasse')" },
+        { "name": "class_file", "type": "ClassFile *", "desc": "ClassFile da classe do objeto; NULL para objetos de classes nativas" },
+        { "name": "num_fields", "type": "u2", "desc": "Número total de campos de instância (incluindo campos herdados)" },
+        { "name": "field_names", "type": "char **", "desc": "Array com o nome de cada campo" },
+        { "name": "fields", "type": "Slot *", "desc": "Array com o valor atual de cada campo" },
+        { "name": "native_data", "type": "void *", "desc": "Buffer opaco para classes nativas; ex: StringBuilder usa para armazenar a string acumulada" }
+      ],
+      "references": ["ClassFile", "Slot"]
+    },
+
+    {
+      "name": "JVMArray",
+      "typedef": "JVMArray",
+      "file": "src/lib/interpreter/basic_ops.h",
+      "description": "Representa um array JVM alocado pelos opcodes newarray/anewarray. O campo 'data' é um buffer tipado (tamanho do elemento varia conforme atype).",
+      "fields": [
+        { "name": "length", "type": "int32_t", "desc": "Número de elementos do array" },
+        { "name": "atype", "type": "int", "desc": "Tipo dos elementos (T_INT=10, T_LONG=11, T_FLOAT=6, T_DOUBLE=7, T_OBJECT=12, etc.)" },
+        { "name": "data", "type": "void *", "desc": "Buffer de dados dos elementos, inicializado com zero" }
+      ],
+      "references": []
+    },
+
+    {
+      "name": "Args",
+      "typedef": "Args",
+      "file": "src/lib/utils/args.h",
+      "description": "Contém os argumentos da linha de comando após o parsing. Usada pelo main para configurar o comportamento da JVM.",
+      "fields": [
+        { "name": "class_path", "type": "const char *", "desc": "Caminho do arquivo .class de entrada (obrigatório)" },
+        { "name": "output_path", "type": "const char *", "desc": "Caminho do arquivo de saída; NULL se não especificado (usa padrão: .txt)" },
+        { "name": "do_print", "type": "int", "desc": "1 se --print foi passado (exibe saída no terminal além do arquivo)" }
+      ],
+      "references": []
+    },
+
+    {
+      "name": "exception_table_entry",
+      "typedef": "exception_table_entry",
+      "file": "src/lib/types/attribute.h",
+      "description": "Uma entrada da tabela de exceções do atributo Code. Define o intervalo de bytecodes protegido e o handler.",
+      "fields": [
+        { "name": "start_pc", "type": "u2", "desc": "Início do intervalo protegido (inclusive)" },
+        { "name": "end_pc", "type": "u2", "desc": "Fim do intervalo protegido (exclusive)" },
+        { "name": "handler_pc", "type": "u2", "desc": "PC do handler de exceção" },
+        { "name": "catch_type", "type": "u2", "desc": "Índice no CP do tipo de exceção capturado (0 = finally)" }
+      ],
+      "references": []
+    },
+
+    {
+      "name": "CONSTANT_Utf8_info",
+      "typedef": "CONSTANT_Utf8_info",
+      "file": "src/lib/types/class_file/cp_info.h",
+      "description": "Entrada do constant pool que armazena uma string UTF-8 modificada. Usada para nomes de classes, métodos, campos e descritores.",
+      "fields": [
+        { "name": "tag", "type": "u1", "desc": "Tag = 1 (CONSTANT_Utf8)" },
+        { "name": "length", "type": "u2", "desc": "Comprimento da string em bytes" },
+        { "name": "bytes", "type": "u1 *", "desc": "Conteúdo da string (terminado com \\0 após leitura)" }
+      ],
+      "references": []
+    },
+
+    {
+      "name": "CONSTANT_Methodref_info",
+      "typedef": "CONSTANT_Methodref_info",
+      "file": "src/lib/types/class_file/cp_info.h",
+      "description": "Entrada do constant pool para referência a método. Usada pelos opcodes invokevirtual, invokestatic e invokespecial.",
+      "fields": [
+        { "name": "tag", "type": "u1", "desc": "Tag = 10 (CONSTANT_Methodref)" },
+        { "name": "class_index", "type": "u2", "desc": "Índice no CP para CONSTANT_Class da classe dona do método" },
+        { "name": "name_and_type_index", "type": "u2", "desc": "Índice no CP para CONSTANT_NameAndType com nome e descritor" }
+      ],
+      "references": ["CONSTANT_Class_info", "CONSTANT_NameAndType_info"]
+    },
+
+    {
+      "name": "CONSTANT_NameAndType_info",
+      "typedef": "CONSTANT_NameAndType_info",
+      "file": "src/lib/types/class_file/cp_info.h",
+      "description": "Entrada do constant pool que combina um nome (de campo ou método) com seu descritor de tipo.",
+      "fields": [
+        { "name": "tag", "type": "u1", "desc": "Tag = 12 (CONSTANT_NameAndType)" },
+        { "name": "name_index", "type": "u2", "desc": "Índice no CP para a string com o nome" },
+        { "name": "descriptor_index", "type": "u2", "desc": "Índice no CP para a string com o descritor" }
+      ],
+      "references": ["CONSTANT_Utf8_info"]
+    }
+  ]
+}

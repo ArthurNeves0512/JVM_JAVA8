@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>interpreter.c — JVM Java 8 em C</title>
+<link rel="stylesheet" href="../style.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+  mermaid.initialize({ startOnLoad: true, theme: 'default' });
+</script>
+</head>
+<body>
+<nav id="sidebar">
+  <div id="sidebar-header">
+    <a href="../index.html"><div class="logo">JVM</div> JVM Java 8</a>
+  </div>
+  <div id="sidebar-search">
+    <input type="text" placeholder="Filtrar..." id="sidebar-filter">
+  </div>
+  <nav id="sidebar-nav">
+    <div class="nav-section">Visão Geral</div>
+    <a href="../index.html" class="nav-item">Início</a>
+    <a href="../diagram.html" class="nav-item">Diagrama Geral</a>
+    <a href="../structs.html" class="nav-item">Estruturas de Dados</a>
+    <div class="nav-section">Módulos</div>
+    <a href="main.html" class="nav-item">main.c <span class="tag tag-module">main</span></a>
+    <a href="read_file.html" class="nav-item">read_file.c <span class="tag tag-module">file</span></a>
+    <a href="dot_class.html" class="nav-item">dot_class.c <span class="tag tag-module">types</span></a>
+    <a href="attribute.html" class="nav-item">attribute.c <span class="tag tag-module">types</span></a>
+    <a href="opcodes.html" class="nav-item">opcodes.c <span class="tag tag-module">types</span></a>
+    <a href="loader.html" class="nav-item">loader.c <span class="tag tag-module">class_loader</span></a>
+    <a href="fields_interfaces.html" class="nav-item">fields_interfaces.c <span class="tag tag-module">class_loader</span></a>
+    <a href="methods.html" class="nav-item">methods.c <span class="tag tag-module">class_loader</span></a>
+    <a href="interpreter.html" class="nav-item active">interpreter.c <span class="tag tag-module">interpreter</span></a>
+    <a href="basic_ops.html" class="nav-item">basic_ops.c <span class="tag tag-module">interpreter</span></a>
+    <a href="jvm_stack.html" class="nav-item">jvm_stack.c <span class="tag tag-module">interpreter</span></a>
+    <a href="heap.html" class="nav-item">heap.c <span class="tag tag-module">interpreter</span></a>
+    <a href="method_invoke.html" class="nav-item">method_invoke.c <span class="tag tag-module">interpreter</span></a>
+    <a href="native_methods.html" class="nav-item">native_methods.c <span class="tag tag-module">interpreter</span></a>
+    <a href="printer.html" class="nav-item">printer.c <span class="tag tag-module">printer</span></a>
+    <a href="args.html" class="nav-item">args.c <span class="tag tag-module">utils</span></a>
+  </nav>
+</nav>
+<div id="main">
+  <header class="page-header">
+    <div class="breadcrumb"><a href="../index.html">JVM</a> <span>›</span> Módulos</div>
+    <h1>interpreter.c <span class="badge badge-module">interpreter</span></h1>
+    <div class="subtitle">Ponto de entrada do interpretador de bytecodes — inicializa e executa o método main</div>
+  </header>
+  <div class="page-content">
+
+    <div class="section">
+      <div class="section-title">Papel no projeto</div>
+      <p>Implementa o ponto de entrada da execução de bytecodes da JVM. A função <code>executaJVM</code> inicializa o registro de métodos nativos, localiza o método <code>main</code> no ClassFile, cria o frame de execução e inicia o loop de interpretação via <code>executaFrame</code>. Ao término, libera todos os recursos alocados durante a execução: arrays, campos estáticos e heap.</p>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Funções</div>
+
+      <div class="fn-card" id="fn-executaJVM">
+        <div class="fn-card-header"><span class="fn-name">executaJVM()</span><span class="fn-line">linha 11</span></div>
+        <div class="fn-signature"><code>void executaJVM(ClassFile *cf)</code></div>
+        <div class="fn-body">
+          <p class="fn-summary">Ponto de entrada do interpretador. Inicializa os métodos nativos, varre os métodos do ClassFile procurando por <code>"main"</code>, localiza seu <code>Code_attribute</code>, cria o frame inicial e o executa. Ao final, libera arrays, campos estáticos e heap. Imprime erro para <code>stderr</code> se o método <code>main</code> não for encontrado.</p>
+          <div class="label mt-8">Parâmetros</div>
+          <table class="param-table">
+            <tr><th>Nome</th><th>Tipo</th><th>Descrição</th></tr>
+            <tr><td class="param-name">cf</td><td><code>ClassFile *</code></td><td class="param-desc">ClassFile da classe principal a executar</td></tr>
+          </table>
+          <div class="return-row"><strong>Retorno:</strong> void</div>
+          <div class="label mt-8">Chama</div>
+          <div class="calls-list">
+            <a href="native_methods.html#fn-initNativeMethods" class="call-link">initNativeMethods()</a>
+            <a href="attribute.html#fn-getUtf8" class="call-link">getUtf8()</a>
+            <a href="method_invoke.html#fn-encontraCodeAttr" class="call-link">encontraCodeAttr()</a>
+            <a href="basic_ops.html#fn-criaFrame" class="call-link">criaFrame()</a>
+            <a href="basic_ops.html#fn-executaFrame" class="call-link">executaFrame()</a>
+            <a href="basic_ops.html#fn-liberaFrame" class="call-link">liberaFrame()</a>
+            <a href="basic_ops.html#fn-liberaArrays" class="call-link">liberaArrays()</a>
+            <a href="basic_ops.html#fn-liberaStaticFields" class="call-link">liberaStaticFields()</a>
+            <a href="heap.html#fn-liberaHeap" class="call-link">liberaHeap()</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Diagrama de chamadas</div>
+      <div class="diagram-container">
+        <pre class="mermaid">flowchart TD
+    executaJVM["executaJVM()"]
+    initNativeMethods["initNativeMethods()"]
+    getUtf8["getUtf8()"]
+    encontraCodeAttr["encontraCodeAttr()"]
+    criaFrame["criaFrame()"]
+    executaFrame["executaFrame()"]
+    liberaFrame["liberaFrame()"]
+    liberaArrays["liberaArrays()"]
+    liberaStaticFields["liberaStaticFields()"]
+    liberaHeap["liberaHeap()"]
+    execInvokestatic["execInvokestatic()"]
+    execInvokevirtual["execInvokevirtual()"]
+    execInvokespecial["execInvokespecial()"]
+    alocaObjeto["alocaObjeto()"]
+    buscaCampo["buscaCampo()"]
+    loadClassFile["loadClassFile()"]
+    executaJVM --> initNativeMethods
+    executaJVM --> getUtf8
+    executaJVM --> encontraCodeAttr
+    executaJVM --> criaFrame
+    executaJVM --> executaFrame
+    executaJVM --> liberaFrame
+    executaJVM --> liberaArrays
+    executaJVM --> liberaStaticFields
+    executaJVM --> liberaHeap
+    executaFrame --> execInvokestatic
+    executaFrame --> execInvokevirtual
+    executaFrame --> execInvokespecial
+    executaFrame --> alocaObjeto
+    executaFrame --> buscaCampo
+    executaFrame --> loadClassFile</pre>
+      </div>
+    </div>
+
+  </div>
+</div>
+<script>
+document.getElementById('sidebar-filter').addEventListener('input', function() {
+  const q = this.value.toLowerCase();
+  document.querySelectorAll('#sidebar-nav .nav-item').forEach(el => {
+    el.style.display = el.textContent.toLowerCase().includes(q) ? '' : 'none';
+  });
+});
+document.querySelectorAll('.fn-card-header').forEach(h => {
+  h.addEventListener('click', () => { h.nextElementSibling?.classList.toggle('open'); });
+});
+hljs.highlightAll();
+</script>
+</body>
+</html>

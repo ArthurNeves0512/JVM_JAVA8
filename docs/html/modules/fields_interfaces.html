@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>fields_interfaces.c — JVM Java 8 em C</title>
+<link rel="stylesheet" href="../style.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+  mermaid.initialize({ startOnLoad: true, theme: 'default' });
+</script>
+</head>
+<body>
+<nav id="sidebar">
+  <div id="sidebar-header">
+    <a href="../index.html"><div class="logo">JVM</div> JVM Java 8</a>
+  </div>
+  <div id="sidebar-search">
+    <input type="text" placeholder="Filtrar..." id="sidebar-filter">
+  </div>
+  <nav id="sidebar-nav">
+    <div class="nav-section">Visão Geral</div>
+    <a href="../index.html" class="nav-item">Início</a>
+    <a href="../diagram.html" class="nav-item">Diagrama Geral</a>
+    <a href="../structs.html" class="nav-item">Estruturas de Dados</a>
+    <div class="nav-section">Módulos</div>
+    <a href="main.html" class="nav-item">main.c <span class="tag tag-module">main</span></a>
+    <a href="read_file.html" class="nav-item">read_file.c <span class="tag tag-module">file</span></a>
+    <a href="dot_class.html" class="nav-item">dot_class.c <span class="tag tag-module">types</span></a>
+    <a href="attribute.html" class="nav-item">attribute.c <span class="tag tag-module">types</span></a>
+    <a href="opcodes.html" class="nav-item">opcodes.c <span class="tag tag-module">types</span></a>
+    <a href="loader.html" class="nav-item">loader.c <span class="tag tag-module">class_loader</span></a>
+    <a href="fields_interfaces.html" class="nav-item active">fields_interfaces.c <span class="tag tag-module">class_loader</span></a>
+    <a href="methods.html" class="nav-item">methods.c <span class="tag tag-module">class_loader</span></a>
+    <a href="interpreter.html" class="nav-item">interpreter.c <span class="tag tag-module">interpreter</span></a>
+    <a href="basic_ops.html" class="nav-item">basic_ops.c <span class="tag tag-module">interpreter</span></a>
+    <a href="jvm_stack.html" class="nav-item">jvm_stack.c <span class="tag tag-module">interpreter</span></a>
+    <a href="heap.html" class="nav-item">heap.c <span class="tag tag-module">interpreter</span></a>
+    <a href="method_invoke.html" class="nav-item">method_invoke.c <span class="tag tag-module">interpreter</span></a>
+    <a href="native_methods.html" class="nav-item">native_methods.c <span class="tag tag-module">interpreter</span></a>
+    <a href="printer.html" class="nav-item">printer.c <span class="tag tag-module">printer</span></a>
+    <a href="args.html" class="nav-item">args.c <span class="tag tag-module">utils</span></a>
+  </nav>
+</nav>
+<div id="main">
+  <header class="page-header">
+    <div class="breadcrumb"><a href="../index.html">JVM</a> <span>›</span> Módulos</div>
+    <h1>fields_interfaces.c <span class="badge badge-module">class_loader</span></h1>
+    <div class="subtitle">Leitura das seções de interfaces e campos do arquivo .class</div>
+  </header>
+  <div class="page-content">
+
+    <div class="section">
+      <div class="section-title">Papel no projeto</div>
+      <p>Responsável por decodificar as seções de <strong>interfaces</strong> e <strong>campos</strong> do arquivo <code>.class</code>. Cada campo (<code>field_info</code>) contém flags de acesso, índices para nome e descritor no constant pool, e seus próprios atributos (ex: <code>ConstantValue</code> para constantes). As interfaces são armazenadas como simples índices no CP.</p>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Funções</div>
+
+      <div class="fn-card" id="fn-readInterfaces">
+        <div class="fn-card-header"><span class="fn-name">readInterfaces()</span><span class="fn-line">linha 3</span></div>
+        <div class="fn-signature"><code>void readInterfaces(ClassFile *class_file_ptr, FILE *file_ptr)</code></div>
+        <div class="fn-body">
+          <p class="fn-summary">Lê o <code>interfaces_count</code> e aloca o array de índices de interface, lendo cada índice (u2) sequencialmente do arquivo.</p>
+          <div class="label mt-8">Parâmetros</div>
+          <table class="param-table">
+            <tr><th>Nome</th><th>Tipo</th><th>Descrição</th></tr>
+            <tr><td class="param-name">class_file_ptr</td><td><code>ClassFile *</code></td><td class="param-desc">ClassFile destino</td></tr>
+            <tr><td class="param-name">file_ptr</td><td><code>FILE *</code></td><td class="param-desc">Arquivo .class</td></tr>
+          </table>
+          <div class="return-row"><strong>Retorno:</strong> void</div>
+        </div>
+      </div>
+
+      <div class="fn-card" id="fn-readFields">
+        <div class="fn-card-header"><span class="fn-name">readFields()</span><span class="fn-line">linha 14</span></div>
+        <div class="fn-signature"><code>void readFields(ClassFile *class_file_ptr, FILE *file_ptr)</code></div>
+        <div class="fn-body">
+          <p class="fn-summary">Lê o <code>fields_count</code> e decodifica cada <code>field_info</code>: access_flags, name_index, descriptor_index e seus atributos (ex: <code>ConstantValue</code>). Os atributos de cada campo são lidos via <code>readAttribute</code>.</p>
+          <div class="label mt-8">Parâmetros</div>
+          <table class="param-table">
+            <tr><th>Nome</th><th>Tipo</th><th>Descrição</th></tr>
+            <tr><td class="param-name">class_file_ptr</td><td><code>ClassFile *</code></td><td class="param-desc">ClassFile destino</td></tr>
+            <tr><td class="param-name">file_ptr</td><td><code>FILE *</code></td><td class="param-desc">Arquivo .class</td></tr>
+          </table>
+          <div class="return-row"><strong>Retorno:</strong> void</div>
+          <div class="label mt-8">Chama</div>
+          <div class="calls-list">
+            <a href="attribute.html#fn-readAttribute" class="call-link">readAttribute()</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+<script>
+document.getElementById('sidebar-filter').addEventListener('input', function() {
+  const q = this.value.toLowerCase();
+  document.querySelectorAll('#sidebar-nav .nav-item').forEach(el => {
+    el.style.display = el.textContent.toLowerCase().includes(q) ? '' : 'none';
+  });
+});
+document.querySelectorAll('.fn-card-header').forEach(h => {
+  h.addEventListener('click', () => { h.nextElementSibling?.classList.toggle('open'); });
+});
+hljs.highlightAll();
+</script>
+</body>
+</html>

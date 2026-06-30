@@ -1,0 +1,56 @@
+flowchart TD
+    execInvokestatic["execInvokestatic()"]
+    execInvokevirtual["execInvokevirtual()"]
+    execInvokespecial["execInvokespecial()"]
+    executa_chamada["executa_chamada() [static]"]
+
+    getUtf8["getUtf8()"]
+    encontraMetodo["encontraMetodo()"]
+    buscaMetodoClasse["buscaMetodoClasse()"]
+    encontraCodeAttr["encontraCodeAttr()"]
+    conta_args["conta_args()"]
+    retorno_void["retorno_void()"]
+    lookupNative["lookupNative()"]
+    isNativeClass["isNativeClass()"]
+    getClassName["getClassName()"]
+    criaFrame["criaFrame()"]
+    executaFrame["executaFrame()"]
+    liberaFrame["liberaFrame()"]
+
+    execInvokestatic --> getUtf8
+    execInvokestatic --> encontraMetodo
+    execInvokestatic --> conta_args
+    execInvokestatic --> lookupNative
+    execInvokestatic --> retorno_void
+    execInvokestatic --> encontraCodeAttr
+    execInvokestatic --> executa_chamada
+
+    execInvokevirtual --> getUtf8
+    execInvokevirtual --> conta_args
+    execInvokevirtual --> buscaMetodoClasse
+    execInvokevirtual --> lookupNative
+    execInvokevirtual --> retorno_void
+    execInvokevirtual --> encontraCodeAttr
+    execInvokevirtual --> executa_chamada
+
+    execInvokespecial --> getUtf8
+    execInvokespecial --> getClassName
+    execInvokespecial --> encontraMetodo
+    execInvokespecial --> buscaMetodoClasse
+    execInvokespecial --> conta_args
+    execInvokespecial --> isNativeClass
+    execInvokespecial --> lookupNative
+    execInvokespecial --> encontraCodeAttr
+    execInvokespecial --> executa_chamada
+
+    executa_chamada --> conta_args
+    executa_chamada --> retorno_void
+    executa_chamada --> criaFrame
+    executa_chamada --> executaFrame
+    executa_chamada --> liberaFrame
+
+    buscaMetodoClasse --> getUtf8
+    buscaMetodoClasse --> buscaMetodoClasse
+
+    encontraMetodo --> buscaMetodoClasse
+    encontraCodeAttr --> getUtf8

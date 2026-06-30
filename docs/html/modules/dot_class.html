@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>dot_class.c — JVM Java 8 em C</title>
+<link rel="stylesheet" href="../style.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+  mermaid.initialize({ startOnLoad: true, theme: 'default' });
+</script>
+</head>
+<body>
+<nav id="sidebar">
+  <div id="sidebar-header">
+    <a href="../index.html"><div class="logo">JVM</div> JVM Java 8</a>
+  </div>
+  <div id="sidebar-search">
+    <input type="text" placeholder="Filtrar..." id="sidebar-filter">
+  </div>
+  <nav id="sidebar-nav">
+    <div class="nav-section">Visão Geral</div>
+    <a href="../index.html" class="nav-item">Início</a>
+    <a href="../diagram.html" class="nav-item">Diagrama Geral</a>
+    <a href="../structs.html" class="nav-item">Estruturas de Dados</a>
+    <div class="nav-section">Módulos</div>
+    <a href="main.html" class="nav-item">main.c <span class="tag tag-module">main</span></a>
+    <a href="read_file.html" class="nav-item">read_file.c <span class="tag tag-module">file</span></a>
+    <a href="dot_class.html" class="nav-item active">dot_class.c <span class="tag tag-module">types</span></a>
+    <a href="attribute.html" class="nav-item">attribute.c <span class="tag tag-module">types</span></a>
+    <a href="opcodes.html" class="nav-item">opcodes.c <span class="tag tag-module">types</span></a>
+    <a href="loader.html" class="nav-item">loader.c <span class="tag tag-module">class_loader</span></a>
+    <a href="fields_interfaces.html" class="nav-item">fields_interfaces.c <span class="tag tag-module">class_loader</span></a>
+    <a href="methods.html" class="nav-item">methods.c <span class="tag tag-module">class_loader</span></a>
+    <a href="interpreter.html" class="nav-item">interpreter.c <span class="tag tag-module">interpreter</span></a>
+    <a href="basic_ops.html" class="nav-item">basic_ops.c <span class="tag tag-module">interpreter</span></a>
+    <a href="jvm_stack.html" class="nav-item">jvm_stack.c <span class="tag tag-module">interpreter</span></a>
+    <a href="heap.html" class="nav-item">heap.c <span class="tag tag-module">interpreter</span></a>
+    <a href="method_invoke.html" class="nav-item">method_invoke.c <span class="tag tag-module">interpreter</span></a>
+    <a href="native_methods.html" class="nav-item">native_methods.c <span class="tag tag-module">interpreter</span></a>
+    <a href="printer.html" class="nav-item">printer.c <span class="tag tag-module">printer</span></a>
+    <a href="args.html" class="nav-item">args.c <span class="tag tag-module">utils</span></a>
+  </nav>
+</nav>
+<div id="main">
+  <header class="page-header">
+    <div class="breadcrumb"><a href="../index.html">JVM</a> <span>›</span> Módulos</div>
+    <h1>dot_class.c <span class="badge badge-module">types</span></h1>
+    <div class="subtitle">Alocação e liberação da estrutura raiz ClassFile</div>
+  </header>
+  <div class="page-content">
+
+    <div class="section">
+      <div class="section-title">Papel no projeto</div>
+      <p>Define e implementa o gerenciamento de memória da estrutura <a href="../structs.html#struct-ClassFile"><code>ClassFile</code></a>, que é a representação raiz de um arquivo <code>.class</code> Java 8. O header <code>dot_class.h</code> declara a struct com todos os seus campos (magic, versão, constant pool, interfaces, campos, métodos, atributos, ponteiro para superclasse). A implementação em <code>dot_class.c</code> cuida da alocação inicial (com todos os ponteiros nulos) e da liberação recursiva de toda a árvore de memória.</p>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Funções</div>
+
+      <div class="fn-card" id="fn-allocClassFile">
+        <div class="fn-card-header">
+          <span class="fn-name">allocClassFile()</span>
+          <span class="fn-line">linha 8</span>
+        </div>
+        <div class="fn-signature"><code>ClassFile *allocClassFile(void)</code></div>
+        <div class="fn-body">
+          <p class="fn-summary">Aloca e inicializa um <code>ClassFile</code> com todos os ponteiros nulos (<code>constant_pool</code>, <code>interfaces</code>, <code>fields</code>, <code>methods</code>, <code>attributes</code> = NULL). Encerra o processo em caso de falha de alocação.</p>
+          <div class="return-row"><strong>Retorno:</strong> Ponteiro para o ClassFile alocado</div>
+        </div>
+      </div>
+
+      <div class="fn-card" id="fn-freeClassFile">
+        <div class="fn-card-header">
+          <span class="fn-name">freeClassFile()</span>
+          <span class="fn-line">linha 73</span>
+        </div>
+        <div class="fn-signature"><code>void freeClassFile(ClassFile *cf)</code></div>
+        <div class="fn-body">
+          <p class="fn-summary">Libera toda a memória associada a um <code>ClassFile</code>: campos, métodos, atributos de classe, interfaces, constant pool e o próprio struct. Seguro para <code>NULL</code>.</p>
+          <div class="label mt-8">Parâmetros</div>
+          <table class="param-table">
+            <tr><th>Nome</th><th>Tipo</th><th>Descrição</th></tr>
+            <tr><td class="param-name">cf</td><td><code>ClassFile *</code></td><td class="param-desc">Ponteiro para o ClassFile a ser liberado</td></tr>
+          </table>
+          <div class="return-row"><strong>Retorno:</strong> void</div>
+          <div class="label mt-8">Chama</div>
+          <div class="calls-list">
+            <a href="#fn-freeFields" class="call-link">freeFields()</a>
+            <a href="methods.html#fn-freeMethods" class="call-link">freeMethods()</a>
+            <a href="#fn-freeClassAttributes" class="call-link">freeClassAttributes()</a>
+            <a href="#fn-freeConstantPool" class="call-link">freeConstantPool()</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="fn-card" id="fn-freeConstantPool">
+        <div class="fn-card-header">
+          <span class="fn-name">freeConstantPool() <span style="font-size:11px;color:var(--text-dim)">[static]</span></span>
+          <span class="fn-line">linha 20</span>
+        </div>
+        <div class="fn-signature"><code>static void freeConstantPool(cp_info *constant_pool, u2 constant_pool_count)</code></div>
+        <div class="fn-body">
+          <p class="fn-summary">Libera cada entrada do constant pool de acordo com seu <code>tag</code>, incluindo os bytes das strings <code>CONSTANT_Utf8</code>. Entradas de placeholder (após Long/Double) são ignoradas. Função interna.</p>
+          <div class="label mt-8">Parâmetros</div>
+          <table class="param-table">
+            <tr><th>Nome</th><th>Tipo</th><th>Descrição</th></tr>
+            <tr><td class="param-name">constant_pool</td><td><code>cp_info *</code></td><td class="param-desc">Array de entradas do constant pool</td></tr>
+            <tr><td class="param-name">constant_pool_count</td><td><code>u2</code></td><td class="param-desc">Número total de entradas no CP</td></tr>
+          </table>
+          <div class="return-row"><strong>Retorno:</strong> void</div>
+        </div>
+      </div>
+
+      <div class="fn-card" id="fn-freeFields">
+        <div class="fn-card-header">
+          <span class="fn-name">freeFields() <span style="font-size:11px;color:var(--text-dim)">[static]</span></span>
+          <span class="fn-line">linha 48</span>
+        </div>
+        <div class="fn-signature"><code>static void freeFields(ClassFile *cf)</code></div>
+        <div class="fn-body">
+          <p class="fn-summary">Libera os atributos de cada campo e o array <code>cf->fields</code>. Função interna.</p>
+          <div class="return-row"><strong>Retorno:</strong> void</div>
+          <div class="label mt-8">Chama</div>
+          <div class="calls-list">
+            <a href="attribute.html#fn-freeAttribute" class="call-link">freeAttribute()</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="fn-card" id="fn-freeClassAttributes">
+        <div class="fn-card-header">
+          <span class="fn-name">freeClassAttributes() <span style="font-size:11px;color:var(--text-dim)">[static]</span></span>
+          <span class="fn-line">linha 63</span>
+        </div>
+        <div class="fn-signature"><code>static void freeClassAttributes(ClassFile *cf)</code></div>
+        <div class="fn-body">
+          <p class="fn-summary">Libera os atributos de nível de classe do ClassFile (ex: SourceFile, InnerClasses). Função interna.</p>
+          <div class="return-row"><strong>Retorno:</strong> void</div>
+          <div class="label mt-8">Chama</div>
+          <div class="calls-list">
+            <a href="attribute.html#fn-freeAttribute" class="call-link">freeAttribute()</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+<script>
+document.getElementById('sidebar-filter').addEventListener('input', function() {
+  const q = this.value.toLowerCase();
+  document.querySelectorAll('#sidebar-nav .nav-item').forEach(el => {
+    el.style.display = el.textContent.toLowerCase().includes(q) ? '' : 'none';
+  });
+});
+document.querySelectorAll('.fn-card-header').forEach(h => {
+  h.addEventListener('click', () => { h.nextElementSibling?.classList.toggle('open'); });
+});
+hljs.highlightAll();
+</script>
+</body>
+</html>

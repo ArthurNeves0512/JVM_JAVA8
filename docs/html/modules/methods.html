@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>methods.c — JVM Java 8 em C</title>
+<link rel="stylesheet" href="../style.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+  mermaid.initialize({ startOnLoad: true, theme: 'default' });
+</script>
+</head>
+<body>
+<nav id="sidebar">
+  <div id="sidebar-header">
+    <a href="../index.html"><div class="logo">JVM</div> JVM Java 8</a>
+  </div>
+  <div id="sidebar-search">
+    <input type="text" placeholder="Filtrar..." id="sidebar-filter">
+  </div>
+  <nav id="sidebar-nav">
+    <div class="nav-section">Visão Geral</div>
+    <a href="../index.html" class="nav-item">Início</a>
+    <a href="../diagram.html" class="nav-item">Diagrama Geral</a>
+    <a href="../structs.html" class="nav-item">Estruturas de Dados</a>
+    <div class="nav-section">Módulos</div>
+    <a href="main.html" class="nav-item">main.c <span class="tag tag-module">main</span></a>
+    <a href="read_file.html" class="nav-item">read_file.c <span class="tag tag-module">file</span></a>
+    <a href="dot_class.html" class="nav-item">dot_class.c <span class="tag tag-module">types</span></a>
+    <a href="attribute.html" class="nav-item">attribute.c <span class="tag tag-module">types</span></a>
+    <a href="opcodes.html" class="nav-item">opcodes.c <span class="tag tag-module">types</span></a>
+    <a href="loader.html" class="nav-item">loader.c <span class="tag tag-module">class_loader</span></a>
+    <a href="fields_interfaces.html" class="nav-item">fields_interfaces.c <span class="tag tag-module">class_loader</span></a>
+    <a href="methods.html" class="nav-item active">methods.c <span class="tag tag-module">class_loader</span></a>
+    <a href="interpreter.html" class="nav-item">interpreter.c <span class="tag tag-module">interpreter</span></a>
+    <a href="basic_ops.html" class="nav-item">basic_ops.c <span class="tag tag-module">interpreter</span></a>
+    <a href="jvm_stack.html" class="nav-item">jvm_stack.c <span class="tag tag-module">interpreter</span></a>
+    <a href="heap.html" class="nav-item">heap.c <span class="tag tag-module">interpreter</span></a>
+    <a href="method_invoke.html" class="nav-item">method_invoke.c <span class="tag tag-module">interpreter</span></a>
+    <a href="native_methods.html" class="nav-item">native_methods.c <span class="tag tag-module">interpreter</span></a>
+    <a href="printer.html" class="nav-item">printer.c <span class="tag tag-module">printer</span></a>
+    <a href="args.html" class="nav-item">args.c <span class="tag tag-module">utils</span></a>
+  </nav>
+</nav>
+<div id="main">
+  <header class="page-header">
+    <div class="breadcrumb"><a href="../index.html">JVM</a> <span>›</span> Módulos</div>
+    <h1>methods.c <span class="badge badge-module">class_loader</span></h1>
+    <div class="subtitle">Leitura, alocação e liberação da seção de métodos do arquivo .class</div>
+  </header>
+  <div class="page-content">
+
+    <div class="section">
+      <div class="section-title">Papel no projeto</div>
+      <p>Responsável por decodificar a seção de <strong>métodos</strong> do arquivo <code>.class</code>. Cada <code>method_info</code> contém flags de acesso, índices para nome e descritor, e seus atributos — o mais crítico sendo o atributo <code>Code</code> que armazena os bytecodes executáveis. <code>freeMethods</code> é chamado por <code>freeClassFile</code> para limpar essa memória.</p>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Funções</div>
+
+      <div class="fn-card" id="fn-readMethodsCount">
+        <div class="fn-card-header"><span class="fn-name">readMethodsCount()</span><span class="fn-line">linha 3</span></div>
+        <div class="fn-signature"><code>void readMethodsCount(ClassFile *cf, FILE *fp)</code></div>
+        <div class="fn-body">
+          <p class="fn-summary">Lê o <code>methods_count</code> (2 bytes) e armazena em <code>cf->methods_count</code>.</p>
+          <div class="label mt-8">Parâmetros</div>
+          <table class="param-table">
+            <tr><th>Nome</th><th>Tipo</th><th>Descrição</th></tr>
+            <tr><td class="param-name">cf</td><td><code>ClassFile *</code></td><td class="param-desc">ClassFile destino</td></tr>
+            <tr><td class="param-name">fp</td><td><code>FILE *</code></td><td class="param-desc">Arquivo .class</td></tr>
+          </table>
+          <div class="return-row"><strong>Retorno:</strong> void</div>
+        </div>
+      </div>
+
+      <div class="fn-card" id="fn-readMethods">
+        <div class="fn-card-header"><span class="fn-name">readMethods()</span><span class="fn-line">linha 7</span></div>
+        <div class="fn-signature"><code>void readMethods(ClassFile *cf, FILE *fp)</code></div>
+        <div class="fn-body">
+          <p class="fn-summary">Aloca e decodifica cada <code>method_info</code>: lê access_flags, name_index, descriptor_index e chama <code>readAttribute</code> para cada atributo do método (principalmente <code>Code</code>, <code>Exceptions</code>).</p>
+          <div class="label mt-8">Parâmetros</div>
+          <table class="param-table">
+            <tr><th>Nome</th><th>Tipo</th><th>Descrição</th></tr>
+            <tr><td class="param-name">cf</td><td><code>ClassFile *</code></td><td class="param-desc">ClassFile destino</td></tr>
+            <tr><td class="param-name">fp</td><td><code>FILE *</code></td><td class="param-desc">Arquivo .class</td></tr>
+          </table>
+          <div class="return-row"><strong>Retorno:</strong> void</div>
+          <div class="label mt-8">Chama</div>
+          <div class="calls-list">
+            <a href="attribute.html#fn-readAttribute" class="call-link">readAttribute()</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="fn-card" id="fn-freeMethods">
+        <div class="fn-card-header"><span class="fn-name">freeMethods()</span><span class="fn-line">linha 36</span></div>
+        <div class="fn-signature"><code>void freeMethods(ClassFile *cf)</code></div>
+        <div class="fn-body">
+          <p class="fn-summary">Libera os atributos de cada método (chamando <code>freeAttribute</code> para cada um) e depois o array <code>cf->methods</code>. Define <code>cf->methods = NULL</code> ao final.</p>
+          <div class="label mt-8">Parâmetros</div>
+          <table class="param-table">
+            <tr><th>Nome</th><th>Tipo</th><th>Descrição</th></tr>
+            <tr><td class="param-name">cf</td><td><code>ClassFile *</code></td><td class="param-desc">ClassFile cujos métodos serão liberados</td></tr>
+          </table>
+          <div class="return-row"><strong>Retorno:</strong> void</div>
+          <div class="label mt-8">Chama</div>
+          <div class="calls-list">
+            <a href="attribute.html#fn-freeAttribute" class="call-link">freeAttribute()</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+<script>
+document.getElementById('sidebar-filter').addEventListener('input', function() {
+  const q = this.value.toLowerCase();
+  document.querySelectorAll('#sidebar-nav .nav-item').forEach(el => {
+    el.style.display = el.textContent.toLowerCase().includes(q) ? '' : 'none';
+  });
+});
+document.querySelectorAll('.fn-card-header').forEach(h => {
+  h.addEventListener('click', () => { h.nextElementSibling?.classList.toggle('open'); });
+});
+hljs.highlightAll();
+</script>
+</body>
+</html>

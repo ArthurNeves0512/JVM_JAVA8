@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>printer.c — JVM Java 8 em C</title>
+<link rel="stylesheet" href="../style.css">
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+  mermaid.initialize({ startOnLoad: true, theme: 'default' });
+</script>
+</head>
+<body><nav id="sidebar">
+  <div id="sidebar-header">
+    <a href="../index.html"><div class="logo">JVM</div> JVM Java 8</a>
+  </div>
+  <div id="sidebar-search">
+    <input type="text" placeholder="Filtrar..." id="sidebar-filter">
+  </div>
+  <nav id="sidebar-nav">
+    <div class="nav-section">Visão Geral</div>
+    <a href="../index.html" class="nav-item">Início</a>
+    <a href="../diagram.html" class="nav-item">Diagrama Geral</a>
+    <a href="../structs.html" class="nav-item">Estruturas de Dados</a>
+    <div class="nav-section">Módulos</div>
+    <a href="main.html" class="nav-item ">main.c <span class="tag tag-module">main</span></a>
+    <a href="read_file.html" class="nav-item ">read_file.c <span class="tag tag-module">file</span></a>
+    <a href="dot_class.html" class="nav-item ">dot_class.c <span class="tag tag-module">types</span></a>
+    <a href="attribute.html" class="nav-item ">attribute.c <span class="tag tag-module">types</span></a>
+    <a href="opcodes.html" class="nav-item ">opcodes.c <span class="tag tag-module">types</span></a>
+    <a href="loader.html" class="nav-item ">loader.c <span class="tag tag-module">class_loader</span></a>
+    <a href="fields_interfaces.html" class="nav-item ">fields_interfaces.c <span class="tag tag-module">class_loader</span></a>
+    <a href="methods.html" class="nav-item ">methods.c <span class="tag tag-module">class_loader</span></a>
+    <a href="interpreter.html" class="nav-item ">interpreter.c <span class="tag tag-module">interpreter</span></a>
+    <a href="basic_ops.html" class="nav-item ">basic_ops.c <span class="tag tag-module">interpreter</span></a>
+    <a href="jvm_stack.html" class="nav-item ">jvm_stack.c <span class="tag tag-module">interpreter</span></a>
+    <a href="heap.html" class="nav-item ">heap.c <span class="tag tag-module">interpreter</span></a>
+    <a href="method_invoke.html" class="nav-item ">method_invoke.c <span class="tag tag-module">interpreter</span></a>
+    <a href="native_methods.html" class="nav-item ">native_methods.c <span class="tag tag-module">interpreter</span></a>
+    <a href="printer.html" class="nav-item active">printer.c <span class="tag tag-module">printer</span></a>
+    <a href="args.html" class="nav-item ">args.c <span class="tag tag-module">utils</span></a>
+  </nav>
+</nav>
+<div id="main">
+  <header class="page-header">
+    <div class="breadcrumb"><a href="../index.html">JVM</a> <span>›</span> Módulos</div>
+    <h1>printer.c <span class="badge badge-module">printer</span></h1>
+    <div class="subtitle">Impressão do ClassFile decodificado em formato legível para humanos.</div>
+  </header>
+  <div class="page-content">
+    <div class="section">
+      <div class="section-title">Papel no projeto</div>
+      <p class="text-muted">Imprime todas as seções de um ClassFile: cabeçalho geral (magic, versões, contadores), constant pool completo com resolução de referências, interfaces, campos com flags de acesso, métodos com bytecodes desassemblados (via printBytecode) e atributos de classe. A saída vai para stdout, que no fluxo normal é redirecionado para um arquivo .txt pelo main.</p>
+    </div>
+    <div class="section">
+      <div class="section-title">Funções</div>
+      <div class="fn-card" id="fn-printClassFile">
+  <div class="fn-card-header">
+    <span class="fn-name">printClassFile()</span>
+    <span class="fn-line">linha 1</span>
+  </div>
+  <div class="fn-signature"><code>void printClassFile(const ClassFile *cf)</code></div>
+  <div class="fn-body">
+    <p class="fn-summary">Ponto de entrada do printer. Imprime o cabeçalho geral (magic, versões, contadores) e o constant pool completo do ClassFile. Chama printClassFileHeader, printConstantPool e printClassInfo.</p>
+    <div class="label mt-8">Parâmetros</div>
+<table class="param-table">
+  <tr><th>Nome</th><th>Tipo</th><th>Descrição</th></tr>
+  <tr><td class="param-name">cf</td><td><code>const ClassFile *</code></td><td class="param-desc">ClassFile a imprimir</td></tr>
+
+</table>
+    <div class="return-row"><strong>Retorno:</strong> void</div>
+    
+  </div>
+</div><div class="fn-card" id="fn-printInterfaces">
+  <div class="fn-card-header">
+    <span class="fn-name">printInterfaces()</span>
+    <span class="fn-line">linha 1</span>
+  </div>
+  <div class="fn-signature"><code>void printInterfaces(const ClassFile *cf)</code></div>
+  <div class="fn-body">
+    <p class="fn-summary">Imprime a lista de interfaces implementadas pela classe, resolvendo cada índice no CP para obter o nome.</p>
+    <div class="label mt-8">Parâmetros</div>
+<table class="param-table">
+  <tr><th>Nome</th><th>Tipo</th><th>Descrição</th></tr>
+  <tr><td class="param-name">cf</td><td><code>const ClassFile *</code></td><td class="param-desc">ClassFile a imprimir</td></tr>
+
+</table>
+    <div class="return-row"><strong>Retorno:</strong> void</div>
+    
+  </div>
+</div><div class="fn-card" id="fn-printFields">
+  <div class="fn-card-header">
+    <span class="fn-name">printFields()</span>
+    <span class="fn-line">linha 1</span>
+  </div>
+  <div class="fn-signature"><code>void printFields(const ClassFile *cf)</code></div>
+  <div class="fn-body">
+    <p class="fn-summary">Imprime cada field_info: nome, descritor, flags de acesso e atributos (como ConstantValue).</p>
+    <div class="label mt-8">Parâmetros</div>
+<table class="param-table">
+  <tr><th>Nome</th><th>Tipo</th><th>Descrição</th></tr>
+  <tr><td class="param-name">cf</td><td><code>const ClassFile *</code></td><td class="param-desc">ClassFile a imprimir</td></tr>
+
+</table>
+    <div class="return-row"><strong>Retorno:</strong> void</div>
+    <div class="label mt-8">Chama</div><div class="calls-list"><a href="attribute.html#fn-getUtf8" class="call-link">getUtf8()</a></div>
+  </div>
+</div><div class="fn-card" id="fn-printMethods">
+  <div class="fn-card-header">
+    <span class="fn-name">printMethods()</span>
+    <span class="fn-line">linha 1</span>
+  </div>
+  <div class="fn-signature"><code>void printMethods(const ClassFile *cf)</code></div>
+  <div class="fn-body">
+    <p class="fn-summary">Imprime cada method_info: nome, descritor, flags de acesso e atributos. Para o atributo Code, chama printCodeAttribute que exibe os bytecodes desassemblados. Para Exceptions, chama printExceptionsAttribute.</p>
+    <div class="label mt-8">Parâmetros</div>
+<table class="param-table">
+  <tr><th>Nome</th><th>Tipo</th><th>Descrição</th></tr>
+  <tr><td class="param-name">cf</td><td><code>const ClassFile *</code></td><td class="param-desc">ClassFile a imprimir</td></tr>
+
+</table>
+    <div class="return-row"><strong>Retorno:</strong> void</div>
+    <div class="label mt-8">Chama</div><div class="calls-list"><a href="attribute.html#fn-getUtf8" class="call-link">getUtf8()</a><a href="attribute.html#fn-printCodeAttribute" class="call-link">printCodeAttribute()</a><a href="attribute.html" class="call-link">printExceptionsAttribute()</a></div>
+  </div>
+</div><div class="fn-card" id="fn-printClassFileAttributes">
+  <div class="fn-card-header">
+    <span class="fn-name">printClassFileAttributes()</span>
+    <span class="fn-line">linha 1</span>
+  </div>
+  <div class="fn-signature"><code>void printClassFileAttributes(const ClassFile *cf)</code></div>
+  <div class="fn-body">
+    <p class="fn-summary">Imprime os atributos de nível de classe: SourceFile, InnerClasses e atributos desconhecidos como raw bytes.</p>
+    <div class="label mt-8">Parâmetros</div>
+<table class="param-table">
+  <tr><th>Nome</th><th>Tipo</th><th>Descrição</th></tr>
+  <tr><td class="param-name">cf</td><td><code>const ClassFile *</code></td><td class="param-desc">ClassFile a imprimir</td></tr>
+
+</table>
+    <div class="return-row"><strong>Retorno:</strong> void</div>
+    <div class="label mt-8">Chama</div><div class="calls-list"><a href="attribute.html#fn-getUtf8" class="call-link">getUtf8()</a><a href="attribute.html" class="call-link">printSourceFileAttribute()</a><a href="attribute.html" class="call-link">printInnerClassesAttribute()</a></div>
+  </div>
+</div><div class="fn-card" id="fn-printFileToTerminal">
+  <div class="fn-card-header">
+    <span class="fn-name">printFileToTerminal()</span>
+    <span class="fn-line">linha 1</span>
+  </div>
+  <div class="fn-signature"><code>void printFileToTerminal(int terminal_fd, const char *path)</code></div>
+  <div class="fn-body">
+    <p class="fn-summary">Abre o arquivo de saída e escreve seu conteúdo diretamente no fd do terminal original (sem passar pelo stdout redirecionado). Implementa o comportamento de --print.</p>
+    <div class="label mt-8">Parâmetros</div>
+<table class="param-table">
+  <tr><th>Nome</th><th>Tipo</th><th>Descrição</th></tr>
+  <tr><td class="param-name">terminal_fd</td><td><code>int</code></td><td class="param-desc">File descriptor do terminal original (salvo com dup() no main)</td></tr>
+<tr><td class="param-name">path</td><td><code>const char *</code></td><td class="param-desc">Caminho do arquivo de saída a exibir</td></tr>
+
+</table>
+    <div class="return-row"><strong>Retorno:</strong> void</div>
+    
+  </div>
+</div>
+    </div>
+    
+  </div>
+</div>
+<script>
+document.getElementById('sidebar-filter').addEventListener('input', function() {
+  const q = this.value.toLowerCase();
+  document.querySelectorAll('#sidebar-nav .nav-item').forEach(el => {
+    el.style.display = el.textContent.toLowerCase().includes(q) ? '' : 'none';
+  });
+});
+document.querySelectorAll('.fn-card-header').forEach(h => {
+  h.addEventListener('click', () => { h.nextElementSibling?.nextElementSibling?.classList.toggle('open'); });
+});
+</script>
+</body>
+</html>

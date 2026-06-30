@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Estruturas de Dados — JVM Java 8 em C</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<nav id="sidebar">
+  <div id="sidebar-header">
+    <a href="index.html"><div class="logo">JVM</div> JVM Java 8</a>
+  </div>
+  <div id="sidebar-search">
+    <input type="text" placeholder="Filtrar..." id="sidebar-filter">
+  </div>
+  <nav id="sidebar-nav">
+    <div class="nav-section">Visão Geral</div>
+    <a href="index.html" class="nav-item">Início</a>
+    <a href="diagram.html" class="nav-item">Diagrama Geral</a>
+    <a href="structs.html" class="nav-item active">Estruturas de Dados</a>
+    <div class="nav-section">Módulos</div>
+    <a href="modules/main.html" class="nav-item">main.c <span class="tag tag-module">main</span></a>
+    <a href="modules/read_file.html" class="nav-item">read_file.c <span class="tag tag-module">file</span></a>
+    <a href="modules/dot_class.html" class="nav-item">dot_class.c <span class="tag tag-module">types</span></a>
+    <a href="modules/attribute.html" class="nav-item">attribute.c <span class="tag tag-module">types</span></a>
+    <a href="modules/opcodes.html" class="nav-item">opcodes.c <span class="tag tag-module">types</span></a>
+    <a href="modules/loader.html" class="nav-item">loader.c <span class="tag tag-module">class_loader</span></a>
+    <a href="modules/fields_interfaces.html" class="nav-item">fields_interfaces.c <span class="tag tag-module">class_loader</span></a>
+    <a href="modules/methods.html" class="nav-item">methods.c <span class="tag tag-module">class_loader</span></a>
+    <a href="modules/interpreter.html" class="nav-item">interpreter.c <span class="tag tag-module">interpreter</span></a>
+    <a href="modules/basic_ops.html" class="nav-item">basic_ops.c <span class="tag tag-module">interpreter</span></a>
+    <a href="modules/jvm_stack.html" class="nav-item">jvm_stack.c <span class="tag tag-module">interpreter</span></a>
+    <a href="modules/heap.html" class="nav-item">heap.c <span class="tag tag-module">interpreter</span></a>
+    <a href="modules/method_invoke.html" class="nav-item">method_invoke.c <span class="tag tag-module">interpreter</span></a>
+    <a href="modules/native_methods.html" class="nav-item">native_methods.c <span class="tag tag-module">interpreter</span></a>
+    <a href="modules/printer.html" class="nav-item">printer.c <span class="tag tag-module">printer</span></a>
+    <a href="modules/args.html" class="nav-item">args.c <span class="tag tag-module">utils</span></a>
+  </nav>
+</nav>
+
+<div id="main">
+  <header class="page-header">
+    <div class="breadcrumb"><a href="index.html">JVM</a> <span>›</span> Referência</div>
+    <h1>Estruturas de Dados <span class="badge badge-struct">14 structs</span></h1>
+    <div class="subtitle">Tipos centrais da JVM: representação do .class, runtime de execução e heap.</div>
+  </header>
+  <div class="page-content">
+
+    <!-- ClassFile -->
+    <div class="struct-card" id="struct-ClassFile">
+      <div class="struct-card-header">
+        <span class="struct-name">ClassFile</span>
+        <span class="struct-file">src/lib/types/class_file/dot_class.h</span>
+      </div>
+      <div class="struct-desc">
+        Representa um arquivo .class completamente decodificado. É a estrutura raiz que agrega todos os
+        componentes: cabeçalho, constant pool, flags de acesso, campos, métodos, atributos e um ponteiro
+        para a superclasse carregada em runtime.
+      </div>
+      <table class="param-table">
+        <tr><th>Campo</th><th>Tipo</th><th>Descrição</th></tr>
+        <tr><td class="param-name">magic</td><td><code>u4</code></td><td class="param-desc">Número mágico do arquivo .class (deve ser 0xCAFEBABE)</td></tr>
+        <tr><td class="param-name">minor_version</td><td><code>u2</code></td><td class="param-desc">Versão menor do formato .class</td></tr>
+        <tr><td class="param-name">major_version</td><td><code>u2</code></td><td class="param-desc">Versão maior (ex: 52 = Java 8)</td></tr>
+        <tr><td class="param-name">constant_pool_count</td><td><code>u2</code></td><td class="param-desc">Número de entradas no constant pool + 1</td></tr>
+        <tr><td class="param-name">constant_pool</td><td><code>cp_info *</code></td><td class="param-desc">Array de entradas do constant pool (índices 1..count-1)</td></tr>
+        <tr><td class="param-name">access_flags</td><td><code>u2</code></td><td class="param-desc">Flags de acesso da classe (ACC_PUBLIC, ACC_ABSTRACT, etc.)</td></tr>
+        <tr><td class="param-name">this_class</td><td><code>u2</code></td><td class="param-desc">Índice no CP para a entrada CONSTANT_Class desta classe</td></tr>
+        <tr><td class="param-name">super_class</td><td><code>u2</code></td><td class="param-desc">Índice no CP para a superclasse (0 se java/lang/Object)</td></tr>
+        <tr><td class="param-name">interfaces_count</td><td><code>u2</code></td><td class="param-desc">Número de interfaces implementadas</td></tr>
+        <tr><td class="param-name">interfaces</td><td><code>u2 *</code></td><td class="param-desc">Array de índices no CP para cada interface</td></tr>
+        <tr><td class="param-name">fields_count</td><td><code>u2</code></td><td class="param-desc">Número de campos da classe</td></tr>
+        <tr><td class="param-name">fields</td><td><code>field_info *</code></td><td class="param-desc">Array de estruturas field_info</td></tr>
+        <tr><td class="param-name">methods_count</td><td><code>u2</code></td><td class="param-desc">Número de métodos da classe</td></tr>
+        <tr><td class="param-name">methods</td><td><code>method_info *</code></td><td class="param-desc">Array de estruturas method_info</td></tr>
+        <tr><td class="param-name">attributes_count</td><td><code>u2</code></td><td class="param-desc">Número de atributos de nível de classe</td></tr>
+        <tr><td class="param-name">attributes</td><td><code>attribute_info *</code></td><td class="param-desc">Array de atributos genéricos (SourceFile, InnerClasses, etc.)</td></tr>
+        <tr><td class="param-name">super_class_file</td><td><code>ClassFile *</code></td><td class="param-desc">Ponteiro para o ClassFile da superclasse; NULL se não houver ou for nativa</td></tr>
+      </table>
+      <div style="padding: 10px 16px 14px; font-size: 12px; color: var(--text-dim);">
+        Usado por: <a href="modules/loader.html" class="call-link">loader.c</a>
+        <a href="modules/dot_class.html" class="call-link">dot_class.c</a>
+        <a href="modules/interpreter.html" class="call-link">interpreter.c</a>
+        <a href="modules/basic_ops.html" class="call-link">basic_ops.c</a>
+        <a href="modules/heap.html" class="call-link">heap.c</a>
+        <a href="modules/method_invoke.html" class="call-link">method_invoke.c</a>
+      </div>
+    </div>
+
+    <!-- cp_info -->
+    <div class="struct-card" id="struct-cp_info">
+      <div class="struct-card-header">
+        <span class="struct-name">cp_info</span>
+        <span class="struct-file">src/lib/types/constant_pool.h</span>
+      </div>
+      <div class="struct-desc">
+        Entrada do constant pool. Usa uma tagged union onde o campo <code>tag</code> indica qual membro
+        está ativo. Representa qualquer tipo de constante JVM (classe, método, campo, string, int, float, etc.).
+      </div>
+      <table class="param-table">
+        <tr><th>Campo</th><th>Tipo</th><th>Ativo quando</th></tr>
+        <tr><td class="param-name">tag</td><td><code>u1</code></td><td class="param-desc">Sempre presente — discriminador do tipo</td></tr>
+        <tr><td class="param-name">constant_class_info</td><td><code>CONSTANT_Class_info *</code></td><td class="param-desc">tag == 7 (CONSTANT_Class)</td></tr>
+        <tr><td class="param-name">fieldRef_info</td><td><code>CONSTANT_Fieldref_info *</code></td><td class="param-desc">tag == 9 (CONSTANT_Fieldref)</td></tr>
+        <tr><td class="param-name">methodRef_info</td><td><code>CONSTANT_Methodref_info *</code></td><td class="param-desc">tag == 10 (CONSTANT_Methodref)</td></tr>
+        <tr><td class="param-name">interfaceMethod_info</td><td><code>CONSTANT_InterfaceMethodref_info *</code></td><td class="param-desc">tag == 11</td></tr>
+        <tr><td class="param-name">string_info</td><td><code>CONSTANT_String_info *</code></td><td class="param-desc">tag == 8 (CONSTANT_String)</td></tr>
+        <tr><td class="param-name">integer_info</td><td><code>CONSTANT_Integer_info *</code></td><td class="param-desc">tag == 3</td></tr>
+        <tr><td class="param-name">float_info</td><td><code>CONSTANT_Float_info *</code></td><td class="param-desc">tag == 4</td></tr>
+        <tr><td class="param-name">long_info</td><td><code>CONSTANT_Long_info *</code></td><td class="param-desc">tag == 5 — ocupa 2 slots no CP</td></tr>
+        <tr><td class="param-name">double_info</td><td><code>CONSTANT_Double_info *</code></td><td class="param-desc">tag == 6 — ocupa 2 slots no CP</td></tr>
+        <tr><td class="param-name">nameAndType_info</td><td><code>CONSTANT_NameAndType_info *</code></td><td class="param-desc">tag == 12</td></tr>
+        <tr><td class="param-name">utf8_info</td><td><code>CONSTANT_Utf8_info *</code></td><td class="param-desc">tag == 1 — nomes, descritores e strings</td></tr>
+        <tr><td class="param-name">methodHandle_info</td><td><code>CONSTANT_MethodHandle_info *</code></td><td class="param-desc">tag == 15</td></tr>
+        <tr><td class="param-name">methodType_info</td><td><code>CONSTANT_MethodType_info *</code></td><td class="param-desc">tag == 16</td></tr>
+        <tr><td class="param-name">invokeDynamic_info</td><td><code>CONSTANT_InvokeDynamic_info *</code></td><td class="param-desc">tag == 18</td></tr>
+      </table>
+      <div style="padding: 10px 16px 14px; font-size: 12px; color: var(--text-dim);">
+        Usado por: <a href="modules/loader.html" class="call-link">loader.c</a>
+        <a href="modules/attribute.html" class="call-link">attribute.c</a>
+        <a href="modules/printer.html" class="call-link">printer.c</a>
+        <a href="modules/method_invoke.html" class="call-link">method_invoke.c</a>
+      </div>
+    </div>
+
+    <!-- Frame -->
+    <div class="struct-card" id="struct-Frame">
+      <div class="struct-card-header">
+        <span class="struct-name">Frame</span>
+        <span class="struct-file">src/lib/interpreter/basic_ops.h</span>
+      </div>
+      <div class="struct-desc">
+        Frame de ativação JVM. Cada chamada de método cria um Frame com sua própria pilha de operandos,
+        variáveis locais, ponteiro para o bytecode e um PC (program counter).
+      </div>
+      <table class="param-table">
+        <tr><th>Campo</th><th>Tipo</th><th>Descrição</th></tr>
+        <tr><td class="param-name">pilha</td><td><code>Slot[64]</code></td><td class="param-desc">Pilha de operandos (máximo 64 slots)</td></tr>
+        <tr><td class="param-name">topo</td><td><code>int</code></td><td class="param-desc">Índice do topo da pilha (-1 = vazia)</td></tr>
+        <tr><td class="param-name">locais</td><td><code>Slot[64]</code></td><td class="param-desc">Variáveis locais (inclui parâmetros e 'this' em [0])</td></tr>
+        <tr><td class="param-name">codigo</td><td><code>u1 *</code></td><td class="param-desc">Ponteiro para o bytecode do método</td></tr>
+        <tr><td class="param-name">tamanho</td><td><code>u4</code></td><td class="param-desc">Comprimento total do bytecode</td></tr>
+        <tr><td class="param-name">pc</td><td><code>u4</code></td><td class="param-desc">Program Counter: posição da próxima instrução</td></tr>
+      </table>
+      <div style="padding: 10px 16px 14px; font-size: 12px; color: var(--text-dim);">
+        Criado por: <a href="modules/basic_ops.html#fn-criaFrame" class="call-link">criaFrame()</a>
+        &nbsp;Executado por: <a href="modules/basic_ops.html#fn-executaFrame" class="call-link">executaFrame()</a>
+        &nbsp;Gerenciado por: <a href="modules/jvm_stack.html" class="call-link">jvm_stack.c</a>
+      </div>
+    </div>
+
+    <!-- Slot -->
+    <div class="struct-card" id="struct-Slot">
+      <div class="struct-card-header">
+        <span class="struct-name">Slot</span>
+        <span class="struct-file">src/lib/interpreter/basic_ops.h</span>
+      </div>
+      <div class="struct-desc">
+        Valor genérico da pilha de operandos ou variável local. Usa campos sobrepostos para qualquer
+        tipo primitivo JVM ou referência. O campo <code>tipo</code> discrimina qual campo está em uso.
+      </div>
+      <table class="param-table">
+        <tr><th>Campo</th><th>Tipo</th><th>Descrição</th></tr>
+        <tr><td class="param-name">inteiro</td><td><code>int32_t</code></td><td class="param-desc">Valor inteiro (TIPO_INT = 0)</td></tr>
+        <tr><td class="param-name">flutuante</td><td><code>float</code></td><td class="param-desc">Valor float (TIPO_FLOAT = 1)</td></tr>
+        <tr><td class="param-name">longo</td><td><code>int64_t</code></td><td class="param-desc">Valor long (TIPO_LONG = 2) ou ponteiro codificado</td></tr>
+        <tr><td class="param-name">duplo</td><td><code>double</code></td><td class="param-desc">Valor double (TIPO_DOUBLE = 3)</td></tr>
+        <tr><td class="param-name">tipo</td><td><code>int</code></td><td class="param-desc">Discriminador: INT=0, FLOAT=1, LONG=2, DOUBLE=3, REF=4, ARRAY=5, OBJECT=6</td></tr>
+        <tr><td class="param-name">ref</td><td><code>void *</code></td><td class="param-desc">Ponteiro genérico para HeapObject ou JVMArray</td></tr>
+      </table>
+    </div>
+
+    <!-- JVMStack -->
+    <div class="struct-card" id="struct-JVMStack">
+      <div class="struct-card-header">
+        <span class="struct-name">JVMStack</span>
+        <span class="struct-file">src/lib/interpreter/jvm_stack.h</span>
+      </div>
+      <div class="struct-desc">
+        Pilha de frames de ativação da JVM. Armazena até MAX_FRAMES (256) frames simultâneos,
+        simulando a call stack.
+      </div>
+      <table class="param-table">
+        <tr><th>Campo</th><th>Tipo</th><th>Descrição</th></tr>
+        <tr><td class="param-name">frames</td><td><code>Frame *[256]</code></td><td class="param-desc">Array de ponteiros para frames (máximo 256)</td></tr>
+        <tr><td class="param-name">topo</td><td><code>int</code></td><td class="param-desc">Índice do frame atual (-1 = vazia)</td></tr>
+      </table>
+      <div style="padding: 10px 16px 14px; font-size: 12px; color: var(--text-dim);">
+        Gerenciado por: <a href="modules/jvm_stack.html" class="call-link">jvm_stack.c</a>
+      </div>
+    </div>
+
+    <!-- HeapObject -->
+    <div class="struct-card" id="struct-HeapObject">
+      <div class="struct-card-header">
+        <span class="struct-name">HeapObject</span>
+        <span class="struct-file">src/lib/interpreter/heap.h</span>
+      </div>
+      <div class="struct-desc">
+        Representa um objeto Java alocado em runtime na heap simulada. Armazena o nome da classe,
+        o ClassFile associado, os campos de instância (incluindo herdados) com seus valores,
+        e um ponteiro para dados nativos (ex: StringBuilder usa para acumular a string).
+      </div>
+      <table class="param-table">
+        <tr><th>Campo</th><th>Tipo</th><th>Descrição</th></tr>
+        <tr><td class="param-name">class_name</td><td><code>char *</code></td><td class="param-desc">Nome da classe do objeto</td></tr>
+        <tr><td class="param-name">class_file</td><td><code>ClassFile *</code></td><td class="param-desc">ClassFile da classe; NULL para classes nativas</td></tr>
+        <tr><td class="param-name">num_fields</td><td><code>u2</code></td><td class="param-desc">Total de campos de instância (incluindo herdados)</td></tr>
+        <tr><td class="param-name">field_names</td><td><code>char **</code></td><td class="param-desc">Array com o nome de cada campo</td></tr>
+        <tr><td class="param-name">fields</td><td><code>Slot *</code></td><td class="param-desc">Array com o valor atual de cada campo</td></tr>
+        <tr><td class="param-name">native_data</td><td><code>void *</code></td><td class="param-desc">Buffer opaco para classes nativas (ex: StringBuilder)</td></tr>
+      </table>
+      <div style="padding: 10px 16px 14px; font-size: 12px; color: var(--text-dim);">
+        Alocado por: <a href="modules/heap.html#fn-alocaObjeto" class="call-link">alocaObjeto()</a>
+        &nbsp;Buscado por: <a href="modules/heap.html#fn-buscaCampo" class="call-link">buscaCampo()</a>
+        &nbsp;Liberado por: <a href="modules/heap.html#fn-liberaHeap" class="call-link">liberaHeap()</a>
+      </div>
+    </div>
+
+    <!-- JVMArray -->
+    <div class="struct-card" id="struct-JVMArray">
+      <div class="struct-card-header">
+        <span class="struct-name">JVMArray</span>
+        <span class="struct-file">src/lib/interpreter/basic_ops.h</span>
+      </div>
+      <div class="struct-desc">
+        Representa um array JVM alocado pelos opcodes <code>newarray</code> / <code>anewarray</code>.
+        O buffer <code>data</code> é tipado — o tamanho de cada elemento varia conforme <code>atype</code>.
+      </div>
+      <table class="param-table">
+        <tr><th>Campo</th><th>Tipo</th><th>Descrição</th></tr>
+        <tr><td class="param-name">length</td><td><code>int32_t</code></td><td class="param-desc">Número de elementos do array</td></tr>
+        <tr><td class="param-name">atype</td><td><code>int</code></td><td class="param-desc">Tipo dos elementos: T_INT=10, T_LONG=11, T_FLOAT=6, T_DOUBLE=7, T_OBJECT=12, etc.</td></tr>
+        <tr><td class="param-name">data</td><td><code>void *</code></td><td class="param-desc">Buffer de elementos inicializado com zero</td></tr>
+      </table>
+      <div style="padding: 10px 16px 14px; font-size: 12px; color: var(--text-dim);">
+        Alocado por: <a href="modules/basic_ops.html" class="call-link">aloca_array()</a>
+        &nbsp;Liberado por: <a href="modules/basic_ops.html#fn-liberaArrays" class="call-link">liberaArrays()</a>
+      </div>
+    </div>
+
+    <!-- Code_attribute -->
+    <div class="struct-card" id="struct-Code_attribute">
+      <div class="struct-card-header">
+        <span class="struct-name">Code_attribute</span>
+        <span class="struct-file">src/lib/types/attribute.h</span>
+      </div>
+      <div class="struct-desc">
+        Atributo Code de um método JVM: contém os bytecodes executáveis, limites de pilha e variáveis
+        locais, tabela de exceções e sub-atributos de depuração (LineNumberTable, LocalVariableTable).
+      </div>
+      <table class="param-table">
+        <tr><th>Campo</th><th>Tipo</th><th>Descrição</th></tr>
+        <tr><td class="param-name">max_stack</td><td><code>u2</code></td><td class="param-desc">Profundidade máxima da pilha de operandos</td></tr>
+        <tr><td class="param-name">max_locals</td><td><code>u2</code></td><td class="param-desc">Número máximo de variáveis locais</td></tr>
+        <tr><td class="param-name">code_length</td><td><code>u4</code></td><td class="param-desc">Comprimento do bytecode em bytes</td></tr>
+        <tr><td class="param-name">code</td><td><code>u1 *</code></td><td class="param-desc">Buffer com os bytecodes do método</td></tr>
+        <tr><td class="param-name">exception_table_length</td><td><code>u2</code></td><td class="param-desc">Número de entradas na tabela de exceções</td></tr>
+        <tr><td class="param-name">exception_table</td><td><code>exception_table_entry *</code></td><td class="param-desc">Tabela de handlers de exceção</td></tr>
+        <tr><td class="param-name">attributes_count</td><td><code>u2</code></td><td class="param-desc">Número de sub-atributos</td></tr>
+        <tr><td class="param-name">attributes</td><td><code>attribute_info *</code></td><td class="param-desc">Sub-atributos (LineNumberTable, LocalVariableTable)</td></tr>
+      </table>
+      <div style="padding: 10px 16px 14px; font-size: 12px; color: var(--text-dim);">
+        Lido por: <a href="modules/attribute.html#fn-readCodeAttribute" class="call-link">readCodeAttribute()</a>
+        &nbsp;Usado por: <a href="modules/basic_ops.html#fn-criaFrame" class="call-link">criaFrame()</a>
+        &nbsp;<a href="modules/method_invoke.html#fn-encontraCodeAttr" class="call-link">encontraCodeAttr()</a>
+      </div>
+    </div>
+
+    <!-- field_info -->
+    <div class="struct-card" id="struct-field_info">
+      <div class="struct-card-header">
+        <span class="struct-name">field_info</span>
+        <span class="struct-file">src/lib/types/class_file/methods_info.h</span>
+      </div>
+      <div class="struct-desc">
+        Representa um campo da classe. Contém flags de acesso, índices para nome e descritor no CP,
+        e seus atributos (ex: ConstantValue para constantes compiladas).
+      </div>
+      <table class="param-table">
+        <tr><th>Campo</th><th>Tipo</th><th>Descrição</th></tr>
+        <tr><td class="param-name">access_flags</td><td><code>u2</code></td><td class="param-desc">ACC_PUBLIC, ACC_STATIC, ACC_FINAL, etc.</td></tr>
+        <tr><td class="param-name">name_index</td><td><code>u2</code></td><td class="param-desc">Índice no CP para o nome do campo</td></tr>
+        <tr><td class="param-name">descriptor_index</td><td><code>u2</code></td><td class="param-desc">Índice no CP para o descritor de tipo</td></tr>
+        <tr><td class="param-name">attributes_count</td><td><code>u2</code></td><td class="param-desc">Número de atributos</td></tr>
+        <tr><td class="param-name">attributes</td><td><code>attribute_info *</code></td><td class="param-desc">Array de atributos do campo</td></tr>
+      </table>
+    </div>
+
+    <!-- method_info -->
+    <div class="struct-card" id="struct-method_info">
+      <div class="struct-card-header">
+        <span class="struct-name">method_info</span>
+        <span class="struct-file">src/lib/types/class_file/methods_info.h</span>
+      </div>
+      <div class="struct-desc">
+        Representa um método da classe. O atributo mais importante é o <em>Code</em>, que contém os bytecodes.
+      </div>
+      <table class="param-table">
+        <tr><th>Campo</th><th>Tipo</th><th>Descrição</th></tr>
+        <tr><td class="param-name">access_flags</td><td><code>u2</code></td><td class="param-desc">ACC_PUBLIC, ACC_STATIC, ACC_ABSTRACT, etc.</td></tr>
+        <tr><td class="param-name">name_index</td><td><code>u2</code></td><td class="param-desc">Índice no CP para o nome do método</td></tr>
+        <tr><td class="param-name">descriptor_index</td><td><code>u2</code></td><td class="param-desc">Índice no CP para o descritor de método</td></tr>
+        <tr><td class="param-name">attributes_count</td><td><code>u2</code></td><td class="param-desc">Número de atributos</td></tr>
+        <tr><td class="param-name">attributes</td><td><code>attribute_info *</code></td><td class="param-desc">Array de atributos (Code, Exceptions, etc.)</td></tr>
+      </table>
+      <div style="padding: 10px 16px 14px; font-size: 12px; color: var(--text-dim);">
+        Lido por: <a href="modules/methods.html#fn-readMethods" class="call-link">readMethods()</a>
+        &nbsp;Buscado por: <a href="modules/method_invoke.html#fn-buscaMetodoClasse" class="call-link">buscaMetodoClasse()</a>
+      </div>
+    </div>
+
+    <!-- attribute_info -->
+    <div class="struct-card" id="struct-attribute_info">
+      <div class="struct-card-header">
+        <span class="struct-name">attribute_info</span>
+        <span class="struct-file">src/lib/types/class_file/attributes_info.h</span>
+      </div>
+      <div class="struct-desc">
+        Cabeçalho genérico de qualquer atributo JVM. O campo <code>info</code> aponta para a struct
+        específica decodificada (ex: Code_attribute) ou para bytes raw.
+      </div>
+      <table class="param-table">
+        <tr><th>Campo</th><th>Tipo</th><th>Descrição</th></tr>
+        <tr><td class="param-name">attribute_name_index</td><td><code>u2</code></td><td class="param-desc">Índice no CP para o nome do atributo</td></tr>
+        <tr><td class="param-name">attribute_length</td><td><code>u4</code></td><td class="param-desc">Comprimento em bytes do corpo</td></tr>
+        <tr><td class="param-name">info</td><td><code>u1 *</code></td><td class="param-desc">Ponteiro para os dados decodificados (cast para struct específica)</td></tr>
+      </table>
+    </div>
+
+    <!-- Args -->
+    <div class="struct-card" id="struct-Args">
+      <div class="struct-card-header">
+        <span class="struct-name">Args</span>
+        <span class="struct-file">src/lib/utils/args.h</span>
+      </div>
+      <div class="struct-desc">
+        Contém os argumentos da linha de comando após o parsing por <code>parse_args()</code>.
+      </div>
+      <table class="param-table">
+        <tr><th>Campo</th><th>Tipo</th><th>Descrição</th></tr>
+        <tr><td class="param-name">class_path</td><td><code>const char *</code></td><td class="param-desc">Caminho do arquivo .class de entrada (obrigatório)</td></tr>
+        <tr><td class="param-name">output_path</td><td><code>const char *</code></td><td class="param-desc">Caminho do arquivo de saída; NULL se não especificado</td></tr>
+        <tr><td class="param-name">do_print</td><td><code>int</code></td><td class="param-desc">1 se --print foi passado</td></tr>
+      </table>
+      <div style="padding: 10px 16px 14px; font-size: 12px; color: var(--text-dim);">
+        Preenchida por: <a href="modules/args.html#fn-parse_args" class="call-link">parse_args()</a>
+      </div>
+    </div>
+
+    <!-- exception_table_entry -->
+    <div class="struct-card" id="struct-exception_table_entry">
+      <div class="struct-card-header">
+        <span class="struct-name">exception_table_entry</span>
+        <span class="struct-file">src/lib/types/attribute.h</span>
+      </div>
+      <div class="struct-desc">
+        Uma entrada da tabela de exceções do atributo Code. Define o intervalo de bytecodes protegido
+        e o handler de exceção.
+      </div>
+      <table class="param-table">
+        <tr><th>Campo</th><th>Tipo</th><th>Descrição</th></tr>
+        <tr><td class="param-name">start_pc</td><td><code>u2</code></td><td class="param-desc">Início do intervalo protegido (inclusive)</td></tr>
+        <tr><td class="param-name">end_pc</td><td><code>u2</code></td><td class="param-desc">Fim do intervalo protegido (exclusive)</td></tr>
+        <tr><td class="param-name">handler_pc</td><td><code>u2</code></td><td class="param-desc">PC do handler de exceção</td></tr>
+        <tr><td class="param-name">catch_type</td><td><code>u2</code></td><td class="param-desc">Índice no CP do tipo de exceção (0 = finally)</td></tr>
+      </table>
+    </div>
+
+    <!-- CONSTANT_Utf8_info -->
+    <div class="struct-card" id="struct-CONSTANT_Utf8_info">
+      <div class="struct-card-header">
+        <span class="struct-name">CONSTANT_Utf8_info</span>
+        <span class="struct-file">src/lib/types/class_file/cp_info.h</span>
+      </div>
+      <div class="struct-desc">
+        Entrada do constant pool que armazena uma string UTF-8. Usada para nomes de classes,
+        métodos, campos e descritores. Após a leitura, o buffer é terminado com '\0'.
+      </div>
+      <table class="param-table">
+        <tr><th>Campo</th><th>Tipo</th><th>Descrição</th></tr>
+        <tr><td class="param-name">tag</td><td><code>u1</code></td><td class="param-desc">Tag = 1 (CONSTANT_Utf8)</td></tr>
+        <tr><td class="param-name">length</td><td><code>u2</code></td><td class="param-desc">Comprimento da string em bytes</td></tr>
+        <tr><td class="param-name">bytes</td><td><code>u1 *</code></td><td class="param-desc">Conteúdo da string (terminado com \0)</td></tr>
+      </table>
+    </div>
+
+  </div><!-- .page-content -->
+</div><!-- #main -->
+
+<script>
+document.getElementById('sidebar-filter').addEventListener('input', function() {
+  const q = this.value.toLowerCase();
+  document.querySelectorAll('#sidebar-nav .nav-item').forEach(el => {
+    el.style.display = el.textContent.toLowerCase().includes(q) ? '' : 'none';
+  });
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>opcodes.c — JVM Java 8 em C</title>
+<link rel="stylesheet" href="../style.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+  mermaid.initialize({ startOnLoad: true, theme: 'default' });
+</script>
+</head>
+<body>
+<nav id="sidebar">
+  <div id="sidebar-header">
+    <a href="../index.html"><div class="logo">JVM</div> JVM Java 8</a>
+  </div>
+  <div id="sidebar-search">
+    <input type="text" placeholder="Filtrar..." id="sidebar-filter">
+  </div>
+  <nav id="sidebar-nav">
+    <div class="nav-section">Visão Geral</div>
+    <a href="../index.html" class="nav-item">Início</a>
+    <a href="../diagram.html" class="nav-item">Diagrama Geral</a>
+    <a href="../structs.html" class="nav-item">Estruturas de Dados</a>
+    <div class="nav-section">Módulos</div>
+    <a href="main.html" class="nav-item">main.c <span class="tag tag-module">main</span></a>
+    <a href="read_file.html" class="nav-item">read_file.c <span class="tag tag-module">file</span></a>
+    <a href="dot_class.html" class="nav-item">dot_class.c <span class="tag tag-module">types</span></a>
+    <a href="attribute.html" class="nav-item">attribute.c <span class="tag tag-module">types</span></a>
+    <a href="opcodes.html" class="nav-item active">opcodes.c <span class="tag tag-module">types</span></a>
+    <a href="loader.html" class="nav-item">loader.c <span class="tag tag-module">class_loader</span></a>
+    <a href="fields_interfaces.html" class="nav-item">fields_interfaces.c <span class="tag tag-module">class_loader</span></a>
+    <a href="methods.html" class="nav-item">methods.c <span class="tag tag-module">class_loader</span></a>
+    <a href="interpreter.html" class="nav-item">interpreter.c <span class="tag tag-module">interpreter</span></a>
+    <a href="basic_ops.html" class="nav-item">basic_ops.c <span class="tag tag-module">interpreter</span></a>
+    <a href="jvm_stack.html" class="nav-item">jvm_stack.c <span class="tag tag-module">interpreter</span></a>
+    <a href="heap.html" class="nav-item">heap.c <span class="tag tag-module">interpreter</span></a>
+    <a href="method_invoke.html" class="nav-item">method_invoke.c <span class="tag tag-module">interpreter</span></a>
+    <a href="native_methods.html" class="nav-item">native_methods.c <span class="tag tag-module">interpreter</span></a>
+    <a href="printer.html" class="nav-item">printer.c <span class="tag tag-module">printer</span></a>
+    <a href="args.html" class="nav-item">args.c <span class="tag tag-module">utils</span></a>
+  </nav>
+</nav>
+<div id="main">
+  <header class="page-header">
+    <div class="breadcrumb"><a href="../index.html">JVM</a> <span>›</span> Módulos</div>
+    <h1>opcodes.c <span class="badge badge-module">types</span></h1>
+    <div class="subtitle">Tabela de opcodes, desassemblador de bytecode e cálculo de tamanho de instrução</div>
+  </header>
+  <div class="page-content">
+
+    <div class="section">
+      <div class="section-title">Papel no projeto</div>
+      <p>Define a tabela estática <code>opcode_table[256]</code> mapeando cada bytecode JVM ao seu mnemônico e tamanho em bytes. Implementa o desassemblador de bytecode (<code>printBytecode</code>) que exibe cada instrução com seu offset, nome e operandos — incluindo resolução de referências do constant pool. Também calcula o tamanho correto de instruções de tamanho variável (<code>tableswitch</code>, <code>lookupswitch</code>, <code>wide</code>).</p>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Funções</div>
+
+      <div class="fn-card" id="fn-opcode_size_variable">
+        <div class="fn-card-header">
+          <span class="fn-name">opcode_size_variable()</span>
+          <span class="fn-line">linha ~190</span>
+        </div>
+        <div class="fn-signature"><code>u4 opcode_size_variable(const u1 *code, u4 pc)</code></div>
+        <div class="fn-body">
+          <p class="fn-summary">Calcula o tamanho em bytes de instruções de tamanho variável: <code>tableswitch</code> (alinhamento + low/high + offsets), <code>lookupswitch</code> (alinhamento + npairs) e <code>wide</code> (diferente para <code>iinc</code>). Para outros opcodes, retorna 1 (o chamador usa <code>opcode_table.size</code>).</p>
+          <div class="label mt-8">Parâmetros</div>
+          <table class="param-table">
+            <tr><th>Nome</th><th>Tipo</th><th>Descrição</th></tr>
+            <tr><td class="param-name">code</td><td><code>const u1 *</code></td><td class="param-desc">Buffer de bytecodes</td></tr>
+            <tr><td class="param-name">pc</td><td><code>u4</code></td><td class="param-desc">Posição atual do program counter</td></tr>
+          </table>
+          <div class="return-row"><strong>Retorno:</strong> Tamanho em bytes da instrução atual</div>
+        </div>
+      </div>
+
+      <div class="fn-card" id="fn-printBytecode">
+        <div class="fn-card-header">
+          <span class="fn-name">printBytecode()</span>
+          <span class="fn-line">linha ~221</span>
+        </div>
+        <div class="fn-signature"><code>void printBytecode(const u1 *code, u4 code_length, cp_info *cp)</code></div>
+        <div class="fn-body">
+          <p class="fn-summary">Desassembla e imprime o bytecode de um método: exibe o offset, mnemônico e operandos de cada instrução. Resolve referências do constant pool para instrução como <code>invokevirtual</code>, <code>getstatic</code>, <code>new</code>. Trata corretamente <code>tableswitch</code>, <code>lookupswitch</code> e <code>wide</code>.</p>
+          <div class="label mt-8">Parâmetros</div>
+          <table class="param-table">
+            <tr><th>Nome</th><th>Tipo</th><th>Descrição</th></tr>
+            <tr><td class="param-name">code</td><td><code>const u1 *</code></td><td class="param-desc">Buffer de bytecodes do método</td></tr>
+            <tr><td class="param-name">code_length</td><td><code>u4</code></td><td class="param-desc">Comprimento total do bytecode em bytes</td></tr>
+            <tr><td class="param-name">cp</td><td><code>cp_info *</code></td><td class="param-desc">Constant pool para resolução de referências</td></tr>
+          </table>
+          <div class="return-row"><strong>Retorno:</strong> void</div>
+          <div class="label mt-8">Chama</div>
+          <div class="calls-list">
+            <a href="#fn-opcode_size_variable" class="call-link">opcode_size_variable()</a>
+            <a href="#fn-printCpRef" class="call-link">printCpRef()</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="fn-card" id="fn-printCpRef">
+        <div class="fn-card-header">
+          <span class="fn-name">printCpRef() <span style="font-size:11px;color:var(--text-dim)">[static]</span></span>
+          <span class="fn-line">linha ~213</span>
+        </div>
+        <div class="fn-signature"><code>static void printCpRef(cp_info *cp, u2 idx)</code></div>
+        <div class="fn-body">
+          <p class="fn-summary">Imprime a referência do constant pool no índice dado de forma legível: para classes exibe o nome, para refs de método/campo exibe <code>classe.nome:descritor</code>, para strings exibe o conteúdo entre aspas. Função interna.</p>
+          <div class="label mt-8">Parâmetros</div>
+          <table class="param-table">
+            <tr><th>Nome</th><th>Tipo</th><th>Descrição</th></tr>
+            <tr><td class="param-name">cp</td><td><code>cp_info *</code></td><td class="param-desc">Constant pool</td></tr>
+            <tr><td class="param-name">idx</td><td><code>u2</code></td><td class="param-desc">Índice da entrada no CP</td></tr>
+          </table>
+          <div class="return-row"><strong>Retorno:</strong> void</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+<script>
+document.getElementById('sidebar-filter').addEventListener('input', function() {
+  const q = this.value.toLowerCase();
+  document.querySelectorAll('#sidebar-nav .nav-item').forEach(el => {
+    el.style.display = el.textContent.toLowerCase().includes(q) ? '' : 'none';
+  });
+});
+document.querySelectorAll('.fn-card-header').forEach(h => {
+  h.addEventListener('click', () => { h.nextElementSibling?.classList.toggle('open'); });
+});
+hljs.highlightAll();
+</script>
+</body>
+</html>

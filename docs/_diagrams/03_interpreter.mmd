@@ -1,0 +1,46 @@
+flowchart TD
+    executaJVM["executaJVM()"]
+    initNativeMethods["initNativeMethods()"]
+    getUtf8["getUtf8()"]
+    encontraCodeAttr["encontraCodeAttr()"]
+    criaFrame["criaFrame()"]
+    executaFrame["executaFrame()"]
+    liberaFrame["liberaFrame()"]
+    liberaArrays["liberaArrays()"]
+    liberaStaticFields["liberaStaticFields()"]
+    liberaHeap["liberaHeap()"]
+
+    execInvokestatic["execInvokestatic()"]
+    execInvokevirtual["execInvokevirtual()"]
+    execInvokespecial["execInvokespecial()"]
+    alocaObjeto["alocaObjeto()"]
+    buscaCampo["buscaCampo()"]
+    loadClassFile["loadClassFile()"]
+    ldc_push["ldc_push() [static]"]
+    ldc2_push["ldc2_push() [static]"]
+    aloca_array["aloca_array() [static]"]
+    find_static_field["find_static_field() [static]"]
+    alloc_static_field["alloc_static_field() [static]"]
+
+    executaJVM --> initNativeMethods
+    executaJVM --> getUtf8
+    executaJVM --> encontraCodeAttr
+    executaJVM --> criaFrame
+    executaJVM --> executaFrame
+    executaJVM --> liberaFrame
+    executaJVM --> liberaArrays
+    executaJVM --> liberaStaticFields
+    executaJVM --> liberaHeap
+
+    executaFrame --> execInvokestatic
+    executaFrame --> execInvokevirtual
+    executaFrame --> execInvokespecial
+    executaFrame --> alocaObjeto
+    executaFrame --> buscaCampo
+    executaFrame --> loadClassFile
+    executaFrame --> ldc_push
+    executaFrame --> ldc2_push
+    executaFrame --> aloca_array
+    executaFrame --> find_static_field
+    executaFrame --> alloc_static_field
+    executaFrame --> getUtf8

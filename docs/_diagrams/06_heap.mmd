@@ -1,0 +1,16 @@
+flowchart TD
+    alocaObjeto["alocaObjeto()"]
+    buscaCampo["buscaCampo()"]
+    liberaHeap["liberaHeap()"]
+    conta_campos_total["conta_campos_total() [static]"]
+    getUtf8["getUtf8()"]
+
+    alocaObjeto --> conta_campos_total
+    alocaObjeto --> getUtf8
+
+    subgraph "heap pool (estático, max 1024)"
+        heap_pool["heap_pool[]"]
+    end
+
+    alocaObjeto --> heap_pool
+    liberaHeap --> heap_pool

@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>method_invoke.c — JVM Java 8 em C</title>
+<link rel="stylesheet" href="../style.css">
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+  mermaid.initialize({ startOnLoad: true, theme: 'default' });
+</script>
+</head>
+<body><nav id="sidebar">
+  <div id="sidebar-header">
+    <a href="../index.html"><div class="logo">JVM</div> JVM Java 8</a>
+  </div>
+  <div id="sidebar-search">
+    <input type="text" placeholder="Filtrar..." id="sidebar-filter">
+  </div>
+  <nav id="sidebar-nav">
+    <div class="nav-section">Visão Geral</div>
+    <a href="../index.html" class="nav-item">Início</a>
+    <a href="../diagram.html" class="nav-item">Diagrama Geral</a>
+    <a href="../structs.html" class="nav-item">Estruturas de Dados</a>
+    <div class="nav-section">Módulos</div>
+    <a href="main.html" class="nav-item ">main.c <span class="tag tag-module">main</span></a>
+    <a href="read_file.html" class="nav-item ">read_file.c <span class="tag tag-module">file</span></a>
+    <a href="dot_class.html" class="nav-item ">dot_class.c <span class="tag tag-module">types</span></a>
+    <a href="attribute.html" class="nav-item ">attribute.c <span class="tag tag-module">types</span></a>
+    <a href="opcodes.html" class="nav-item ">opcodes.c <span class="tag tag-module">types</span></a>
+    <a href="loader.html" class="nav-item ">loader.c <span class="tag tag-module">class_loader</span></a>
+    <a href="fields_interfaces.html" class="nav-item ">fields_interfaces.c <span class="tag tag-module">class_loader</span></a>
+    <a href="methods.html" class="nav-item ">methods.c <span class="tag tag-module">class_loader</span></a>
+    <a href="interpreter.html" class="nav-item ">interpreter.c <span class="tag tag-module">interpreter</span></a>
+    <a href="basic_ops.html" class="nav-item ">basic_ops.c <span class="tag tag-module">interpreter</span></a>
+    <a href="jvm_stack.html" class="nav-item ">jvm_stack.c <span class="tag tag-module">interpreter</span></a>
+    <a href="heap.html" class="nav-item ">heap.c <span class="tag tag-module">interpreter</span></a>
+    <a href="method_invoke.html" class="nav-item active">method_invoke.c <span class="tag tag-module">interpreter</span></a>
+    <a href="native_methods.html" class="nav-item ">native_methods.c <span class="tag tag-module">interpreter</span></a>
+    <a href="printer.html" class="nav-item ">printer.c <span class="tag tag-module">printer</span></a>
+    <a href="args.html" class="nav-item ">args.c <span class="tag tag-module">utils</span></a>
+  </nav>
+</nav>
+<div id="main">
+  <header class="page-header">
+    <div class="breadcrumb"><a href="../index.html">JVM</a> <span>›</span> Módulos</div>
+    <h1>method_invoke.c <span class="badge badge-module">method_invoke</span></h1>
+    <div class="subtitle">Implementação dos opcodes de invocação: invokestatic, invokevirtual e invokespecial.</div>
+  </header>
+  <div class="page-content">
+    <div class="section">
+      <div class="section-title">Papel no projeto</div>
+      <p class="text-muted">Resolve e executa chamadas de método JVM. Para métodos do projeto, cria um Frame filho, transfere os argumentos e executa. Para métodos nativos, despacha via lookupNative(). O invokevirtual suporta polimorfismo usando o ClassFile real do objeto em runtime. O invokespecial trata construtores com lógica especial para distinguir same-class de cross-class.</p>
+    </div>
+    <div class="section">
+      <div class="section-title">Funções</div>
+      <div class="fn-card" id="fn-conta_args">
+  <div class="fn-card-header">
+    <span class="fn-name">conta_args()</span>
+    <span class="fn-line">linha 16</span>
+  </div>
+  <div class="fn-signature"><code>int conta_args(const char *descriptor)</code></div>
+  <div class="fn-body">
+    <p class="fn-summary">Analisa o descritor de método JVM e conta o número de argumentos. Trata tipos L (referência terminada por ;), [ (array) e tipos primitivos de 1 char.</p>
+    <div class="label mt-8">Parâmetros</div>
+<table class="param-table">
+  <tr><th>Nome</th><th>Tipo</th><th>Descrição</th></tr>
+  <tr><td class="param-name">descriptor</td><td><code>const char *</code></td><td class="param-desc">Descritor de método JVM, ex: '(ILjava/lang/String;)V'</td></tr>
+
+</table>
+    <div class="return-row"><strong>Retorno:</strong> Número de argumentos</div>
+    
+  </div>
+</div><div class="fn-card" id="fn-retorno_void">
+  <div class="fn-card-header">
+    <span class="fn-name">retorno_void()</span>
+    <span class="fn-line">linha 34</span>
+  </div>
+  <div class="fn-signature"><code>int retorno_void(const char *descriptor)</code></div>
+  <div class="fn-body">
+    <p class="fn-summary">Verifica se o método tem retorno void procurando ')V' no descritor.</p>
+    <div class="label mt-8">Parâmetros</div>
+<table class="param-table">
+  <tr><th>Nome</th><th>Tipo</th><th>Descrição</th></tr>
+  <tr><td class="param-name">descriptor</td><td><code>const char *</code></td><td class="param-desc">Descritor de método JVM</td></tr>
+
+</table>
+    <div class="return-row"><strong>Retorno:</strong> 1 se retorno for void, 0 caso contrário</div>
+    
+  </div>
+</div><div class="fn-card" id="fn-encontraCodeAttr">
+  <div class="fn-card-header">
+    <span class="fn-name">encontraCodeAttr()</span>
+    <span class="fn-line">linha 42</span>
+  </div>
+  <div class="fn-signature"><code>Code_attribute *encontraCodeAttr(method_info *m, cp_info *cp)</code></div>
+  <div class="fn-body">
+    <p class="fn-summary">Percorre os atributos de um method_info procurando o de nome 'Code'. Retorna o ponteiro para o Code_attribute decodificado ou NULL se não encontrado.</p>
+    <div class="label mt-8">Parâmetros</div>
+<table class="param-table">
+  <tr><th>Nome</th><th>Tipo</th><th>Descrição</th></tr>
+  <tr><td class="param-name">m</td><td><code>method_info *</code></td><td class="param-desc">Método a inspecionar</td></tr>
+<tr><td class="param-name">cp</td><td><code>cp_info *</code></td><td class="param-desc">Constant pool para resolver o nome do atributo</td></tr>
+
+</table>
+    <div class="return-row"><strong>Retorno:</strong> Ponteiro para Code_attribute ou NULL</div>
+    <div class="label mt-8">Chama</div><div class="calls-list"><a href="attribute.html#fn-getUtf8" class="call-link">getUtf8()</a></div>
+  </div>
+</div><div class="fn-card" id="fn-buscaMetodoClasse">
+  <div class="fn-card-header">
+    <span class="fn-name">buscaMetodoClasse()</span>
+    <span class="fn-line">linha 53</span>
+  </div>
+  <div class="fn-signature"><code>method_info *buscaMetodoClasse(ClassFile *cf, const char *name, const char *desc, ClassFile **owner)</code></div>
+  <div class="fn-body">
+    <p class="fn-summary">Busca um método pelo nome e descritor no ClassFile dado e recursivamente em sua cadeia de superclasses. Quando encontrado, preenche *owner com o ClassFile onde foi definido.</p>
+    <div class="label mt-8">Parâmetros</div>
+<table class="param-table">
+  <tr><th>Nome</th><th>Tipo</th><th>Descrição</th></tr>
+  <tr><td class="param-name">cf</td><td><code>ClassFile *</code></td><td class="param-desc">ClassFile onde iniciar a busca</td></tr>
+<tr><td class="param-name">name</td><td><code>const char *</code></td><td class="param-desc">Nome do método</td></tr>
+<tr><td class="param-name">desc</td><td><code>const char *</code></td><td class="param-desc">Descritor do método</td></tr>
+<tr><td class="param-name">owner</td><td><code>ClassFile **</code></td><td class="param-desc">Saída: ClassFile onde o método foi encontrado (pode ser NULL)</td></tr>
+
+</table>
+    <div class="return-row"><strong>Retorno:</strong> Ponteiro para method_info ou NULL</div>
+    <div class="label mt-8">Chama</div><div class="calls-list"><a href="attribute.html#fn-getUtf8" class="call-link">getUtf8()</a><a href="method_invoke.html#fn-buscaMetodoClasse" class="call-link">buscaMetodoClasse()</a></div>
+  </div>
+</div><div class="fn-card" id="fn-encontraMetodo">
+  <div class="fn-card-header">
+    <span class="fn-name">encontraMetodo()</span>
+    <span class="fn-line">linha 97</span>
+  </div>
+  <div class="fn-signature"><code>method_info *encontraMetodo(ClassFile *cf, const char *name, const char *desc)</code></div>
+  <div class="fn-body">
+    <p class="fn-summary">Wrapper de buscaMetodoClasse que descarta o owner. Busca um método na hierarquia começando em cf.</p>
+    <div class="label mt-8">Parâmetros</div>
+<table class="param-table">
+  <tr><th>Nome</th><th>Tipo</th><th>Descrição</th></tr>
+  <tr><td class="param-name">cf</td><td><code>ClassFile *</code></td><td class="param-desc">ClassFile onde buscar</td></tr>
+<tr><td class="param-name">name</td><td><code>const char *</code></td><td class="param-desc">Nome do método</td></tr>
+<tr><td class="param-name">desc</td><td><code>const char *</code></td><td class="param-desc">Descritor do método</td></tr>
+
+</table>
+    <div class="return-row"><strong>Retorno:</strong> Ponteiro para method_info ou NULL</div>
+    <div class="label mt-8">Chama</div><div class="calls-list"><a href="method_invoke.html#fn-buscaMetodoClasse" class="call-link">buscaMetodoClasse()</a></div>
+  </div>
+</div><div class="fn-card" id="fn-executa_chamada">
+  <div class="fn-card-header">
+    <span class="fn-name">executa_chamada [static]()</span>
+    <span class="fn-line">linha 121</span>
+  </div>
+  <div class="fn-signature"><code>static void executa_chamada(Frame *caller, ClassFile *cf, Code_attribute *ca, const char *descriptor, int is_instance)</code></div>
+  <div class="fn-body">
+    <p class="fn-summary">Cria um Frame filho, copia os argumentos (e o objectref para instâncias) da pilha do chamador para os locais do filho, executa o frame e empurra o valor de retorno de volta. Função interna.</p>
+    <div class="label mt-8">Parâmetros</div>
+<table class="param-table">
+  <tr><th>Nome</th><th>Tipo</th><th>Descrição</th></tr>
+  <tr><td class="param-name">caller</td><td><code>Frame *</code></td><td class="param-desc">Frame do chamador</td></tr>
+<tr><td class="param-name">cf</td><td><code>ClassFile *</code></td><td class="param-desc">ClassFile do método chamado</td></tr>
+<tr><td class="param-name">ca</td><td><code>Code_attribute *</code></td><td class="param-desc">Código do método</td></tr>
+<tr><td class="param-name">descriptor</td><td><code>const char *</code></td><td class="param-desc">Descritor do método</td></tr>
+<tr><td class="param-name">is_instance</td><td><code>int</code></td><td class="param-desc">1 se método de instância (objectref em local[0])</td></tr>
+
+</table>
+    <div class="return-row"><strong>Retorno:</strong> void</div>
+    <div class="label mt-8">Chama</div><div class="calls-list"><a href="method_invoke.html#fn-conta_args" class="call-link">conta_args()</a><a href="method_invoke.html#fn-retorno_void" class="call-link">retorno_void()</a><a href="basic_ops.html#fn-criaFrame" class="call-link">criaFrame()</a><a href="basic_ops.html#fn-executaFrame" class="call-link">executaFrame()</a><a href="basic_ops.html#fn-liberaFrame" class="call-link">liberaFrame()</a></div>
+  </div>
+</div><div class="fn-card" id="fn-execInvokestatic">
+  <div class="fn-card-header">
+    <span class="fn-name">execInvokestatic()</span>
+    <span class="fn-line">linha 151</span>
+  </div>
+  <div class="fn-signature"><code>void execInvokestatic(Frame *caller, ClassFile *cf, u2 idx)</code></div>
+  <div class="fn-body">
+    <p class="fn-summary">Implementa o opcode invokestatic: resolve o método pelo índice do CP, verifica se é nativo (lookupNative), e se for método do projeto executa via executa_chamada. Se não encontrado e não nativo, descarta os argumentos e empilha null/0 para não corromper a pilha.</p>
+    <div class="label mt-8">Parâmetros</div>
+<table class="param-table">
+  <tr><th>Nome</th><th>Tipo</th><th>Descrição</th></tr>
+  <tr><td class="param-name">caller</td><td><code>Frame *</code></td><td class="param-desc">Frame do chamador</td></tr>
+<tr><td class="param-name">cf</td><td><code>ClassFile *</code></td><td class="param-desc">ClassFile do chamador</td></tr>
+<tr><td class="param-name">idx</td><td><code>u2</code></td><td class="param-desc">Índice no CP do Methodref</td></tr>
+
+</table>
+    <div class="return-row"><strong>Retorno:</strong> void</div>
+    <div class="label mt-8">Chama</div><div class="calls-list"><a href="attribute.html#fn-getUtf8" class="call-link">getUtf8()</a><a href="method_invoke.html#fn-encontraMetodo" class="call-link">encontraMetodo()</a><a href="method_invoke.html#fn-conta_args" class="call-link">conta_args()</a><a href="native_methods.html#fn-lookupNative" class="call-link">lookupNative()</a><a href="method_invoke.html#fn-retorno_void" class="call-link">retorno_void()</a><a href="method_invoke.html#fn-encontraCodeAttr" class="call-link">encontraCodeAttr()</a><a href="method_invoke.html#fn-executa_chamada" class="call-link">executa_chamada()</a></div>
+  </div>
+</div><div class="fn-card" id="fn-execInvokevirtual">
+  <div class="fn-card-header">
+    <span class="fn-name">execInvokevirtual()</span>
+    <span class="fn-line">linha 198</span>
+  </div>
+  <div class="fn-signature"><code>void execInvokevirtual(Frame *caller, ClassFile *cf, u2 idx)</code></div>
+  <div class="fn-body">
+    <p class="fn-summary">Implementa o opcode invokevirtual com dispatch virtual: usa o ClassFile do objeto em runtime (polimorfismo). Se o método não for encontrado no ClassFile real, tenta métodos nativos via lookupNative.</p>
+    <div class="label mt-8">Parâmetros</div>
+<table class="param-table">
+  <tr><th>Nome</th><th>Tipo</th><th>Descrição</th></tr>
+  <tr><td class="param-name">caller</td><td><code>Frame *</code></td><td class="param-desc">Frame do chamador</td></tr>
+<tr><td class="param-name">cf</td><td><code>ClassFile *</code></td><td class="param-desc">ClassFile estático do chamador</td></tr>
+<tr><td class="param-name">idx</td><td><code>u2</code></td><td class="param-desc">Índice no CP do Methodref</td></tr>
+
+</table>
+    <div class="return-row"><strong>Retorno:</strong> void</div>
+    <div class="label mt-8">Chama</div><div class="calls-list"><a href="attribute.html#fn-getUtf8" class="call-link">getUtf8()</a><a href="method_invoke.html#fn-conta_args" class="call-link">conta_args()</a><a href="method_invoke.html#fn-buscaMetodoClasse" class="call-link">buscaMetodoClasse()</a><a href="native_methods.html#fn-lookupNative" class="call-link">lookupNative()</a><a href="method_invoke.html#fn-retorno_void" class="call-link">retorno_void()</a><a href="method_invoke.html#fn-encontraCodeAttr" class="call-link">encontraCodeAttr()</a><a href="method_invoke.html#fn-executa_chamada" class="call-link">executa_chamada()</a></div>
+  </div>
+</div><div class="fn-card" id="fn-execInvokespecial">
+  <div class="fn-card-header">
+    <span class="fn-name">execInvokespecial()</span>
+    <span class="fn-line">linha 324</span>
+  </div>
+  <div class="fn-signature"><code>void execInvokespecial(Frame *caller, ClassFile *cf, u2 idx)</code></div>
+  <div class="fn-body">
+    <p class="fn-summary">Implementa o opcode invokespecial: trata construtores (<init>), métodos privados e super. Para construtores, distingue chamadas na mesma classe de chamadas cruzadas (super.<init>), buscando o ClassFile correto via heap object ou cadeia de herança.</p>
+    <div class="label mt-8">Parâmetros</div>
+<table class="param-table">
+  <tr><th>Nome</th><th>Tipo</th><th>Descrição</th></tr>
+  <tr><td class="param-name">caller</td><td><code>Frame *</code></td><td class="param-desc">Frame do chamador</td></tr>
+<tr><td class="param-name">cf</td><td><code>ClassFile *</code></td><td class="param-desc">ClassFile do chamador</td></tr>
+<tr><td class="param-name">idx</td><td><code>u2</code></td><td class="param-desc">Índice no CP do Methodref</td></tr>
+
+</table>
+    <div class="return-row"><strong>Retorno:</strong> void</div>
+    <div class="label mt-8">Chama</div><div class="calls-list"><a href="attribute.html#fn-getUtf8" class="call-link">getUtf8()</a><a href="loader.html#fn-getClassName" class="call-link">getClassName()</a><a href="method_invoke.html#fn-encontraMetodo" class="call-link">encontraMetodo()</a><a href="method_invoke.html#fn-buscaMetodoClasse" class="call-link">buscaMetodoClasse()</a><a href="method_invoke.html#fn-conta_args" class="call-link">conta_args()</a><a href="native_methods.html#fn-isNativeClass" class="call-link">isNativeClass()</a><a href="native_methods.html#fn-lookupNative" class="call-link">lookupNative()</a><a href="method_invoke.html#fn-encontraCodeAttr" class="call-link">encontraCodeAttr()</a><a href="method_invoke.html#fn-executa_chamada" class="call-link">executa_chamada()</a></div>
+  </div>
+</div>
+    </div>
+    <div class="section">
+      <div class="section-title">Diagrama de chamadas</div>
+      <div class="diagram-container">
+        <pre class="mermaid">flowchart TD
+    execInvokestatic["execInvokestatic()"]
+    execInvokevirtual["execInvokevirtual()"]
+    execInvokespecial["execInvokespecial()"]
+    executa_chamada["executa_chamada() [static]"]
+
+    getUtf8["getUtf8()"]
+    encontraMetodo["encontraMetodo()"]
+    buscaMetodoClasse["buscaMetodoClasse()"]
+    encontraCodeAttr["encontraCodeAttr()"]
+    conta_args["conta_args()"]
+    retorno_void["retorno_void()"]
+    lookupNative["lookupNative()"]
+    isNativeClass["isNativeClass()"]
+    getClassName["getClassName()"]
+    criaFrame["criaFrame()"]
+    executaFrame["executaFrame()"]
+    liberaFrame["liberaFrame()"]
+
+    execInvokestatic --> getUtf8
+    execInvokestatic --> encontraMetodo
+    execInvokestatic --> conta_args
+    execInvokestatic --> lookupNative
+    execInvokestatic --> retorno_void
+    execInvokestatic --> encontraCodeAttr
+    execInvokestatic --> executa_chamada
+
+    execInvokevirtual --> getUtf8
+    execInvokevirtual --> conta_args
+    execInvokevirtual --> buscaMetodoClasse
+    execInvokevirtual --> lookupNative
+    execInvokevirtual --> retorno_void
+    execInvokevirtual --> encontraCodeAttr
+    execInvokevirtual --> executa_chamada
+
+    execInvokespecial --> getUtf8
+    execInvokespecial --> getClassName
+    execInvokespecial --> encontraMetodo
+    execInvokespecial --> buscaMetodoClasse
+    execInvokespecial --> conta_args
+    execInvokespecial --> isNativeClass
+    execInvokespecial --> lookupNative
+    execInvokespecial --> encontraCodeAttr
+    execInvokespecial --> executa_chamada
+
+    executa_chamada --> conta_args
+    executa_chamada --> retorno_void
+    executa_chamada --> criaFrame
+    executa_chamada --> executaFrame
+    executa_chamada --> liberaFrame
+
+    buscaMetodoClasse --> getUtf8
+    buscaMetodoClasse --> buscaMetodoClasse
+
+    encontraMetodo --> buscaMetodoClasse
+    encontraCodeAttr --> getUtf8
+</pre>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+document.getElementById('sidebar-filter').addEventListener('input', function() {
+  const q = this.value.toLowerCase();
+  document.querySelectorAll('#sidebar-nav .nav-item').forEach(el => {
+    el.style.display = el.textContent.toLowerCase().includes(q) ? '' : 'none';
+  });
+});
+document.querySelectorAll('.fn-card-header').forEach(h => {
+  h.addEventListener('click', () => { h.nextElementSibling?.nextElementSibling?.classList.toggle('open'); });
+});
+</script>
+</body>
+</html>

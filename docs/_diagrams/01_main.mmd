@@ -1,0 +1,42 @@
+flowchart TD
+    main["main()"]
+
+    parse_args["parse_args()"]
+    build_path["build_default_output_path()"]
+    setClassDir["setClassDir()"]
+    readFile["readFile()"]
+    allocClassFile["allocClassFile()"]
+    classFilesSetup["classFilesSetup()"]
+    readInterfaces["readInterfaces()"]
+    readFields["readFields()"]
+    readMethodsCount["readMethodsCount()"]
+    readMethods["readMethods()"]
+    readClassFileAttributes["readClassFileAttributes()"]
+    printClassFile["printClassFile()"]
+    printInterfaces["printInterfaces()"]
+    printFields["printFields()"]
+    printMethods["printMethods()"]
+    printClassFileAttributes["printClassFileAttributes()"]
+    printFileToTerminal["printFileToTerminal()"]
+    executaJVM["executaJVM()"]
+    freeClassFile["freeClassFile()"]
+
+    main --> parse_args
+    main --> build_path
+    main --> setClassDir
+    main --> readFile
+    main --> allocClassFile
+    main --> classFilesSetup
+    main --> readInterfaces
+    main --> readFields
+    main --> readMethodsCount
+    main --> readMethods
+    main --> readClassFileAttributes
+    main --> printClassFile
+    main --> printInterfaces
+    main --> printFields
+    main --> printMethods
+    main --> printClassFileAttributes
+    main --> printFileToTerminal
+    main --> executaJVM
+    main --> freeClassFile

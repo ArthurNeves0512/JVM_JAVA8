@@ -1,0 +1,52 @@
+flowchart TD
+    classFilesSetup["classFilesSetup()"]
+    readCafeBabe["readCafeBabe()"]
+    readConstantPoolCount["readConstantPoolCount()"]
+    constant_pool["constant_pool() [static]"]
+    readAccessFlags["readAccessFlags()"]
+    readThisClass["readThisClass()"]
+    readSuperClass["readSuperClass()"]
+
+    loadClassFile["loadClassFile()"]
+    isNativeClass["isNativeClass()"]
+    readInterfacesCount["readInterfacesCount()"]
+    readFields["readFields()"]
+    readMethodsCount["readMethodsCount()"]
+    readMethods["readMethods()"]
+    readClassFileAttributes["readClassFileAttributes()"]
+    loadSuperClass["loadSuperClass()"]
+
+    readInterfaces["readInterfaces()"]
+    readFields2["readFields()"]
+    readAttribute["readAttribute()"]
+    getUtf8["getUtf8()"]
+
+    classFilesSetup --> readCafeBabe
+    classFilesSetup --> readConstantPoolCount
+    classFilesSetup --> constant_pool
+    classFilesSetup --> readAccessFlags
+    classFilesSetup --> readThisClass
+    classFilesSetup --> readSuperClass
+
+    loadClassFile --> isNativeClass
+    loadClassFile --> classFilesSetup
+    loadClassFile --> readInterfacesCount
+    loadClassFile --> readFields2
+    loadClassFile --> readMethodsCount
+    loadClassFile --> readMethods
+    loadClassFile --> readClassFileAttributes
+    loadClassFile --> loadSuperClass
+
+    loadSuperClass --> getUtf8
+    loadSuperClass --> isNativeClass
+    loadSuperClass --> classFilesSetup
+    loadSuperClass --> readInterfacesCount
+    loadSuperClass --> readFields
+    loadSuperClass --> readMethodsCount
+    loadSuperClass --> readMethods
+    loadSuperClass --> readClassFileAttributes
+    loadSuperClass --> loadSuperClass
+
+    readFields --> readAttribute
+    readMethods --> readAttribute
+    readClassFileAttributes --> readAttribute

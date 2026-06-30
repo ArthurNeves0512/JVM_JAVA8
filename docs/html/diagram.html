@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Diagrama Geral — JVM Java 8 em C</title>
+<link rel="stylesheet" href="style.css">
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+  mermaid.initialize({ startOnLoad: true, theme: 'default', flowchart: { curve: 'basis' } });
+</script>
+</head>
+<body>
+
+<nav id="sidebar">
+  <div id="sidebar-header">
+    <a href="index.html"><div class="logo">JVM</div> JVM Java 8</a>
+  </div>
+  <div id="sidebar-search">
+    <input type="text" placeholder="Filtrar..." id="sidebar-filter">
+  </div>
+  <nav id="sidebar-nav">
+    <div class="nav-section">Visão Geral</div>
+    <a href="index.html" class="nav-item">Início</a>
+    <a href="diagram.html" class="nav-item active">Diagrama Geral</a>
+    <a href="structs.html" class="nav-item">Estruturas de Dados</a>
+    <div class="nav-section">Módulos</div>
+    <a href="modules/main.html" class="nav-item">main.c <span class="tag tag-module">main</span></a>
+    <a href="modules/read_file.html" class="nav-item">read_file.c <span class="tag tag-module">file</span></a>
+    <a href="modules/dot_class.html" class="nav-item">dot_class.c <span class="tag tag-module">types</span></a>
+    <a href="modules/attribute.html" class="nav-item">attribute.c <span class="tag tag-module">types</span></a>
+    <a href="modules/opcodes.html" class="nav-item">opcodes.c <span class="tag tag-module">types</span></a>
+    <a href="modules/loader.html" class="nav-item">loader.c <span class="tag tag-module">class_loader</span></a>
+    <a href="modules/fields_interfaces.html" class="nav-item">fields_interfaces.c <span class="tag tag-module">class_loader</span></a>
+    <a href="modules/methods.html" class="nav-item">methods.c <span class="tag tag-module">class_loader</span></a>
+    <a href="modules/interpreter.html" class="nav-item">interpreter.c <span class="tag tag-module">interpreter</span></a>
+    <a href="modules/basic_ops.html" class="nav-item">basic_ops.c <span class="tag tag-module">interpreter</span></a>
+    <a href="modules/jvm_stack.html" class="nav-item">jvm_stack.c <span class="tag tag-module">interpreter</span></a>
+    <a href="modules/heap.html" class="nav-item">heap.c <span class="tag tag-module">interpreter</span></a>
+    <a href="modules/method_invoke.html" class="nav-item">method_invoke.c <span class="tag tag-module">interpreter</span></a>
+    <a href="modules/native_methods.html" class="nav-item">native_methods.c <span class="tag tag-module">interpreter</span></a>
+    <a href="modules/printer.html" class="nav-item">printer.c <span class="tag tag-module">printer</span></a>
+    <a href="modules/args.html" class="nav-item">args.c <span class="tag tag-module">utils</span></a>
+  </nav>
+</nav>
+
+<div id="main">
+  <header class="page-header">
+    <div class="breadcrumb"><a href="index.html">JVM</a> <span>›</span> Referência</div>
+    <h1>Diagrama Geral <span class="badge badge-diagram">7 módulos</span></h1>
+    <div class="subtitle">Comunicação entre módulos da JVM — do ponto de entrada ao interpretador de bytecodes.</div>
+  </header>
+  <div class="page-content">
+
+    <div class="section">
+      <div class="section-title">Visão de alto nível entre módulos</div>
+      <p class="text-muted mb-16">
+        Cada nó representa um módulo (conjunto de arquivos .c/.h). As arestas mostram dependências diretas:
+        quem chama funções de quem. Clique nos links abaixo para explorar os módulos individuais.
+      </p>
+      <div class="diagram-container">
+        <pre class="mermaid">
+flowchart TD
+    main["<b>main</b>\nparse_args · readFile · executaJVM"]
+    utils["<b>utils</b>\nparse_args\nbuild_default_output_path"]
+    file["<b>file</b>\nreadFile"]
+    class_loader["<b>class_loader</b>\nclassFilesSetup\nreadInterfaces / readFields\nreadMethods · loadClassFile"]
+    types["<b>types</b>\nallocClassFile / freeClassFile\nreadAttribute · getUtf8\nprintBytecode · opcodes"]
+    printer["<b>printer</b>\nprintClassFile\nprintMethods · printFields..."]
+    interpreter["<b>interpreter</b>\nexecutaJVM\nexecutaFrame"]
+    heap["<b>heap</b>\nalocaObjeto\nbuscaCampo · liberaHeap"]
+    jvm_stack["<b>jvm_stack</b>\ncriaJVMStack\nempilhaFrame · desempilhaFrame"]
+    method_invoke["<b>method_invoke</b>\nexecInvokestatic\nexecInvokevirtual\nexecInvokespecial"]
+    native_methods["<b>native_methods</b>\ninitNativeMethods\nlookupNative · isNativeClass"]
+
+    main --> utils
+    main --> file
+    main --> class_loader
+    main --> printer
+    main --> interpreter
+
+    class_loader --> types
+    class_loader --> file
+    class_loader --> native_methods
+
+    printer --> types
+
+    interpreter --> method_invoke
+    interpreter --> heap
+    interpreter --> jvm_stack
+    interpreter --> native_methods
+    interpreter --> types
+
+    method_invoke --> heap
+    method_invoke --> native_methods
+    method_invoke --> class_loader
+    method_invoke --> types
+
+    style main fill:#1c3a6e,color:#79c0ff,stroke:#3b6db5
+    style interpreter fill:#1a3a2a,color:#3fb950,stroke:#2d6a4f
+    style class_loader fill:#3a2010,color:#e3994a,stroke:#7a4520
+    style types fill:#252530,color:#c9d1d9,stroke:#444
+    style method_invoke fill:#1a3a2a,color:#3fb950,stroke:#2d6a4f
+    style heap fill:#1a3a2a,color:#3fb950,stroke:#2d6a4f
+    style jvm_stack fill:#1a3a2a,color:#3fb950,stroke:#2d6a4f
+    style native_methods fill:#1a3a2a,color:#3fb950,stroke:#2d6a4f
+    style printer fill:#3a2010,color:#e3994a,stroke:#7a4520
+    style utils fill:#252530,color:#c9d1d9,stroke:#444
+    style file fill:#252530,color:#c9d1d9,stroke:#444
+        </pre>
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <div class="section">
+      <div class="section-title">Diagramas detalhados por módulo</div>
+      <div class="module-grid">
+        <a href="modules/main.html" class="module-card">
+          <div class="module-card-title">main.c</div>
+          <div class="module-card-desc">Orquestra toda a pipeline de carregamento e execução.</div>
+          <div class="module-card-meta">1 função pública</div>
+        </a>
+        <a href="modules/loader.html" class="module-card">
+          <div class="module-card-title">loader.c</div>
+          <div class="module-card-desc">Decodifica o .class e carrega classes dependentes do disco.</div>
+          <div class="module-card-meta">12 funções</div>
+        </a>
+        <a href="modules/interpreter.html" class="module-card">
+          <div class="module-card-title">interpreter.c</div>
+          <div class="module-card-desc">Ponto de entrada do interpretador; localiza e executa o main.</div>
+          <div class="module-card-meta">1 função pública</div>
+        </a>
+        <a href="modules/basic_ops.html" class="module-card">
+          <div class="module-card-title">basic_ops.c</div>
+          <div class="module-card-desc">Loop de despacho de bytecodes; cobre todos os opcodes suportados.</div>
+          <div class="module-card-meta">8 funções</div>
+        </a>
+        <a href="modules/method_invoke.html" class="module-card">
+          <div class="module-card-title">method_invoke.c</div>
+          <div class="module-card-desc">Handlers de invokestatic, invokevirtual e invokespecial.</div>
+          <div class="module-card-meta">9 funções</div>
+        </a>
+        <a href="modules/heap.html" class="module-card">
+          <div class="module-card-title">heap.c</div>
+          <div class="module-card-desc">Alocação de objetos e busca de campos em runtime.</div>
+          <div class="module-card-meta">4 funções</div>
+        </a>
+        <a href="modules/native_methods.html" class="module-card">
+          <div class="module-card-title">native_methods.c</div>
+          <div class="module-card-desc">Registro e despacho de métodos nativos Java simulados.</div>
+          <div class="module-card-meta">4 funções + 30+ handlers</div>
+        </a>
+        <a href="modules/attribute.html" class="module-card">
+          <div class="module-card-title">attribute.c</div>
+          <div class="module-card-desc">Parser de atributos JVM; decodifica Code, ConstantValue, etc.</div>
+          <div class="module-card-meta">6 funções</div>
+        </a>
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <div class="section">
+      <div class="section-title">Legenda das cores</div>
+      <div style="display:flex; flex-wrap:wrap; gap:12px; font-size:13px;">
+        <span style="background:#1c3a6e;color:#79c0ff;padding:4px 10px;border-radius:4px;">main — ponto de entrada</span>
+        <span style="background:#1a3a2a;color:#3fb950;padding:4px 10px;border-radius:4px;">interpreter — runtime JVM</span>
+        <span style="background:#3a2010;color:#e3994a;padding:4px 10px;border-radius:4px;">class_loader / printer — I/O</span>
+        <span style="background:#252530;color:#c9d1d9;padding:4px 10px;border-radius:4px;">types / utils — infraestrutura</span>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+document.getElementById('sidebar-filter').addEventListener('input', function() {
+  const q = this.value.toLowerCase();
+  document.querySelectorAll('#sidebar-nav .nav-item').forEach(el => {
+    el.style.display = el.textContent.toLowerCase().includes(q) ? '' : 'none';
+  });
+});
+</script>
+</body>
+</html>

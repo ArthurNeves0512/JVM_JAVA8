@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>args.c — JVM Java 8 em C</title>
+<link rel="stylesheet" href="../style.css">
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+  mermaid.initialize({ startOnLoad: true, theme: 'default' });
+</script>
+</head>
+<body><nav id="sidebar">
+  <div id="sidebar-header">
+    <a href="../index.html"><div class="logo">JVM</div> JVM Java 8</a>
+  </div>
+  <div id="sidebar-search">
+    <input type="text" placeholder="Filtrar..." id="sidebar-filter">
+  </div>
+  <nav id="sidebar-nav">
+    <div class="nav-section">Visão Geral</div>
+    <a href="../index.html" class="nav-item">Início</a>
+    <a href="../diagram.html" class="nav-item">Diagrama Geral</a>
+    <a href="../structs.html" class="nav-item">Estruturas de Dados</a>
+    <div class="nav-section">Módulos</div>
+    <a href="main.html" class="nav-item ">main.c <span class="tag tag-module">main</span></a>
+    <a href="read_file.html" class="nav-item ">read_file.c <span class="tag tag-module">file</span></a>
+    <a href="dot_class.html" class="nav-item ">dot_class.c <span class="tag tag-module">types</span></a>
+    <a href="attribute.html" class="nav-item ">attribute.c <span class="tag tag-module">types</span></a>
+    <a href="opcodes.html" class="nav-item ">opcodes.c <span class="tag tag-module">types</span></a>
+    <a href="loader.html" class="nav-item ">loader.c <span class="tag tag-module">class_loader</span></a>
+    <a href="fields_interfaces.html" class="nav-item ">fields_interfaces.c <span class="tag tag-module">class_loader</span></a>
+    <a href="methods.html" class="nav-item ">methods.c <span class="tag tag-module">class_loader</span></a>
+    <a href="interpreter.html" class="nav-item ">interpreter.c <span class="tag tag-module">interpreter</span></a>
+    <a href="basic_ops.html" class="nav-item ">basic_ops.c <span class="tag tag-module">interpreter</span></a>
+    <a href="jvm_stack.html" class="nav-item ">jvm_stack.c <span class="tag tag-module">interpreter</span></a>
+    <a href="heap.html" class="nav-item ">heap.c <span class="tag tag-module">interpreter</span></a>
+    <a href="method_invoke.html" class="nav-item ">method_invoke.c <span class="tag tag-module">interpreter</span></a>
+    <a href="native_methods.html" class="nav-item ">native_methods.c <span class="tag tag-module">interpreter</span></a>
+    <a href="printer.html" class="nav-item ">printer.c <span class="tag tag-module">printer</span></a>
+    <a href="args.html" class="nav-item active">args.c <span class="tag tag-module">utils</span></a>
+  </nav>
+</nav>
+<div id="main">
+  <header class="page-header">
+    <div class="breadcrumb"><a href="../index.html">JVM</a> <span>›</span> Módulos</div>
+    <h1>args.c <span class="badge badge-module">args</span></h1>
+    <div class="subtitle">Parsing dos argumentos da linha de comando.</div>
+  </header>
+  <div class="page-content">
+    <div class="section">
+      <div class="section-title">Papel no projeto</div>
+      <p class="text-muted">Processa argc/argv e preenche a struct Args com: o caminho do .class (obrigatório), o caminho de saída (opcional, via -o), e a flag --print (opcional). build_default_output_path constrói o caminho padrão trocando .class por .txt.</p>
+    </div>
+    <div class="section">
+      <div class="section-title">Funções</div>
+      <div class="fn-card" id="fn-parse_args">
+  <div class="fn-card-header">
+    <span class="fn-name">parse_args()</span>
+    <span class="fn-line">linha 6</span>
+  </div>
+  <div class="fn-signature"><code>int parse_args(int argc, char *argv[], Args *out)</code></div>
+  <div class="fn-body">
+    <p class="fn-summary">Analisa os argumentos da linha de comando. Espera o caminho do .class como primeiro argumento, com opções opcionais: -o &lt;arquivo_saida&gt; e --print. Exibe usage e retorna -1 em caso de erro de sintaxe.</p>
+    <div class="label mt-8">Parâmetros</div>
+<table class="param-table">
+  <tr><th>Nome</th><th>Tipo</th><th>Descrição</th></tr>
+  <tr><td class="param-name">argc</td><td><code>int</code></td><td class="param-desc">Número de argumentos</td></tr>
+<tr><td class="param-name">argv</td><td><code>char *[]</code></td><td class="param-desc">Vetor de argumentos</td></tr>
+<tr><td class="param-name">out</td><td><code>Args *</code></td><td class="param-desc">Struct onde os argumentos parseados serão gravados</td></tr>
+
+</table>
+    <div class="return-row"><strong>Retorno:</strong> 0 em sucesso, -1 em caso de erro</div>
+    
+  </div>
+</div><div class="fn-card" id="fn-build_default_output_path">
+  <div class="fn-card-header">
+    <span class="fn-name">build_default_output_path()</span>
+    <span class="fn-line">linha 1</span>
+  </div>
+  <div class="fn-signature"><code>void build_default_output_path(const char *class_path, char *out, size_t out_size)</code></div>
+  <div class="fn-body">
+    <p class="fn-summary">Constrói o caminho de saída padrão substituindo a extensão do arquivo .class por .txt. Se não houver extensão, acrescenta .txt ao nome.</p>
+    <div class="label mt-8">Parâmetros</div>
+<table class="param-table">
+  <tr><th>Nome</th><th>Tipo</th><th>Descrição</th></tr>
+  <tr><td class="param-name">class_path</td><td><code>const char *</code></td><td class="param-desc">Caminho do arquivo .class de entrada</td></tr>
+<tr><td class="param-name">out</td><td><code>char *</code></td><td class="param-desc">Buffer onde o caminho de saída será gravado</td></tr>
+<tr><td class="param-name">out_size</td><td><code>size_t</code></td><td class="param-desc">Tamanho do buffer out</td></tr>
+
+</table>
+    <div class="return-row"><strong>Retorno:</strong> void</div>
+    
+  </div>
+</div>
+    </div>
+    
+  </div>
+</div>
+<script>
+document.getElementById('sidebar-filter').addEventListener('input', function() {
+  const q = this.value.toLowerCase();
+  document.querySelectorAll('#sidebar-nav .nav-item').forEach(el => {
+    el.style.display = el.textContent.toLowerCase().includes(q) ? '' : 'none';
+  });
+});
+document.querySelectorAll('.fn-card-header').forEach(h => {
+  h.addEventListener('click', () => { h.nextElementSibling?.nextElementSibling?.classList.toggle('open'); });
+});
+</script>
+</body>
+</html>

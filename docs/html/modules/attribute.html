@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>attribute.c — JVM Java 8 em C</title>
+<link rel="stylesheet" href="../style.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+  mermaid.initialize({ startOnLoad: true, theme: 'default' });
+</script>
+</head>
+<body>
+<nav id="sidebar">
+  <div id="sidebar-header">
+    <a href="../index.html"><div class="logo">JVM</div> JVM Java 8</a>
+  </div>
+  <div id="sidebar-search">
+    <input type="text" placeholder="Filtrar..." id="sidebar-filter">
+  </div>
+  <nav id="sidebar-nav">
+    <div class="nav-section">Visão Geral</div>
+    <a href="../index.html" class="nav-item">Início</a>
+    <a href="../diagram.html" class="nav-item">Diagrama Geral</a>
+    <a href="../structs.html" class="nav-item">Estruturas de Dados</a>
+    <div class="nav-section">Módulos</div>
+    <a href="main.html" class="nav-item">main.c <span class="tag tag-module">main</span></a>
+    <a href="read_file.html" class="nav-item">read_file.c <span class="tag tag-module">file</span></a>
+    <a href="dot_class.html" class="nav-item">dot_class.c <span class="tag tag-module">types</span></a>
+    <a href="attribute.html" class="nav-item active">attribute.c <span class="tag tag-module">types</span></a>
+    <a href="opcodes.html" class="nav-item">opcodes.c <span class="tag tag-module">types</span></a>
+    <a href="loader.html" class="nav-item">loader.c <span class="tag tag-module">class_loader</span></a>
+    <a href="fields_interfaces.html" class="nav-item">fields_interfaces.c <span class="tag tag-module">class_loader</span></a>
+    <a href="methods.html" class="nav-item">methods.c <span class="tag tag-module">class_loader</span></a>
+    <a href="interpreter.html" class="nav-item">interpreter.c <span class="tag tag-module">interpreter</span></a>
+    <a href="basic_ops.html" class="nav-item">basic_ops.c <span class="tag tag-module">interpreter</span></a>
+    <a href="jvm_stack.html" class="nav-item">jvm_stack.c <span class="tag tag-module">interpreter</span></a>
+    <a href="heap.html" class="nav-item">heap.c <span class="tag tag-module">interpreter</span></a>
+    <a href="method_invoke.html" class="nav-item">method_invoke.c <span class="tag tag-module">interpreter</span></a>
+    <a href="native_methods.html" class="nav-item">native_methods.c <span class="tag tag-module">interpreter</span></a>
+    <a href="printer.html" class="nav-item">printer.c <span class="tag tag-module">printer</span></a>
+    <a href="args.html" class="nav-item">args.c <span class="tag tag-module">utils</span></a>
+  </nav>
+</nav>
+<div id="main">
+  <header class="page-header">
+    <div class="breadcrumb"><a href="../index.html">JVM</a> <span>›</span> Módulos</div>
+    <h1>attribute.c <span class="badge badge-module">types</span></h1>
+    <div class="subtitle">Parser, printer e liberador de atributos JVM (Code, ConstantValue, Exceptions, etc.)</div>
+  </header>
+  <div class="page-content">
+
+    <div class="section">
+      <div class="section-title">Papel no projeto</div>
+      <p>Implementa a leitura (decodificação), impressão e liberação de todos os atributos JVM suportados. O atributo mais importante é o <code>Code</code>, que contém os bytecodes executáveis de um método. A função <code>getUtf8()</code> é um utilitário crítico usado em todo o projeto para resolver strings do constant pool. Os atributos não reconhecidos são armazenados como bytes raw.</p>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Funções</div>
+
+      <div class="fn-card" id="fn-getUtf8">
+        <div class="fn-card-header">
+          <span class="fn-name">getUtf8()</span>
+          <span class="fn-line">attribute.c</span>
+        </div>
+        <div class="fn-signature"><code>char *getUtf8(cp_info *constant_pool, u2 index)</code></div>
+        <div class="fn-body">
+          <p class="fn-summary">Retorna uma cópia (<code>strdup</code>) da string UTF-8 na entrada <code>index</code> do constant pool. O chamador é responsável por liberar com <code>free()</code>. Retorna <code>NULL</code> se o índice for inválido ou a tag não for <code>CONSTANT_Utf8</code>.</p>
+          <div class="label mt-8">Parâmetros</div>
+          <table class="param-table">
+            <tr><th>Nome</th><th>Tipo</th><th>Descrição</th></tr>
+            <tr><td class="param-name">constant_pool</td><td><code>cp_info *</code></td><td class="param-desc">Array do constant pool</td></tr>
+            <tr><td class="param-name">index</td><td><code>u2</code></td><td class="param-desc">Índice da entrada Utf8 no CP</td></tr>
+          </table>
+          <div class="return-row"><strong>Retorno:</strong> String alocada com o conteúdo UTF-8, ou NULL</div>
+        </div>
+      </div>
+
+      <div class="fn-card" id="fn-readAttribute">
+        <div class="fn-card-header">
+          <span class="fn-name">readAttribute()</span>
+          <span class="fn-line">attribute.c</span>
+        </div>
+        <div class="fn-signature"><code>attribute_info readAttribute(FILE *file_ptr, cp_info *constant_pool)</code></div>
+        <div class="fn-body">
+          <p class="fn-summary">Lê o cabeçalho genérico de um atributo (<code>attribute_name_index</code> e <code>attribute_length</code>) e decodifica o corpo conforme o nome: <code>Code</code>, <code>ConstantValue</code>, <code>Exceptions</code>, <code>SourceFile</code>, <code>InnerClasses</code>, <code>LineNumberTable</code>, <code>LocalVariableTable</code>, ou raw bytes para tipos desconhecidos.</p>
+          <div class="label mt-8">Parâmetros</div>
+          <table class="param-table">
+            <tr><th>Nome</th><th>Tipo</th><th>Descrição</th></tr>
+            <tr><td class="param-name">file_ptr</td><td><code>FILE *</code></td><td class="param-desc">Arquivo .class posicionado no início do atributo</td></tr>
+            <tr><td class="param-name">constant_pool</td><td><code>cp_info *</code></td><td class="param-desc">CP necessário para identificar o nome do atributo</td></tr>
+          </table>
+          <div class="return-row"><strong>Retorno:</strong> <code>attribute_info</code> com o campo <code>info</code> apontando para a struct decodificada</div>
+          <div class="label mt-8">Chama</div>
+          <div class="calls-list">
+            <a href="#fn-getUtf8" class="call-link">getUtf8()</a>
+            <a href="#fn-readCodeAttribute" class="call-link">readCodeAttribute()</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="fn-card" id="fn-readCodeAttribute">
+        <div class="fn-card-header">
+          <span class="fn-name">readCodeAttribute()</span>
+          <span class="fn-line">attribute.c</span>
+        </div>
+        <div class="fn-signature"><code>Code_attribute *readCodeAttribute(FILE *fp, cp_info *cp)</code></div>
+        <div class="fn-body">
+          <p class="fn-summary">Decodifica o atributo <code>Code</code>: lê <code>max_stack</code>, <code>max_locals</code>, os bytecodes, a tabela de exceções e os sub-atributos (<code>LineNumberTable</code>, <code>LocalVariableTable</code>).</p>
+          <div class="label mt-8">Parâmetros</div>
+          <table class="param-table">
+            <tr><th>Nome</th><th>Tipo</th><th>Descrição</th></tr>
+            <tr><td class="param-name">fp</td><td><code>FILE *</code></td><td class="param-desc">Arquivo .class posicionado após o attribute_length</td></tr>
+            <tr><td class="param-name">cp</td><td><code>cp_info *</code></td><td class="param-desc">Constant pool para decodificar sub-atributos</td></tr>
+          </table>
+          <div class="return-row"><strong>Retorno:</strong> Ponteiro para <code>Code_attribute</code> alocado</div>
+          <div class="label mt-8">Chama</div>
+          <div class="calls-list">
+            <a href="#fn-readAttribute" class="call-link">readAttribute()</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="fn-card" id="fn-printCodeAttribute">
+        <div class="fn-card-header">
+          <span class="fn-name">printCodeAttribute()</span>
+          <span class="fn-line">attribute.c</span>
+        </div>
+        <div class="fn-signature"><code>void printCodeAttribute(Code_attribute *code_attr, cp_info *constant_pool)</code></div>
+        <div class="fn-body">
+          <p class="fn-summary">Imprime os campos do atributo <code>Code</code>: <code>max_stack</code>, <code>max_locals</code>, bytecodes desassemblados (via <code>printBytecode</code>), tabela de exceções e sub-atributos.</p>
+          <div class="label mt-8">Chama</div>
+          <div class="calls-list">
+            <a href="opcodes.html#fn-printBytecode" class="call-link">printBytecode()</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="fn-card" id="fn-freeCodeAttribute">
+        <div class="fn-card-header">
+          <span class="fn-name">freeCodeAttribute()</span>
+          <span class="fn-line">attribute.c</span>
+        </div>
+        <div class="fn-signature"><code>void freeCodeAttribute(Code_attribute *attr, cp_info *constant_pool)</code></div>
+        <div class="fn-body">
+          <p class="fn-summary">Libera o <code>Code_attribute</code>: bytecodes, tabela de exceções e sub-atributos.</p>
+          <div class="label mt-8">Chama</div>
+          <div class="calls-list">
+            <a href="#fn-freeAttribute" class="call-link">freeAttribute()</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="fn-card" id="fn-freeAttribute">
+        <div class="fn-card-header">
+          <span class="fn-name">freeAttribute()</span>
+          <span class="fn-line">attribute.c</span>
+        </div>
+        <div class="fn-signature"><code>void freeAttribute(attribute_info *attr, cp_info *constant_pool)</code></div>
+        <div class="fn-body">
+          <p class="fn-summary">Dispatcher de liberação: identifica o tipo do atributo pelo nome no CP e chama a função <code>free</code> específica (<code>freeCodeAttribute</code>, <code>freeConstantValueAttribute</code>, etc.).</p>
+          <div class="label mt-8">Chama</div>
+          <div class="calls-list">
+            <a href="#fn-getUtf8" class="call-link">getUtf8()</a>
+            <a href="#fn-freeCodeAttribute" class="call-link">freeCodeAttribute()</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+<script>
+document.getElementById('sidebar-filter').addEventListener('input', function() {
+  const q = this.value.toLowerCase();
+  document.querySelectorAll('#sidebar-nav .nav-item').forEach(el => {
+    el.style.display = el.textContent.toLowerCase().includes(q) ? '' : 'none';
+  });
+});
+document.querySelectorAll('.fn-card-header').forEach(h => {
+  h.addEventListener('click', () => { h.nextElementSibling?.classList.toggle('open'); });
+});
+hljs.highlightAll();
+</script>
+</body>
+</html>

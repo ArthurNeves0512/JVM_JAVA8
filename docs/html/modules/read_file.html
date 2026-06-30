@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>read_file.c — JVM Java 8 em C</title>
+<link rel="stylesheet" href="../style.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+  mermaid.initialize({ startOnLoad: true, theme: 'default' });
+</script>
+</head>
+<body>
+<nav id="sidebar">
+  <div id="sidebar-header">
+    <a href="../index.html"><div class="logo">JVM</div> JVM Java 8</a>
+  </div>
+  <div id="sidebar-search">
+    <input type="text" placeholder="Filtrar..." id="sidebar-filter">
+  </div>
+  <nav id="sidebar-nav">
+    <div class="nav-section">Visão Geral</div>
+    <a href="../index.html" class="nav-item">Início</a>
+    <a href="../diagram.html" class="nav-item">Diagrama Geral</a>
+    <a href="../structs.html" class="nav-item">Estruturas de Dados</a>
+    <div class="nav-section">Módulos</div>
+    <a href="main.html" class="nav-item">main.c <span class="tag tag-module">main</span></a>
+    <a href="read_file.html" class="nav-item active">read_file.c <span class="tag tag-module">file</span></a>
+    <a href="dot_class.html" class="nav-item">dot_class.c <span class="tag tag-module">types</span></a>
+    <a href="attribute.html" class="nav-item">attribute.c <span class="tag tag-module">types</span></a>
+    <a href="opcodes.html" class="nav-item">opcodes.c <span class="tag tag-module">types</span></a>
+    <a href="loader.html" class="nav-item">loader.c <span class="tag tag-module">class_loader</span></a>
+    <a href="fields_interfaces.html" class="nav-item">fields_interfaces.c <span class="tag tag-module">class_loader</span></a>
+    <a href="methods.html" class="nav-item">methods.c <span class="tag tag-module">class_loader</span></a>
+    <a href="interpreter.html" class="nav-item">interpreter.c <span class="tag tag-module">interpreter</span></a>
+    <a href="basic_ops.html" class="nav-item">basic_ops.c <span class="tag tag-module">interpreter</span></a>
+    <a href="jvm_stack.html" class="nav-item">jvm_stack.c <span class="tag tag-module">interpreter</span></a>
+    <a href="heap.html" class="nav-item">heap.c <span class="tag tag-module">interpreter</span></a>
+    <a href="method_invoke.html" class="nav-item">method_invoke.c <span class="tag tag-module">interpreter</span></a>
+    <a href="native_methods.html" class="nav-item">native_methods.c <span class="tag tag-module">interpreter</span></a>
+    <a href="printer.html" class="nav-item">printer.c <span class="tag tag-module">printer</span></a>
+    <a href="args.html" class="nav-item">args.c <span class="tag tag-module">utils</span></a>
+  </nav>
+</nav>
+<div id="main">
+  <header class="page-header">
+    <div class="breadcrumb"><a href="../index.html">JVM</a> <span>›</span> Módulos</div>
+    <h1>read_file.c <span class="badge badge-module">file</span></h1>
+    <div class="subtitle">Leitura do arquivo binário .class em modo big-endian</div>
+  </header>
+  <div class="page-content">
+
+    <div class="section">
+      <div class="section-title">Papel no projeto</div>
+      <p>Este módulo é responsável pela abertura do arquivo <code>.class</code> Java no sistema de arquivos. O arquivo <code>read_file.c</code> implementa a função de abertura, enquanto o header <code>read_byte.h</code> define funções inline para leitura de 1, 2 e 4 bytes no formato big-endian exigido pela especificação JVM. Essas primitivas (<code>u1Read</code>, <code>u2Read</code>, <code>u4Read</code>) são utilizadas por todo o módulo <code>class_loader</code> para desserializar os dados do arquivo.</p>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Funções</div>
+
+      <div class="fn-card" id="fn-readFile">
+        <div class="fn-card-header">
+          <span class="fn-name">readFile()</span>
+          <span class="fn-line">linha 4</span>
+        </div>
+        <div class="fn-signature"><code>FILE *readFile(const char *file_path)</code></div>
+        <div class="fn-body">
+          <p class="fn-summary">Abre o arquivo <code>.class</code> em modo binário de leitura (<code>"rb"</code>). Encerra o processo com <code>perror</code> se o arquivo não puder ser aberto.</p>
+          <div class="label mt-8">Parâmetros</div>
+          <table class="param-table">
+            <tr><th>Nome</th><th>Tipo</th><th>Descrição</th></tr>
+            <tr><td class="param-name">file_path</td><td><code>const char *</code></td><td class="param-desc">Caminho para o arquivo .class a abrir</td></tr>
+          </table>
+          <div class="return-row"><strong>Retorno:</strong> Ponteiro <code>FILE*</code> para leitura do arquivo</div>
+          <div class="label mt-8">Chama</div>
+          <div class="calls-list">
+            <span class="call-link no-link">(sem chamadas a funções do projeto)</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="fn-card" id="fn-u1Read">
+        <div class="fn-card-header">
+          <span class="fn-name">u1Read() <span style="font-size:11px;color:var(--text-dim)">[inline, read_byte.h]</span></span>
+          <span class="fn-line">header</span>
+        </div>
+        <div class="fn-signature"><code>static inline u1 u1Read(FILE *ptr_file)</code></div>
+        <div class="fn-body">
+          <p class="fn-summary">Lê 1 byte (u1) do arquivo. Wrapper inline de <code>getc()</code>.</p>
+          <div class="return-row"><strong>Retorno:</strong> Byte lido como <code>u1</code> (uint8_t)</div>
+        </div>
+      </div>
+
+      <div class="fn-card" id="fn-u2Read">
+        <div class="fn-card-header">
+          <span class="fn-name">u2Read() <span style="font-size:11px;color:var(--text-dim)">[inline, read_byte.h]</span></span>
+          <span class="fn-line">header</span>
+        </div>
+        <div class="fn-signature"><code>static inline u2 u2Read(FILE *ptr_file)</code></div>
+        <div class="fn-body">
+          <p class="fn-summary">Lê 2 bytes em big-endian e retorna como <code>u2</code> (uint16_t). O byte mais significativo é lido primeiro.</p>
+          <div class="return-row"><strong>Retorno:</strong> Valor de 2 bytes em big-endian como <code>u2</code></div>
+        </div>
+      </div>
+
+      <div class="fn-card" id="fn-u4Read">
+        <div class="fn-card-header">
+          <span class="fn-name">u4Read() <span style="font-size:11px;color:var(--text-dim)">[inline, read_byte.h]</span></span>
+          <span class="fn-line">header</span>
+        </div>
+        <div class="fn-signature"><code>static inline u4 u4Read(FILE *ptr_file)</code></div>
+        <div class="fn-body">
+          <p class="fn-summary">Lê 4 bytes em big-endian combinando dois <code>u2Read</code>. Retorna como <code>u4</code> (uint32_t).</p>
+          <div class="return-row"><strong>Retorno:</strong> Valor de 4 bytes em big-endian como <code>u4</code></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+<script>
+document.getElementById('sidebar-filter').addEventListener('input', function() {
+  const q = this.value.toLowerCase();
+  document.querySelectorAll('#sidebar-nav .nav-item').forEach(el => {
+    el.style.display = el.textContent.toLowerCase().includes(q) ? '' : 'none';
+  });
+});
+document.querySelectorAll('.fn-card-header').forEach(h => {
+  h.addEventListener('click', () => { h.nextElementSibling?.classList.toggle('open'); });
+});
+hljs.highlightAll();
+</script>
+</body>
+</html>

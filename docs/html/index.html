@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JVM Java 8 em C — Documentação</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<nav id="sidebar">
+  <div id="sidebar-header">
+    <a href="index.html"><div class="logo">JVM</div> JVM Java 8</a>
+  </div>
+  <div id="sidebar-search">
+    <input type="text" placeholder="Filtrar..." id="sidebar-filter">
+  </div>
+  <nav id="sidebar-nav">
+    <div class="nav-section">Visão Geral</div>
+    <a href="index.html" class="nav-item active">Início</a>
+    <a href="diagram.html" class="nav-item">Diagrama Geral</a>
+    <a href="structs.html" class="nav-item">Estruturas de Dados</a>
+    <div class="nav-section">Módulos</div>
+    <a href="modules/main.html" class="nav-item">main.c <span class="tag tag-module">main</span></a>
+    <a href="modules/read_file.html" class="nav-item">read_file.c <span class="tag tag-module">file</span></a>
+    <a href="modules/dot_class.html" class="nav-item">dot_class.c <span class="tag tag-module">types</span></a>
+    <a href="modules/attribute.html" class="nav-item">attribute.c <span class="tag tag-module">types</span></a>
+    <a href="modules/opcodes.html" class="nav-item">opcodes.c <span class="tag tag-module">types</span></a>
+    <a href="modules/loader.html" class="nav-item">loader.c <span class="tag tag-module">class_loader</span></a>
+    <a href="modules/fields_interfaces.html" class="nav-item">fields_interfaces.c <span class="tag tag-module">class_loader</span></a>
+    <a href="modules/methods.html" class="nav-item">methods.c <span class="tag tag-module">class_loader</span></a>
+    <a href="modules/interpreter.html" class="nav-item">interpreter.c <span class="tag tag-module">interpreter</span></a>
+    <a href="modules/basic_ops.html" class="nav-item">basic_ops.c <span class="tag tag-module">interpreter</span></a>
+    <a href="modules/jvm_stack.html" class="nav-item">jvm_stack.c <span class="tag tag-module">interpreter</span></a>
+    <a href="modules/heap.html" class="nav-item">heap.c <span class="tag tag-module">interpreter</span></a>
+    <a href="modules/method_invoke.html" class="nav-item">method_invoke.c <span class="tag tag-module">interpreter</span></a>
+    <a href="modules/native_methods.html" class="nav-item">native_methods.c <span class="tag tag-module">interpreter</span></a>
+    <a href="modules/printer.html" class="nav-item">printer.c <span class="tag tag-module">printer</span></a>
+    <a href="modules/args.html" class="nav-item">args.c <span class="tag tag-module">utils</span></a>
+  </nav>
+</nav>
+
+<div id="main">
+  <header class="page-header">
+    <h1>JVM Java 8 em C <span class="badge badge-module">Documentação</span></h1>
+    <div class="subtitle">Implementação de uma Java Virtual Machine em C — interpretador de bytecodes Java 8 (.class).</div>
+  </header>
+  <div class="page-content">
+
+    <!-- Visão geral do projeto -->
+    <div class="section">
+      <div class="section-title">Sobre o projeto</div>
+      <p style="color:var(--text-muted); line-height:1.7; max-width:720px;">
+        Este projeto implementa uma JVM simplificada em C, capaz de carregar arquivos <code>.class</code>
+        no formato Java 8 (major version 52), decodificar o constant pool, campos, métodos e atributos,
+        imprimir as informações do ClassFile, e executar o bytecode do método <code>main</code> incluindo
+        operações aritméticas, controle de fluxo, arrays, objetos, herança e métodos nativos simulados
+        (System.out.println, StringBuilder, String.valueOf, etc.).
+      </p>
+    </div>
+
+    <!-- Stats -->
+    <div class="section">
+      <div class="section-title">Visão geral</div>
+      <div style="display:flex; flex-wrap:wrap; gap:16px; margin-bottom:8px;">
+        <div style="background:var(--bg-card);border:1px solid var(--border-soft);border-radius:8px;padding:16px 24px;text-align:center;min-width:120px;">
+          <div style="font-size:28px;font-weight:700;color:var(--accent);">7</div>
+          <div style="font-size:12px;color:var(--text-dim);margin-top:2px;">módulos</div>
+        </div>
+        <div style="background:var(--bg-card);border:1px solid var(--border-soft);border-radius:8px;padding:16px 24px;text-align:center;min-width:120px;">
+          <div style="font-size:28px;font-weight:700;color:var(--accent);">27</div>
+          <div style="font-size:12px;color:var(--text-dim);margin-top:2px;">arquivos .c/.h</div>
+        </div>
+        <div style="background:var(--bg-card);border:1px solid var(--border-soft);border-radius:8px;padding:16px 24px;text-align:center;min-width:120px;">
+          <div style="font-size:28px;font-weight:700;color:var(--purple);">60+</div>
+          <div style="font-size:12px;color:var(--text-dim);margin-top:2px;">funções documentadas</div>
+        </div>
+        <div style="background:var(--bg-card);border:1px solid var(--border-soft);border-radius:8px;padding:16px 24px;text-align:center;min-width:120px;">
+          <div style="font-size:28px;font-weight:700;color:var(--green);">14</div>
+          <div style="font-size:12px;color:var(--text-dim);margin-top:2px;">structs documentadas</div>
+        </div>
+        <div style="background:var(--bg-card);border:1px solid var(--border-soft);border-radius:8px;padding:16px 24px;text-align:center;min-width:120px;">
+          <div style="font-size:28px;font-weight:700;color:var(--yellow);">~2200</div>
+          <div style="font-size:12px;color:var(--text-dim);margin-top:2px;">linhas de código</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pipeline de execução -->
+    <div class="section">
+      <div class="section-title">Pipeline de execução</div>
+      <div style="display:flex;flex-direction:column;gap:8px;max-width:600px;">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div style="background:var(--accent-dim);color:#fff;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;">1</div>
+          <div><strong style="color:var(--text);">Argumentos CLI</strong> — <code>parse_args()</code> extrai o caminho do .class e opções</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div style="background:var(--accent-dim);color:#fff;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;">2</div>
+          <div><strong style="color:var(--text);">Leitura binária</strong> — <code>readFile()</code> abre o arquivo .class em modo binário</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div style="background:var(--accent-dim);color:#fff;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;">3</div>
+          <div><strong style="color:var(--text);">Decodificação</strong> — o class_loader lê sequencialmente: magic, versão, constant pool, flags, campos, métodos, atributos</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div style="background:var(--accent-dim);color:#fff;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;">4</div>
+          <div><strong style="color:var(--text);">Impressão</strong> — o printer exibe o ClassFile decodificado em formato legível (saída para .txt)</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div style="background:var(--accent-dim);color:#fff;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;">5</div>
+          <div><strong style="color:var(--text);">Execução</strong> — <code>executaJVM()</code> localiza o método <code>main</code>, cria um Frame e inicia o loop de bytecodes</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div style="background:var(--accent-dim);color:#fff;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;">6</div>
+          <div><strong style="color:var(--text);">Liberação</strong> — arrays, campos estáticos, heap e ClassFile são liberados</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Módulos -->
+    <div class="section">
+      <div class="section-title">Módulos</div>
+      <div class="module-grid">
+        <a href="modules/main.html" class="module-card">
+          <div class="module-card-title">main.c</div>
+          <div class="module-card-desc">Ponto de entrada. Orquestra a pipeline completa: args → carregar → imprimir → executar.</div>
+          <div class="module-card-meta">módulo: main · 1 função</div>
+        </a>
+        <a href="modules/read_file.html" class="module-card">
+          <div class="module-card-title">read_file.c / read_byte.h</div>
+          <div class="module-card-desc">Abre o arquivo binário .class e lê bytes em big-endian (u1/u2/u4).</div>
+          <div class="module-card-meta">módulo: file · 4 funções</div>
+        </a>
+        <a href="modules/dot_class.html" class="module-card">
+          <div class="module-card-title">dot_class.c</div>
+          <div class="module-card-desc">Alocação e liberação da estrutura raiz ClassFile.</div>
+          <div class="module-card-meta">módulo: types · 5 funções</div>
+        </a>
+        <a href="modules/attribute.html" class="module-card">
+          <div class="module-card-title">attribute.c</div>
+          <div class="module-card-desc">Parser e printer de atributos JVM: Code, ConstantValue, Exceptions, etc.</div>
+          <div class="module-card-meta">módulo: types · 6 funções</div>
+        </a>
+        <a href="modules/opcodes.html" class="module-card">
+          <div class="module-card-title">opcodes.c</div>
+          <div class="module-card-desc">Tabela de metadados de todos os opcodes JVM e desassemblador de bytecode.</div>
+          <div class="module-card-meta">módulo: types · 3 funções</div>
+        </a>
+        <a href="modules/loader.html" class="module-card">
+          <div class="module-card-title">loader.c</div>
+          <div class="module-card-desc">Decodifica o .class sequencialmente e carrega classes dependentes do disco.</div>
+          <div class="module-card-meta">módulo: class_loader · 12 funções</div>
+        </a>
+        <a href="modules/fields_interfaces.html" class="module-card">
+          <div class="module-card-title">fields_interfaces.c</div>
+          <div class="module-card-desc">Lê e decodifica as seções de interfaces e campos do .class.</div>
+          <div class="module-card-meta">módulo: class_loader · 2 funções</div>
+        </a>
+        <a href="modules/methods.html" class="module-card">
+          <div class="module-card-title">methods.c</div>
+          <div class="module-card-desc">Lê e libera a seção de métodos do .class.</div>
+          <div class="module-card-meta">módulo: class_loader · 3 funções</div>
+        </a>
+        <a href="modules/interpreter.html" class="module-card">
+          <div class="module-card-title">interpreter.c</div>
+          <div class="module-card-desc">Inicializa a JVM, localiza o método main e dispara a execução.</div>
+          <div class="module-card-meta">módulo: interpreter · 1 função</div>
+        </a>
+        <a href="modules/basic_ops.html" class="module-card">
+          <div class="module-card-title">basic_ops.c</div>
+          <div class="module-card-desc">Motor principal: loop de despacho de todos os opcodes JVM suportados.</div>
+          <div class="module-card-meta">módulo: interpreter · 8 funções · ~1100 linhas</div>
+        </a>
+        <a href="modules/jvm_stack.html" class="module-card">
+          <div class="module-card-title">jvm_stack.c</div>
+          <div class="module-card-desc">Pilha de frames de ativação: push/pop/peek com verificação de overflow.</div>
+          <div class="module-card-meta">módulo: interpreter · 5 funções</div>
+        </a>
+        <a href="modules/heap.html" class="module-card">
+          <div class="module-card-title">heap.c</div>
+          <div class="module-card-desc">Alocação de objetos Java em runtime, busca de campos e liberação da heap.</div>
+          <div class="module-card-meta">módulo: interpreter · 4 funções</div>
+        </a>
+        <a href="modules/method_invoke.html" class="module-card">
+          <div class="module-card-title">method_invoke.c</div>
+          <div class="module-card-desc">Handlers de invokestatic, invokevirtual e invokespecial com dispatch virtual e suporte a herança.</div>
+          <div class="module-card-meta">módulo: interpreter · 9 funções</div>
+        </a>
+        <a href="modules/native_methods.html" class="module-card">
+          <div class="module-card-title">native_methods.c</div>
+          <div class="module-card-desc">Registro e despacho de métodos nativos: System.out, StringBuilder, String, Object.</div>
+          <div class="module-card-meta">módulo: interpreter · 4 funções + 30+ handlers</div>
+        </a>
+        <a href="modules/printer.html" class="module-card">
+          <div class="module-card-title">printer.c</div>
+          <div class="module-card-desc">Imprime o ClassFile decodificado: cabeçalho, CP, interfaces, campos, métodos e atributos.</div>
+          <div class="module-card-meta">módulo: printer · 6 funções</div>
+        </a>
+        <a href="modules/args.html" class="module-card">
+          <div class="module-card-title">args.c</div>
+          <div class="module-card-desc">Parsing dos argumentos CLI: caminho do .class, arquivo de saída, flag --print.</div>
+          <div class="module-card-meta">módulo: utils · 2 funções</div>
+        </a>
+      </div>
+    </div>
+
+    <!-- Busca de funções -->
+    <div class="section">
+      <div class="section-title">Busca de funções</div>
+      <div id="fn-search-container">
+        <input type="text" id="fn-search" placeholder="Digite o nome de uma função...">
+      </div>
+      <div class="fn-index-list" id="fn-index">
+        <!-- main.c -->
+        <a href="modules/main.html#fn-main" class="fn-index-item" data-name="main"><span class="fn-index-name">main()</span><span class="fn-index-module">main.c</span></a>
+        <!-- read_file.c -->
+        <a href="modules/read_file.html#fn-readFile" class="fn-index-item" data-name="readFile"><span class="fn-index-name">readFile()</span><span class="fn-index-module">read_file.c</span></a>
+        <a href="modules/read_file.html#fn-u1Read" class="fn-index-item" data-name="u1Read u2Read u4Read"><span class="fn-index-name">u1Read() / u2Read() / u4Read()</span><span class="fn-index-module">read_byte.h (inline)</span></a>
+        <!-- dot_class.c -->
+        <a href="modules/dot_class.html#fn-allocClassFile" class="fn-index-item" data-name="allocClassFile"><span class="fn-index-name">allocClassFile()</span><span class="fn-index-module">dot_class.c</span></a>
+        <a href="modules/dot_class.html#fn-freeClassFile" class="fn-index-item" data-name="freeClassFile"><span class="fn-index-name">freeClassFile()</span><span class="fn-index-module">dot_class.c</span></a>
+        <a href="modules/dot_class.html#fn-freeConstantPool" class="fn-index-item" data-name="freeConstantPool"><span class="fn-index-name">freeConstantPool()</span><span class="fn-index-module">dot_class.c [static]</span></a>
+        <!-- attribute.c -->
+        <a href="modules/attribute.html#fn-readAttribute" class="fn-index-item" data-name="readAttribute"><span class="fn-index-name">readAttribute()</span><span class="fn-index-module">attribute.c</span></a>
+        <a href="modules/attribute.html#fn-readCodeAttribute" class="fn-index-item" data-name="readCodeAttribute"><span class="fn-index-name">readCodeAttribute()</span><span class="fn-index-module">attribute.c</span></a>
+        <a href="modules/attribute.html#fn-getUtf8" class="fn-index-item" data-name="getUtf8"><span class="fn-index-name">getUtf8()</span><span class="fn-index-module">attribute.c</span></a>
+        <a href="modules/attribute.html#fn-printCodeAttribute" class="fn-index-item" data-name="printCodeAttribute"><span class="fn-index-name">printCodeAttribute()</span><span class="fn-index-module">attribute.c</span></a>
+        <a href="modules/attribute.html#fn-freeAttribute" class="fn-index-item" data-name="freeAttribute"><span class="fn-index-name">freeAttribute()</span><span class="fn-index-module">attribute.c</span></a>
+        <!-- opcodes.c -->
+        <a href="modules/opcodes.html#fn-opcode_size_variable" class="fn-index-item" data-name="opcode_size_variable"><span class="fn-index-name">opcode_size_variable()</span><span class="fn-index-module">opcodes.c</span></a>
+        <a href="modules/opcodes.html#fn-printBytecode" class="fn-index-item" data-name="printBytecode"><span class="fn-index-name">printBytecode()</span><span class="fn-index-module">opcodes.c</span></a>
+        <!-- loader.c -->
+        <a href="modules/loader.html#fn-setClassDir" class="fn-index-item" data-name="setClassDir"><span class="fn-index-name">setClassDir()</span><span class="fn-index-module">loader.c</span></a>
+        <a href="modules/loader.html#fn-readCafeBabe" class="fn-index-item" data-name="readCafeBabe"><span class="fn-index-name">readCafeBabe()</span><span class="fn-index-module">loader.c</span></a>
+        <a href="modules/loader.html#fn-classFilesSetup" class="fn-index-item" data-name="classFilesSetup"><span class="fn-index-name">classFilesSetup()</span><span class="fn-index-module">loader.c</span></a>
+        <a href="modules/loader.html#fn-loadClassFile" class="fn-index-item" data-name="loadClassFile"><span class="fn-index-name">loadClassFile()</span><span class="fn-index-module">loader.c</span></a>
+        <a href="modules/loader.html#fn-loadSuperClass" class="fn-index-item" data-name="loadSuperClass"><span class="fn-index-name">loadSuperClass()</span><span class="fn-index-module">loader.c</span></a>
+        <a href="modules/loader.html#fn-getClassName" class="fn-index-item" data-name="getClassName"><span class="fn-index-name">getClassName()</span><span class="fn-index-module">loader.c</span></a>
+        <a href="modules/loader.html#fn-getSuperClassName" class="fn-index-item" data-name="getSuperClassName"><span class="fn-index-name">getSuperClassName()</span><span class="fn-index-module">loader.c</span></a>
+        <a href="modules/loader.html#fn-readClassFileAttributes" class="fn-index-item" data-name="readClassFileAttributes"><span class="fn-index-name">readClassFileAttributes()</span><span class="fn-index-module">loader.c</span></a>
+        <!-- fields_interfaces.c -->
+        <a href="modules/fields_interfaces.html#fn-readInterfaces" class="fn-index-item" data-name="readInterfaces"><span class="fn-index-name">readInterfaces()</span><span class="fn-index-module">fields_interfaces.c</span></a>
+        <a href="modules/fields_interfaces.html#fn-readFields" class="fn-index-item" data-name="readFields"><span class="fn-index-name">readFields()</span><span class="fn-index-module">fields_interfaces.c</span></a>
+        <!-- methods.c -->
+        <a href="modules/methods.html#fn-readMethods" class="fn-index-item" data-name="readMethods"><span class="fn-index-name">readMethods()</span><span class="fn-index-module">methods.c</span></a>
+        <a href="modules/methods.html#fn-readMethodsCount" class="fn-index-item" data-name="readMethodsCount"><span class="fn-index-name">readMethodsCount()</span><span class="fn-index-module">methods.c</span></a>
+        <a href="modules/methods.html#fn-freeMethods" class="fn-index-item" data-name="freeMethods"><span class="fn-index-name">freeMethods()</span><span class="fn-index-module">methods.c</span></a>
+        <!-- interpreter.c -->
+        <a href="modules/interpreter.html#fn-executaJVM" class="fn-index-item" data-name="executaJVM"><span class="fn-index-name">executaJVM()</span><span class="fn-index-module">interpreter.c</span></a>
+        <!-- basic_ops.c -->
+        <a href="modules/basic_ops.html#fn-criaFrame" class="fn-index-item" data-name="criaFrame"><span class="fn-index-name">criaFrame()</span><span class="fn-index-module">basic_ops.c</span></a>
+        <a href="modules/basic_ops.html#fn-liberaFrame" class="fn-index-item" data-name="liberaFrame"><span class="fn-index-name">liberaFrame()</span><span class="fn-index-module">basic_ops.c</span></a>
+        <a href="modules/basic_ops.html#fn-executaFrame" class="fn-index-item" data-name="executaFrame"><span class="fn-index-name">executaFrame()</span><span class="fn-index-module">basic_ops.c</span></a>
+        <a href="modules/basic_ops.html#fn-liberaArrays" class="fn-index-item" data-name="liberaArrays"><span class="fn-index-name">liberaArrays()</span><span class="fn-index-module">basic_ops.c</span></a>
+        <a href="modules/basic_ops.html#fn-liberaStaticFields" class="fn-index-item" data-name="liberaStaticFields"><span class="fn-index-name">liberaStaticFields()</span><span class="fn-index-module">basic_ops.c</span></a>
+        <!-- jvm_stack.c -->
+        <a href="modules/jvm_stack.html#fn-criaJVMStack" class="fn-index-item" data-name="criaJVMStack"><span class="fn-index-name">criaJVMStack()</span><span class="fn-index-module">jvm_stack.c</span></a>
+        <a href="modules/jvm_stack.html#fn-empilhaFrame" class="fn-index-item" data-name="empilhaFrame"><span class="fn-index-name">empilhaFrame()</span><span class="fn-index-module">jvm_stack.c</span></a>
+        <a href="modules/jvm_stack.html#fn-desempilhaFrame" class="fn-index-item" data-name="desempilhaFrame"><span class="fn-index-name">desempilhaFrame()</span><span class="fn-index-module">jvm_stack.c</span></a>
+        <a href="modules/jvm_stack.html#fn-frameAtual" class="fn-index-item" data-name="frameAtual"><span class="fn-index-name">frameAtual()</span><span class="fn-index-module">jvm_stack.c</span></a>
+        <a href="modules/jvm_stack.html#fn-liberaJVMStack" class="fn-index-item" data-name="liberaJVMStack"><span class="fn-index-name">liberaJVMStack()</span><span class="fn-index-module">jvm_stack.c</span></a>
+        <!-- heap.c -->
+        <a href="modules/heap.html#fn-alocaObjeto" class="fn-index-item" data-name="alocaObjeto"><span class="fn-index-name">alocaObjeto()</span><span class="fn-index-module">heap.c</span></a>
+        <a href="modules/heap.html#fn-buscaCampo" class="fn-index-item" data-name="buscaCampo"><span class="fn-index-name">buscaCampo()</span><span class="fn-index-module">heap.c</span></a>
+        <a href="modules/heap.html#fn-liberaHeap" class="fn-index-item" data-name="liberaHeap"><span class="fn-index-name">liberaHeap()</span><span class="fn-index-module">heap.c</span></a>
+        <!-- method_invoke.c -->
+        <a href="modules/method_invoke.html#fn-conta_args" class="fn-index-item" data-name="conta_args"><span class="fn-index-name">conta_args()</span><span class="fn-index-module">method_invoke.c</span></a>
+        <a href="modules/method_invoke.html#fn-retorno_void" class="fn-index-item" data-name="retorno_void"><span class="fn-index-name">retorno_void()</span><span class="fn-index-module">method_invoke.c</span></a>
+        <a href="modules/method_invoke.html#fn-encontraCodeAttr" class="fn-index-item" data-name="encontraCodeAttr"><span class="fn-index-name">encontraCodeAttr()</span><span class="fn-index-module">method_invoke.c</span></a>
+        <a href="modules/method_invoke.html#fn-buscaMetodoClasse" class="fn-index-item" data-name="buscaMetodoClasse"><span class="fn-index-name">buscaMetodoClasse()</span><span class="fn-index-module">method_invoke.c</span></a>
+        <a href="modules/method_invoke.html#fn-encontraMetodo" class="fn-index-item" data-name="encontraMetodo"><span class="fn-index-name">encontraMetodo()</span><span class="fn-index-module">method_invoke.c</span></a>
+        <a href="modules/method_invoke.html#fn-execInvokestatic" class="fn-index-item" data-name="execInvokestatic"><span class="fn-index-name">execInvokestatic()</span><span class="fn-index-module">method_invoke.c</span></a>
+        <a href="modules/method_invoke.html#fn-execInvokevirtual" class="fn-index-item" data-name="execInvokevirtual"><span class="fn-index-name">execInvokevirtual()</span><span class="fn-index-module">method_invoke.c</span></a>
+        <a href="modules/method_invoke.html#fn-execInvokespecial" class="fn-index-item" data-name="execInvokespecial"><span class="fn-index-name">execInvokespecial()</span><span class="fn-index-module">method_invoke.c</span></a>
+        <!-- native_methods.c -->
+        <a href="modules/native_methods.html#fn-initNativeMethods" class="fn-index-item" data-name="initNativeMethods"><span class="fn-index-name">initNativeMethods()</span><span class="fn-index-module">native_methods.c</span></a>
+        <a href="modules/native_methods.html#fn-lookupNative" class="fn-index-item" data-name="lookupNative"><span class="fn-index-name">lookupNative()</span><span class="fn-index-module">native_methods.c</span></a>
+        <a href="modules/native_methods.html#fn-isNativeClass" class="fn-index-item" data-name="isNativeClass"><span class="fn-index-name">isNativeClass()</span><span class="fn-index-module">native_methods.c</span></a>
+        <!-- printer.c -->
+        <a href="modules/printer.html#fn-printClassFile" class="fn-index-item" data-name="printClassFile"><span class="fn-index-name">printClassFile()</span><span class="fn-index-module">printer.c</span></a>
+        <a href="modules/printer.html#fn-printMethods" class="fn-index-item" data-name="printMethods"><span class="fn-index-name">printMethods()</span><span class="fn-index-module">printer.c</span></a>
+        <a href="modules/printer.html#fn-printFields" class="fn-index-item" data-name="printFields"><span class="fn-index-name">printFields()</span><span class="fn-index-module">printer.c</span></a>
+        <a href="modules/printer.html#fn-printInterfaces" class="fn-index-item" data-name="printInterfaces"><span class="fn-index-name">printInterfaces()</span><span class="fn-index-module">printer.c</span></a>
+        <a href="modules/printer.html#fn-printClassFileAttributes" class="fn-index-item" data-name="printClassFileAttributes"><span class="fn-index-name">printClassFileAttributes()</span><span class="fn-index-module">printer.c</span></a>
+        <a href="modules/printer.html#fn-printFileToTerminal" class="fn-index-item" data-name="printFileToTerminal"><span class="fn-index-name">printFileToTerminal()</span><span class="fn-index-module">printer.c</span></a>
+        <!-- args.c -->
+        <a href="modules/args.html#fn-parse_args" class="fn-index-item" data-name="parse_args"><span class="fn-index-name">parse_args()</span><span class="fn-index-module">args.c</span></a>
+        <a href="modules/args.html#fn-build_default_output_path" class="fn-index-item" data-name="build_default_output_path"><span class="fn-index-name">build_default_output_path()</span><span class="fn-index-module">args.c</span></a>
+      </div>
+    </div>
+
+  </div><!-- .page-content -->
+</div><!-- #main -->
+
+<script>
+// Sidebar filter
+document.getElementById('sidebar-filter').addEventListener('input', function() {
+  const q = this.value.toLowerCase();
+  document.querySelectorAll('#sidebar-nav .nav-item').forEach(el => {
+    el.style.display = el.textContent.toLowerCase().includes(q) ? '' : 'none';
+  });
+});
+
+// Function search
+document.getElementById('fn-search').addEventListener('input', function() {
+  const q = this.value.toLowerCase().trim();
+  document.querySelectorAll('#fn-index .fn-index-item').forEach(el => {
+    const name = (el.dataset.name || '').toLowerCase();
+    const text = el.textContent.toLowerCase();
+    el.classList.toggle('hidden', q.length > 0 && !name.includes(q) && !text.includes(q));
+  });
+});
+</script>
+</body>
+</html>

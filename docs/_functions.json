@@ -1,0 +1,895 @@
+{
+  "src/main.c": [
+    {
+      "name": "main",
+      "signature": "int main(int argc, char *argv[])",
+      "line": 12,
+      "summary": "Ponto de entrada do programa. Faz o parsing dos argumentos CLI, redireciona stdout para o arquivo de saída, carrega e decodifica o arquivo .class, imprime suas informações e executa a JVM.",
+      "params": [
+        { "name": "argc", "type": "int", "desc": "Número de argumentos da linha de comando" },
+        { "name": "argv", "type": "char *[]", "desc": "Vetor de strings com os argumentos" }
+      ],
+      "returns": "0 em sucesso, EXIT_FAILURE em erro",
+      "calls": ["parse_args", "build_default_output_path", "setClassDir", "readFile", "allocClassFile", "classFilesSetup", "readInterfaces", "readFields", "readMethodsCount", "readMethods", "readClassFileAttributes", "printClassFile", "printInterfaces", "printFields", "printMethods", "printClassFileAttributes", "printFileToTerminal", "executaJVM", "freeClassFile"]
+    }
+  ],
+
+  "src/lib/file/read_file.c": [
+    {
+      "name": "readFile",
+      "signature": "FILE *readFile(const char *file_path)",
+      "line": 4,
+      "summary": "Abre o arquivo .class em modo binário de leitura. Encerra o processo com perror se o arquivo não puder ser aberto.",
+      "params": [
+        { "name": "file_path", "type": "const char *", "desc": "Caminho para o arquivo .class" }
+      ],
+      "returns": "Ponteiro FILE* para leitura do arquivo",
+      "calls": []
+    }
+  ],
+
+  "src/lib/types/class_file/dot_class.c": [
+    {
+      "name": "allocClassFile",
+      "signature": "ClassFile *allocClassFile(void)",
+      "line": 8,
+      "summary": "Aloca e inicializa um ClassFile com todos os ponteiros nulos. Encerra o processo em caso de falha de alocação.",
+      "params": [],
+      "returns": "Ponteiro para o ClassFile alocado",
+      "calls": []
+    },
+    {
+      "name": "freeClassFile",
+      "signature": "void freeClassFile(ClassFile *cf)",
+      "line": 73,
+      "summary": "Libera toda a memória associada a um ClassFile: campos, métodos, atributos, interfaces, constant pool e o próprio struct.",
+      "params": [
+        { "name": "cf", "type": "ClassFile *", "desc": "Ponteiro para o ClassFile a ser liberado" }
+      ],
+      "returns": "void",
+      "calls": ["freeFields", "freeMethods", "freeClassAttributes", "freeConstantPool"]
+    },
+    {
+      "name": "freeConstantPool",
+      "signature": "static void freeConstantPool(cp_info *constant_pool, u2 constant_pool_count)",
+      "line": 20,
+      "summary": "Libera cada entrada do constant pool de acordo com seu tag, incluindo os bytes das strings Utf8. Função interna (static).",
+      "params": [
+        { "name": "constant_pool", "type": "cp_info *", "desc": "Array de entradas do constant pool" },
+        { "name": "constant_pool_count", "type": "u2", "desc": "Número total de entradas no CP" }
+      ],
+      "returns": "void",
+      "calls": []
+    },
+    {
+      "name": "freeFields",
+      "signature": "static void freeFields(ClassFile *cf)",
+      "line": 48,
+      "summary": "Libera os atributos de cada campo e o array de campos do ClassFile. Função interna (static).",
+      "params": [
+        { "name": "cf", "type": "ClassFile *", "desc": "Ponteiro para o ClassFile" }
+      ],
+      "returns": "void",
+      "calls": ["freeAttribute"]
+    },
+    {
+      "name": "freeClassAttributes",
+      "signature": "static void freeClassAttributes(ClassFile *cf)",
+      "line": 63,
+      "summary": "Libera os atributos de nível de classe do ClassFile. Função interna (static).",
+      "params": [
+        { "name": "cf", "type": "ClassFile *", "desc": "Ponteiro para o ClassFile" }
+      ],
+      "returns": "void",
+      "calls": ["freeAttribute"]
+    }
+  ],
+
+  "src/lib/types/opcodes.c": [
+    {
+      "name": "opcode_size_variable",
+      "signature": "u4 opcode_size_variable(const u1 *code, u4 pc)",
+      "line": 190,
+      "summary": "Calcula o tamanho em bytes de instruções de tamanho variável: tableswitch, lookupswitch e wide. Para os demais, retorna 1 (o chamador usa opcode_table.size).",
+      "params": [
+        { "name": "code", "type": "const u1 *", "desc": "Buffer de bytecodes" },
+        { "name": "pc", "type": "u4", "desc": "Posição atual do contador de programa" }
+      ],
+      "returns": "Tamanho em bytes da instrução atual",
+      "calls": []
+    },
+    {
+      "name": "printBytecode",
+      "signature": "void printBytecode(const u1 *code, u4 code_length, cp_info *cp)",
+      "line": 221,
+      "summary": "Desassembla e imprime o bytecode de um método, exibindo o offset, mnemônico e operandos de cada instrução em formato legível. Resolve referências do constant pool para tipos como invokevirtual, getstatic e new.",
+      "params": [
+        { "name": "code", "type": "const u1 *", "desc": "Buffer de bytecodes do método" },
+        { "name": "code_length", "type": "u4", "desc": "Comprimento total do bytecode em bytes" },
+        { "name": "cp", "type": "cp_info *", "desc": "Constant pool para resolução de referências" }
+      ],
+      "returns": "void",
+      "calls": ["opcode_size_variable", "printCpRef"]
+    },
+    {
+      "name": "printCpRef",
+      "signature": "static void printCpRef(cp_info *cp, u2 idx)",
+      "line": 213,
+      "summary": "Imprime a referência do constant pool no índice dado de forma legível: para classes exibe o nome, para refs de método/campo exibe classe.nome:descritor, para strings exibe o conteúdo entre aspas. Função interna (static).",
+      "params": [
+        { "name": "cp", "type": "cp_info *", "desc": "Constant pool" },
+        { "name": "idx", "type": "u2", "desc": "Índice da entrada no CP" }
+      ],
+      "returns": "void",
+      "calls": []
+    }
+  ],
+
+  "src/lib/types/attribute.c": [
+    {
+      "name": "readAttribute",
+      "signature": "attribute_info readAttribute(FILE *file_ptr, cp_info *constant_pool)",
+      "line": 1,
+      "summary": "Lê o cabeçalho genérico de um atributo (attribute_name_index e attribute_length) e decodifica o corpo conforme o nome: Code, ConstantValue, Exceptions, SourceFile, InnerClasses, LineNumberTable, LocalVariableTable, ou raw bytes para tipos desconhecidos.",
+      "params": [
+        { "name": "file_ptr", "type": "FILE *", "desc": "Arquivo .class posicionado no início do atributo" },
+        { "name": "constant_pool", "type": "cp_info *", "desc": "CP necessário para identificar o nome do atributo" }
+      ],
+      "returns": "attribute_info com o campo info apontando para a struct decodificada (ou bytes raw)",
+      "calls": ["readCodeAttribute", "readConstantValueAttribute", "readExceptionsAttribute", "readSourceFileAttribute", "readInnerClassesAttribute", "readLineNumberTableAttribute", "readLocalVariableTableAttribute", "getUtf8"]
+    },
+    {
+      "name": "readCodeAttribute",
+      "signature": "Code_attribute *readCodeAttribute(FILE *fp, cp_info *cp)",
+      "line": 44,
+      "summary": "Decodifica o atributo Code: lê max_stack, max_locals, os bytecodes, a tabela de exceções e os sub-atributos (LineNumberTable, LocalVariableTable).",
+      "params": [
+        { "name": "fp", "type": "FILE *", "desc": "Arquivo .class posicionado após o attribute_length" },
+        { "name": "cp", "type": "cp_info *", "desc": "Constant pool para decodificar sub-atributos" }
+      ],
+      "returns": "Ponteiro para Code_attribute alocado",
+      "calls": ["readAttribute"]
+    },
+    {
+      "name": "getUtf8",
+      "signature": "char *getUtf8(cp_info *constant_pool, u2 index)",
+      "line": 1,
+      "summary": "Retorna uma cópia (strdup) da string UTF-8 armazenada na entrada index do constant pool. O chamador é responsável por liberar com free(). Retorna NULL se o índice for inválido ou a tag não for CONSTANT_Utf8.",
+      "params": [
+        { "name": "constant_pool", "type": "cp_info *", "desc": "Array do constant pool" },
+        { "name": "index", "type": "u2", "desc": "Índice da entrada Utf8" }
+      ],
+      "returns": "String alocada com o conteúdo UTF-8, ou NULL",
+      "calls": []
+    },
+    {
+      "name": "printCodeAttribute",
+      "signature": "void printCodeAttribute(Code_attribute *code_attr, cp_info *constant_pool)",
+      "line": 1,
+      "summary": "Imprime os campos do atributo Code (max_stack, max_locals, bytecodes desassemblados, tabela de exceções e sub-atributos).",
+      "params": [
+        { "name": "code_attr", "type": "Code_attribute *", "desc": "Atributo Code decodificado" },
+        { "name": "constant_pool", "type": "cp_info *", "desc": "CP para resolução de referências" }
+      ],
+      "returns": "void",
+      "calls": ["printBytecode", "printSubAttribute"]
+    },
+    {
+      "name": "freeCodeAttribute",
+      "signature": "void freeCodeAttribute(Code_attribute *attr, cp_info *constant_pool)",
+      "line": 1,
+      "summary": "Libera o Code_attribute: bytecodes, tabela de exceções e sub-atributos.",
+      "params": [
+        { "name": "attr", "type": "Code_attribute *", "desc": "Atributo Code a liberar" },
+        { "name": "constant_pool", "type": "cp_info *", "desc": "CP para interpretar sub-atributos" }
+      ],
+      "returns": "void",
+      "calls": ["freeAttribute"]
+    },
+    {
+      "name": "freeAttribute",
+      "signature": "void freeAttribute(attribute_info *attr, cp_info *constant_pool)",
+      "line": 1,
+      "summary": "Dispatcher de liberação: identifica o tipo do atributo pelo nome no CP e chama a função free específica (freeCodeAttribute, freeConstantValueAttribute, etc.).",
+      "params": [
+        { "name": "attr", "type": "attribute_info *", "desc": "Atributo genérico a liberar" },
+        { "name": "constant_pool", "type": "cp_info *", "desc": "CP para identificar o tipo pelo nome" }
+      ],
+      "returns": "void",
+      "calls": ["getUtf8", "freeCodeAttribute", "freeConstantValueAttribute", "freeExceptionsAttribute", "freeSourceFileAttribute", "freeInnerClassesAttribute", "freeLineNumberTableAttribute", "freeLocalVariableTableAttribute"]
+    }
+  ],
+
+  "src/lib/class_loader/loader.c": [
+    {
+      "name": "setClassDir",
+      "signature": "void setClassDir(const char *path)",
+      "line": 8,
+      "summary": "Extrai o diretório base do caminho do .class principal e o armazena em g_class_dir. Esse prefixo é usado por loadClassFile e loadSuperClass para localizar classes dependentes.",
+      "params": [
+        { "name": "path", "type": "const char *", "desc": "Caminho completo do arquivo .class inicial" }
+      ],
+      "returns": "void",
+      "calls": []
+    },
+    {
+      "name": "readCafeBabe",
+      "signature": "u4 readCafeBabe(FILE *ptr_file)",
+      "line": 20,
+      "summary": "Lê os 4 primeiros bytes do arquivo e verifica se o magic number é 0xCAFEBABE. Encerra o processo com erro se não for um .class válido.",
+      "params": [
+        { "name": "ptr_file", "type": "FILE *", "desc": "Arquivo .class posicionado no início" }
+      ],
+      "returns": "O magic number lido (0xCAFEBABE)",
+      "calls": []
+    },
+    {
+      "name": "readConstantPoolCount",
+      "signature": "u2 readConstantPoolCount(FILE *ptr_file)",
+      "line": 28,
+      "summary": "Lê e retorna o constant_pool_count (2 bytes) do arquivo .class.",
+      "params": [
+        { "name": "ptr_file", "type": "FILE *", "desc": "Arquivo .class posicionado no campo constant_pool_count" }
+      ],
+      "returns": "Número de entradas no constant pool + 1",
+      "calls": []
+    },
+    {
+      "name": "classFilesSetup",
+      "signature": "void classFilesSetup(ClassFile *cf, FILE *fp)",
+      "line": 140,
+      "summary": "Lê o cabeçalho completo do ClassFile: magic, versões, constant pool, access_flags, this_class e super_class. Para Long/Double, avança o índice do CP em 2 posições conforme a especificação.",
+      "params": [
+        { "name": "cf", "type": "ClassFile *", "desc": "ClassFile onde os dados serão gravados" },
+        { "name": "fp", "type": "FILE *", "desc": "Arquivo .class" }
+      ],
+      "returns": "void",
+      "calls": ["readCafeBabe", "readConstantPoolCount", "readAccessFlags", "readThisClass", "readSuperClass", "constant_pool"]
+    },
+    {
+      "name": "readClassFileAttributes",
+      "signature": "void readClassFileAttributes(ClassFile *cf, FILE *fp)",
+      "line": 163,
+      "summary": "Lê e decodifica os atributos de nível de classe (ex: SourceFile, InnerClasses) e os armazena em cf->attributes.",
+      "params": [
+        { "name": "cf", "type": "ClassFile *", "desc": "ClassFile destino" },
+        { "name": "fp", "type": "FILE *", "desc": "Arquivo .class" }
+      ],
+      "returns": "void",
+      "calls": ["readAttribute"]
+    },
+    {
+      "name": "getClassName",
+      "signature": "char *getClassName(ClassFile *cf)",
+      "line": 178,
+      "summary": "Retorna o nome da classe resolvendo this_class → CP[name_index] → bytes UTF-8. Não aloca memória nova; retorna ponteiro direto para os bytes do CP.",
+      "params": [
+        { "name": "cf", "type": "ClassFile *", "desc": "ClassFile do qual extrair o nome" }
+      ],
+      "returns": "Ponteiro para a string com o nome da classe (tipo 'java/lang/Object'), ou NULL",
+      "calls": []
+    },
+    {
+      "name": "getSuperClassName",
+      "signature": "char *getSuperClassName(ClassFile *cf)",
+      "line": 192,
+      "summary": "Retorna o nome da superclasse resolvendo super_class → CP[name_index]. Retorna NULL se super_class == 0 (caso de java/lang/Object).",
+      "params": [
+        { "name": "cf", "type": "ClassFile *", "desc": "ClassFile do qual extrair o nome da superclasse" }
+      ],
+      "returns": "Ponteiro para a string do nome da superclasse, ou NULL",
+      "calls": []
+    },
+    {
+      "name": "loadClassFile",
+      "signature": "ClassFile *loadClassFile(const char *filename)",
+      "line": 207,
+      "summary": "Carrega um arquivo .class do disco a partir de um nome de classe (ex: 'MinhaClas.class'). Primeiro busca no diretório base configurado por setClassDir; com fallback sem prefixo. Retorna NULL para classes nativas. Carrega recursivamente a cadeia de herança via loadSuperClass.",
+      "params": [
+        { "name": "filename", "type": "const char *", "desc": "Nome do arquivo .class a carregar" }
+      ],
+      "returns": "ClassFile carregado, ou NULL se classe nativa ou não encontrada",
+      "calls": ["isNativeClass", "classFilesSetup", "readInterfacesCount", "readFields", "readMethodsCount", "readMethods", "readClassFileAttributes", "loadSuperClass"]
+    },
+    {
+      "name": "loadSuperClass",
+      "signature": "ClassFile *loadSuperClass(ClassFile *cf)",
+      "line": 264,
+      "summary": "Resolve e carrega a superclasse do ClassFile dado. Usa o CP para obter o nome da superclasse, monta o caminho do arquivo e chama loadSuperClass recursivamente para carregar toda a cadeia de herança. Retorna NULL se super_class == 0 ou se for uma classe nativa.",
+      "params": [
+        { "name": "cf", "type": "ClassFile *", "desc": "ClassFile filho cuja superclasse será carregada" }
+      ],
+      "returns": "ClassFile da superclasse, ou NULL",
+      "calls": ["getUtf8", "isNativeClass", "classFilesSetup", "readInterfacesCount", "readFields", "readMethodsCount", "readMethods", "readClassFileAttributes", "loadSuperClass"]
+    },
+    {
+      "name": "readAccessFlags",
+      "signature": "void readAccessFlags(ClassFile *cf, FILE *fp)",
+      "line": 129,
+      "summary": "Lê 2 bytes de access_flags do arquivo e armazena em cf->access_flags.",
+      "params": [
+        { "name": "cf", "type": "ClassFile *", "desc": "ClassFile destino" },
+        { "name": "fp", "type": "FILE *", "desc": "Arquivo .class" }
+      ],
+      "returns": "void",
+      "calls": []
+    },
+    {
+      "name": "readThisClass",
+      "signature": "void readThisClass(ClassFile *cf, FILE *fp)",
+      "line": 133,
+      "summary": "Lê o índice this_class (2 bytes) do arquivo.",
+      "params": [
+        { "name": "cf", "type": "ClassFile *", "desc": "ClassFile destino" },
+        { "name": "fp", "type": "FILE *", "desc": "Arquivo .class" }
+      ],
+      "returns": "void",
+      "calls": []
+    },
+    {
+      "name": "readSuperClass",
+      "signature": "void readSuperClass(ClassFile *cf, FILE *fp)",
+      "line": 137,
+      "summary": "Lê o índice super_class (2 bytes) do arquivo.",
+      "params": [
+        { "name": "cf", "type": "ClassFile *", "desc": "ClassFile destino" },
+        { "name": "fp", "type": "FILE *", "desc": "Arquivo .class" }
+      ],
+      "returns": "void",
+      "calls": []
+    },
+    {
+      "name": "readInterfacesCount",
+      "signature": "void readInterfacesCount(ClassFile *cf, FILE *fp)",
+      "line": 141,
+      "summary": "Lê o interfaces_count (2 bytes) do arquivo.",
+      "params": [
+        { "name": "cf", "type": "ClassFile *", "desc": "ClassFile destino" },
+        { "name": "fp", "type": "FILE *", "desc": "Arquivo .class" }
+      ],
+      "returns": "void",
+      "calls": []
+    }
+  ],
+
+  "src/lib/class_loader/fields_interfaces.c": [
+    {
+      "name": "readInterfaces",
+      "signature": "void readInterfaces(ClassFile *class_file_ptr, FILE *file_ptr)",
+      "line": 3,
+      "summary": "Lê o interfaces_count e aloca o array de índices de interface, lendo cada índice (u2) sequencialmente.",
+      "params": [
+        { "name": "class_file_ptr", "type": "ClassFile *", "desc": "ClassFile destino" },
+        { "name": "file_ptr", "type": "FILE *", "desc": "Arquivo .class" }
+      ],
+      "returns": "void",
+      "calls": []
+    },
+    {
+      "name": "readFields",
+      "signature": "void readFields(ClassFile *class_file_ptr, FILE *file_ptr)",
+      "line": 14,
+      "summary": "Lê o fields_count e decodifica cada field_info: access_flags, name_index, descriptor_index e seus atributos (ex: ConstantValue).",
+      "params": [
+        { "name": "class_file_ptr", "type": "ClassFile *", "desc": "ClassFile destino" },
+        { "name": "file_ptr", "type": "FILE *", "desc": "Arquivo .class" }
+      ],
+      "returns": "void",
+      "calls": ["readAttribute"]
+    }
+  ],
+
+  "src/lib/class_loader/methods.c": [
+    {
+      "name": "readMethodsCount",
+      "signature": "void readMethodsCount(ClassFile *cf, FILE *fp)",
+      "line": 3,
+      "summary": "Lê o methods_count (2 bytes) e armazena em cf->methods_count.",
+      "params": [
+        { "name": "cf", "type": "ClassFile *", "desc": "ClassFile destino" },
+        { "name": "fp", "type": "FILE *", "desc": "Arquivo .class" }
+      ],
+      "returns": "void",
+      "calls": []
+    },
+    {
+      "name": "readMethods",
+      "signature": "void readMethods(ClassFile *cf, FILE *fp)",
+      "line": 7,
+      "summary": "Aloca e decodifica cada method_info: access_flags, name_index, descriptor_index e seus atributos (principalmente Code).",
+      "params": [
+        { "name": "cf", "type": "ClassFile *", "desc": "ClassFile destino" },
+        { "name": "fp", "type": "FILE *", "desc": "Arquivo .class" }
+      ],
+      "returns": "void",
+      "calls": ["readAttribute"]
+    },
+    {
+      "name": "freeMethods",
+      "signature": "void freeMethods(ClassFile *cf)",
+      "line": 36,
+      "summary": "Libera os atributos de cada método e o array cf->methods.",
+      "params": [
+        { "name": "cf", "type": "ClassFile *", "desc": "ClassFile cujos métodos serão liberados" }
+      ],
+      "returns": "void",
+      "calls": ["freeAttribute"]
+    }
+  ],
+
+  "src/lib/interpreter/interpreter.c": [
+    {
+      "name": "executaJVM",
+      "signature": "void executaJVM(ClassFile *cf)",
+      "line": 11,
+      "summary": "Ponto de entrada do interpretador. Inicializa os métodos nativos, localiza o método 'main' no ClassFile, cria o frame de execução e o executa. Ao final, libera os recursos da JVM: arrays, campos estáticos e heap.",
+      "params": [
+        { "name": "cf", "type": "ClassFile *", "desc": "ClassFile da classe principal a executar" }
+      ],
+      "returns": "void",
+      "calls": ["initNativeMethods", "getUtf8", "encontraCodeAttr", "criaFrame", "executaFrame", "liberaFrame", "liberaArrays", "liberaStaticFields", "liberaHeap"]
+    }
+  ],
+
+  "src/lib/interpreter/basic_ops.c": [
+    {
+      "name": "criaFrame",
+      "signature": "Frame *criaFrame(Code_attribute *ca)",
+      "line": 132,
+      "summary": "Aloca e inicializa um Frame de execução: pilha de operandos vazia (topo=-1), PC=0 e aponta o código e tamanho para o Code_attribute fornecido.",
+      "params": [
+        { "name": "ca", "type": "Code_attribute *", "desc": "Atributo Code do método a executar" }
+      ],
+      "returns": "Ponteiro para o Frame criado",
+      "calls": []
+    },
+    {
+      "name": "liberaFrame",
+      "signature": "void liberaFrame(Frame *f)",
+      "line": 146,
+      "summary": "Libera a memória do Frame (apenas o struct; o código pertence ao Code_attribute).",
+      "params": [
+        { "name": "f", "type": "Frame *", "desc": "Frame a ser liberado" }
+      ],
+      "returns": "void",
+      "calls": []
+    },
+    {
+      "name": "liberaArrays",
+      "signature": "void liberaArrays(void)",
+      "line": 121,
+      "summary": "Libera todos os JVMArrays alocados durante a execução (pool estático de arrays).",
+      "params": [],
+      "returns": "void",
+      "calls": []
+    },
+    {
+      "name": "liberaStaticFields",
+      "signature": "void liberaStaticFields(void)",
+      "line": 89,
+      "summary": "Zera o contador de campos estáticos, efetivamente limpando a tabela de campos estáticos.",
+      "params": [],
+      "returns": "void",
+      "calls": []
+    },
+    {
+      "name": "executaFrame",
+      "signature": "void executaFrame(Frame *f, ClassFile *cf)",
+      "line": 218,
+      "summary": "Loop principal de interpretação: lê o opcode no PC atual e executa a operação correspondente via switch-case. Cobre aritmética inteira/long/float/double, load/store de variáveis locais, operações em arrays, controle de fluxo (if/goto/switch), criação de objetos, acesso a campos (getfield/putfield, getstatic/putstatic) e despacho de chamadas de método para execInvokestatic, execInvokevirtual, execInvokespecial.",
+      "params": [
+        { "name": "f", "type": "Frame *", "desc": "Frame de execução atual (pilha, locais, PC)" },
+        { "name": "cf", "type": "ClassFile *", "desc": "ClassFile do método em execução" }
+      ],
+      "returns": "void",
+      "calls": ["execInvokestatic", "execInvokevirtual", "execInvokespecial", "alocaObjeto", "buscaCampo", "loadClassFile", "ldc_push", "ldc2_push", "aloca_array", "find_static_field", "alloc_static_field", "getUtf8"]
+    },
+    {
+      "name": "find_static_field",
+      "signature": "static int find_static_field(const char *cls, const char *fld)",
+      "line": 72,
+      "summary": "Busca um campo estático na tabela estática interna pelo par (nome de classe, nome de campo). Retorna o índice ou -1 se não encontrado. Função interna (static).",
+      "params": [
+        { "name": "cls", "type": "const char *", "desc": "Nome da classe" },
+        { "name": "fld", "type": "const char *", "desc": "Nome do campo" }
+      ],
+      "returns": "Índice na tabela ou -1",
+      "calls": []
+    },
+    {
+      "name": "alloc_static_field",
+      "signature": "static int alloc_static_field(const char *cls, const char *fld)",
+      "line": 80,
+      "summary": "Aloca uma nova entrada na tabela de campos estáticos e inicializa o valor com zero. Função interna (static).",
+      "params": [
+        { "name": "cls", "type": "const char *", "desc": "Nome da classe" },
+        { "name": "fld", "type": "const char *", "desc": "Nome do campo" }
+      ],
+      "returns": "Índice da nova entrada, ou -1 se a tabela estiver cheia",
+      "calls": []
+    },
+    {
+      "name": "aloca_array",
+      "signature": "static JVMArray *aloca_array(int32_t length, int atype)",
+      "line": 101,
+      "summary": "Aloca um JVMArray com o comprimento e tipo dados. Escolhe o tamanho de elemento conforme atype (T_INT, T_LONG, T_OBJECT, etc.) e inicializa os dados com zero. Função interna (static).",
+      "params": [
+        { "name": "length", "type": "int32_t", "desc": "Número de elementos do array" },
+        { "name": "atype", "type": "int", "desc": "Tipo dos elementos (constante T_INT, T_LONG, T_OBJECT, etc.)" }
+      ],
+      "returns": "Ponteiro para o JVMArray alocado",
+      "calls": []
+    }
+  ],
+
+  "src/lib/interpreter/jvm_stack.c": [
+    {
+      "name": "criaJVMStack",
+      "signature": "JVMStack *criaJVMStack(void)",
+      "line": 6,
+      "summary": "Aloca e inicializa a pilha de frames JVM com topo=-1 (vazia).",
+      "params": [],
+      "returns": "Ponteiro para a JVMStack criada",
+      "calls": []
+    },
+    {
+      "name": "empilhaFrame",
+      "signature": "void empilhaFrame(JVMStack *s, Frame *f)",
+      "line": 15,
+      "summary": "Empilha um Frame na JVMStack. Encerra o processo em caso de stack overflow (MAX_FRAMES excedido).",
+      "params": [
+        { "name": "s", "type": "JVMStack *", "desc": "Pilha de frames" },
+        { "name": "f", "type": "Frame *", "desc": "Frame a empilhar" }
+      ],
+      "returns": "void",
+      "calls": []
+    },
+    {
+      "name": "desempilhaFrame",
+      "signature": "Frame *desempilhaFrame(JVMStack *s)",
+      "line": 23,
+      "summary": "Remove e retorna o Frame do topo da pilha. Retorna NULL e imprime erro em caso de underflow.",
+      "params": [
+        { "name": "s", "type": "JVMStack *", "desc": "Pilha de frames" }
+      ],
+      "returns": "Ponteiro para o Frame removido, ou NULL",
+      "calls": []
+    },
+    {
+      "name": "frameAtual",
+      "signature": "Frame *frameAtual(JVMStack *s)",
+      "line": 31,
+      "summary": "Retorna o Frame do topo da pilha sem removê-lo. Retorna NULL se a pilha estiver vazia.",
+      "params": [
+        { "name": "s", "type": "JVMStack *", "desc": "Pilha de frames" }
+      ],
+      "returns": "Ponteiro para o Frame atual, ou NULL",
+      "calls": []
+    },
+    {
+      "name": "liberaJVMStack",
+      "signature": "void liberaJVMStack(JVMStack *s)",
+      "line": 37,
+      "summary": "Desempilha e libera todos os frames pendentes, depois libera o próprio struct da pilha.",
+      "params": [
+        { "name": "s", "type": "JVMStack *", "desc": "Pilha a ser liberada" }
+      ],
+      "returns": "void",
+      "calls": ["desempilhaFrame", "liberaFrame"]
+    }
+  ],
+
+  "src/lib/interpreter/heap.c": [
+    {
+      "name": "alocaObjeto",
+      "signature": "HeapObject *alocaObjeto(ClassFile *cf, const char *class_name)",
+      "line": 22,
+      "summary": "Aloca um HeapObject na heap: copia o nome da classe, conta os campos percorrendo toda a cadeia de herança (cf→super_class_file→...), aloca e nomeia os campos com valor inicial zero. O objeto é registrado no pool estático para liberação posterior.",
+      "params": [
+        { "name": "cf", "type": "ClassFile *", "desc": "ClassFile da classe do objeto (pode ser NULL para classes nativas)" },
+        { "name": "class_name", "type": "const char *", "desc": "Nome da classe" }
+      ],
+      "returns": "Ponteiro para o HeapObject criado",
+      "calls": ["conta_campos_total", "getUtf8"]
+    },
+    {
+      "name": "buscaCampo",
+      "signature": "int buscaCampo(const HeapObject *obj, const char *name)",
+      "line": 77,
+      "summary": "Busca linearmente um campo pelo nome no HeapObject. Retorna o índice do campo ou -1 se não encontrado.",
+      "params": [
+        { "name": "obj", "type": "const HeapObject *", "desc": "Objeto onde buscar o campo" },
+        { "name": "name", "type": "const char *", "desc": "Nome do campo" }
+      ],
+      "returns": "Índice do campo ou -1",
+      "calls": []
+    },
+    {
+      "name": "liberaHeap",
+      "signature": "void liberaHeap(void)",
+      "line": 84,
+      "summary": "Libera todos os HeapObjects alocados durante a execução: nome da classe, nomes e valores dos campos, dados nativos e o próprio struct.",
+      "params": [],
+      "returns": "void",
+      "calls": []
+    },
+    {
+      "name": "conta_campos_total",
+      "signature": "static u2 conta_campos_total(ClassFile *cf)",
+      "line": 13,
+      "summary": "Conta o número total de campos de uma classe incluindo os herdados, percorrendo a cadeia super_class_file. Função interna (static).",
+      "params": [
+        { "name": "cf", "type": "ClassFile *", "desc": "ClassFile da classe" }
+      ],
+      "returns": "Total de campos (instância + herdados)",
+      "calls": []
+    }
+  ],
+
+  "src/lib/interpreter/method_invoke.c": [
+    {
+      "name": "conta_args",
+      "signature": "int conta_args(const char *descriptor)",
+      "line": 16,
+      "summary": "Analisa o descritor de método JVM e conta o número de argumentos. Trata corretamente tipos L (referência), [ (array) e tipos primitivos de 1 caractere.",
+      "params": [
+        { "name": "descriptor", "type": "const char *", "desc": "Descritor de método no formato JVM, ex: '(ILjava/lang/String;)V'" }
+      ],
+      "returns": "Número de argumentos do método",
+      "calls": []
+    },
+    {
+      "name": "retorno_void",
+      "signature": "int retorno_void(const char *descriptor)",
+      "line": 34,
+      "summary": "Verifica se o método tem retorno void procurando ')V' no descritor.",
+      "params": [
+        { "name": "descriptor", "type": "const char *", "desc": "Descritor de método JVM" }
+      ],
+      "returns": "1 se o retorno for void, 0 caso contrário",
+      "calls": []
+    },
+    {
+      "name": "encontraCodeAttr",
+      "signature": "Code_attribute *encontraCodeAttr(method_info *m, cp_info *cp)",
+      "line": 42,
+      "summary": "Percorre os atributos de um method_info procurando o atributo de nome 'Code'. Retorna o ponteiro para o Code_attribute decodificado ou NULL se não encontrado.",
+      "params": [
+        { "name": "m", "type": "method_info *", "desc": "Método a inspecionar" },
+        { "name": "cp", "type": "cp_info *", "desc": "Constant pool para resolver o nome do atributo" }
+      ],
+      "returns": "Ponteiro para Code_attribute ou NULL",
+      "calls": ["getUtf8"]
+    },
+    {
+      "name": "buscaMetodoClasse",
+      "signature": "method_info *buscaMetodoClasse(ClassFile *cf, const char *name, const char *desc, ClassFile **owner)",
+      "line": 53,
+      "summary": "Busca um método pelo nome e descritor no ClassFile dado e recursivamente em sua cadeia de superclasses (super_class_file). Quando encontrado, opcionalmente preenche *owner com o ClassFile onde o método foi definido.",
+      "params": [
+        { "name": "cf", "type": "ClassFile *", "desc": "ClassFile onde iniciar a busca" },
+        { "name": "name", "type": "const char *", "desc": "Nome do método" },
+        { "name": "desc", "type": "const char *", "desc": "Descritor do método" },
+        { "name": "owner", "type": "ClassFile **", "desc": "Saída: ClassFile onde o método foi encontrado (pode ser NULL)" }
+      ],
+      "returns": "Ponteiro para method_info ou NULL se não encontrado",
+      "calls": ["getUtf8", "buscaMetodoClasse"]
+    },
+    {
+      "name": "encontraMetodo",
+      "signature": "method_info *encontraMetodo(ClassFile *cf, const char *name, const char *desc)",
+      "line": 97,
+      "summary": "Wrapper de buscaMetodoClasse que descarta o owner. Busca um método na hierarquia de classes começando em cf.",
+      "params": [
+        { "name": "cf", "type": "ClassFile *", "desc": "ClassFile onde buscar" },
+        { "name": "name", "type": "const char *", "desc": "Nome do método" },
+        { "name": "desc", "type": "const char *", "desc": "Descritor do método" }
+      ],
+      "returns": "Ponteiro para method_info ou NULL",
+      "calls": ["buscaMetodoClasse"]
+    },
+    {
+      "name": "executa_chamada",
+      "signature": "static void executa_chamada(Frame *caller, ClassFile *cf, Code_attribute *ca, const char *descriptor, int is_instance)",
+      "line": 121,
+      "summary": "Cria um novo Frame filho, copia os argumentos (e o objectref para métodos de instância) da pilha do frame chamador para os locais do filho, executa o frame e empurra o valor de retorno de volta na pilha do chamador. Função interna (static).",
+      "params": [
+        { "name": "caller", "type": "Frame *", "desc": "Frame do chamador" },
+        { "name": "cf", "type": "ClassFile *", "desc": "ClassFile do método chamado" },
+        { "name": "ca", "type": "Code_attribute *", "desc": "Código do método a executar" },
+        { "name": "descriptor", "type": "const char *", "desc": "Descritor do método para determinar retorno" },
+        { "name": "is_instance", "type": "int", "desc": "1 se for método de instância (objectref no local[0])" }
+      ],
+      "returns": "void",
+      "calls": ["conta_args", "retorno_void", "criaFrame", "executaFrame", "liberaFrame"]
+    },
+    {
+      "name": "execInvokestatic",
+      "signature": "void execInvokestatic(Frame *caller, ClassFile *cf, u2 idx)",
+      "line": 151,
+      "summary": "Implementa o opcode invokestatic: resolve o método pelo índice do CP, verifica se é nativo (lookupNative), e se for método do projeto executa via executa_chamada. Se não encontrado e não nativo, descarta os argumentos e empilha null/0.",
+      "params": [
+        { "name": "caller", "type": "Frame *", "desc": "Frame do chamador" },
+        { "name": "cf", "type": "ClassFile *", "desc": "ClassFile do chamador" },
+        { "name": "idx", "type": "u2", "desc": "Índice no CP do Methodref" }
+      ],
+      "returns": "void",
+      "calls": ["getUtf8", "encontraMetodo", "conta_args", "lookupNative", "retorno_void", "encontraCodeAttr", "executa_chamada"]
+    },
+    {
+      "name": "execInvokevirtual",
+      "signature": "void execInvokevirtual(Frame *caller, ClassFile *cf, u2 idx)",
+      "line": 198,
+      "summary": "Implementa o opcode invokevirtual: resolve o método pelo CP, realiza dispatch virtual usando o ClassFile do objeto em runtime (polimorfismo). Se o método não for encontrado, tenta métodos nativos via lookupNative.",
+      "params": [
+        { "name": "caller", "type": "Frame *", "desc": "Frame do chamador" },
+        { "name": "cf", "type": "ClassFile *", "desc": "ClassFile estático do chamador" },
+        { "name": "idx", "type": "u2", "desc": "Índice no CP do Methodref" }
+      ],
+      "returns": "void",
+      "calls": ["getUtf8", "conta_args", "buscaMetodoClasse", "lookupNative", "retorno_void", "encontraCodeAttr", "executa_chamada"]
+    },
+    {
+      "name": "execInvokespecial",
+      "signature": "void execInvokespecial(Frame *caller, ClassFile *cf, u2 idx)",
+      "line": 324,
+      "summary": "Implementa o opcode invokespecial: trata chamadas a construtores (<init>), métodos privados e super. Para construtores, distingue entre chamadas na mesma classe e chamadas cruzadas (super.<init>), buscando o ClassFile correto via heap object ou herança.",
+      "params": [
+        { "name": "caller", "type": "Frame *", "desc": "Frame do chamador" },
+        { "name": "cf", "type": "ClassFile *", "desc": "ClassFile do chamador" },
+        { "name": "idx", "type": "u2", "desc": "Índice no CP do Methodref" }
+      ],
+      "returns": "void",
+      "calls": ["getUtf8", "getClassName", "encontraMetodo", "buscaMetodoClasse", "conta_args", "isNativeClass", "lookupNative", "retorno_void", "encontraCodeAttr", "executa_chamada"]
+    }
+  ],
+
+  "src/lib/interpreter/native_methods.c": [
+    {
+      "name": "initNativeMethods",
+      "signature": "void initNativeMethods(void)",
+      "line": 397,
+      "summary": "Registra todos os métodos nativos suportados na tabela nativa estática: PrintStream.print/println (todos os tipos), StringBuilder.<init>/append/toString, String.valueOf (todos os tipos), String.length e Object.<init>. Idempotente: ignora chamadas repetidas.",
+      "params": [],
+      "returns": "void",
+      "calls": ["reg"]
+    },
+    {
+      "name": "lookupNative",
+      "signature": "NativeFn lookupNative(const char *class_name, const char *method_name, const char *descriptor)",
+      "line": 31,
+      "summary": "Busca linearmente na tabela de métodos nativos e retorna o handler (NativeFn) correspondente ao triplo (classe, método, descritor). Retorna NULL se não encontrado.",
+      "params": [
+        { "name": "class_name", "type": "const char *", "desc": "Nome da classe JVM, ex: 'java/io/PrintStream'" },
+        { "name": "method_name", "type": "const char *", "desc": "Nome do método" },
+        { "name": "descriptor", "type": "const char *", "desc": "Descritor do método" }
+      ],
+      "returns": "NativeFn (ponteiro de função) ou NULL",
+      "calls": []
+    },
+    {
+      "name": "isNativeClass",
+      "signature": "int isNativeClass(const char *class_name)",
+      "line": 51,
+      "summary": "Verifica se um nome de classe pertence ao conjunto de classes tratadas nativamente (Object, StringBuilder, String, PrintStream). Usado pelo opcode new para não tentar carregar ClassFiles inexistentes.",
+      "params": [
+        { "name": "class_name", "type": "const char *", "desc": "Nome da classe a verificar" }
+      ],
+      "returns": "1 se for uma classe nativa, 0 caso contrário",
+      "calls": []
+    },
+    {
+      "name": "reg",
+      "signature": "static void reg(const char *cn, const char *mn, const char *desc, NativeFn fn)",
+      "line": 22,
+      "summary": "Registra um método nativo na tabela estática. Função auxiliar interna chamada por initNativeMethods. Ignora silenciosamente se a tabela atingir MAX_NATIVES.",
+      "params": [
+        { "name": "cn", "type": "const char *", "desc": "Nome da classe" },
+        { "name": "mn", "type": "const char *", "desc": "Nome do método" },
+        { "name": "desc", "type": "const char *", "desc": "Descritor do método" },
+        { "name": "fn", "type": "NativeFn", "desc": "Ponteiro para a função C que implementa o método" }
+      ],
+      "returns": "void",
+      "calls": []
+    }
+  ],
+
+  "src/lib/printer/printer.c": [
+    {
+      "name": "printClassFile",
+      "signature": "void printClassFile(const ClassFile *cf)",
+      "line": 1,
+      "summary": "Ponto de entrada do printer: imprime o cabeçalho geral (magic, versões, contadores) e o constant pool completo do ClassFile.",
+      "params": [
+        { "name": "cf", "type": "const ClassFile *", "desc": "ClassFile a imprimir" }
+      ],
+      "returns": "void",
+      "calls": ["printClassFileHeader", "printConstantPool", "printClassInfo"]
+    },
+    {
+      "name": "printInterfaces",
+      "signature": "void printInterfaces(const ClassFile *cf)",
+      "line": 1,
+      "summary": "Imprime a lista de interfaces implementadas pela classe, resolvendo cada índice no constant pool para obter o nome.",
+      "params": [
+        { "name": "cf", "type": "const ClassFile *", "desc": "ClassFile a imprimir" }
+      ],
+      "returns": "void",
+      "calls": []
+    },
+    {
+      "name": "printFields",
+      "signature": "void printFields(const ClassFile *cf)",
+      "line": 1,
+      "summary": "Imprime cada field_info: nome, descritor, flags de acesso e atributos (como ConstantValue).",
+      "params": [
+        { "name": "cf", "type": "const ClassFile *", "desc": "ClassFile a imprimir" }
+      ],
+      "returns": "void",
+      "calls": ["printAccessFlags", "getUtf8"]
+    },
+    {
+      "name": "printMethods",
+      "signature": "void printMethods(const ClassFile *cf)",
+      "line": 1,
+      "summary": "Imprime cada method_info: nome, descritor, flags de acesso e atributos (Code com bytecode desassemblado, Exceptions).",
+      "params": [
+        { "name": "cf", "type": "const ClassFile *", "desc": "ClassFile a imprimir" }
+      ],
+      "returns": "void",
+      "calls": ["printAccessFlags", "getUtf8", "printCodeAttribute", "printExceptionsAttribute"]
+    },
+    {
+      "name": "printClassFileAttributes",
+      "signature": "void printClassFileAttributes(const ClassFile *cf)",
+      "line": 1,
+      "summary": "Imprime os atributos de nível de classe (SourceFile, InnerClasses, e atributos desconhecidos como raw bytes).",
+      "params": [
+        { "name": "cf", "type": "const ClassFile *", "desc": "ClassFile a imprimir" }
+      ],
+      "returns": "void",
+      "calls": ["getUtf8", "printSourceFileAttribute", "printInnerClassesAttribute"]
+    },
+    {
+      "name": "printFileToTerminal",
+      "signature": "void printFileToTerminal(int terminal_fd, const char *path)",
+      "line": 1,
+      "summary": "Abre o arquivo de saída gerado e escreve seu conteúdo diretamente no fd do terminal (sem passar pelo stdout redirecionado), implementando o comportamento de --print.",
+      "params": [
+        { "name": "terminal_fd", "type": "int", "desc": "File descriptor do terminal original" },
+        { "name": "path", "type": "const char *", "desc": "Caminho do arquivo de saída a exibir" }
+      ],
+      "returns": "void",
+      "calls": []
+    }
+  ],
+
+  "src/lib/utils/args.c": [
+    {
+      "name": "parse_args",
+      "signature": "int parse_args(int argc, char *argv[], Args *out)",
+      "line": 6,
+      "summary": "Analisa os argumentos da linha de comando. Espera pelo menos o caminho do .class como primeiro argumento, com opções opcionais: -o <arquivo_saida> e --print. Exibe usage e retorna -1 em caso de erro.",
+      "params": [
+        { "name": "argc", "type": "int", "desc": "Número de argumentos" },
+        { "name": "argv", "type": "char *[]", "desc": "Vetor de argumentos" },
+        { "name": "out", "type": "Args *", "desc": "Struct onde os argumentos parseados serão gravados" }
+      ],
+      "returns": "0 em sucesso, -1 em caso de erro de sintaxe",
+      "calls": []
+    },
+    {
+      "name": "build_default_output_path",
+      "signature": "void build_default_output_path(const char *class_path, char *out, size_t out_size)",
+      "line": 1,
+      "summary": "Constrói o caminho de saída padrão substituindo a extensão do arquivo .class por .txt. Se não houver extensão, acrescenta .txt.",
+      "params": [
+        { "name": "class_path", "type": "const char *", "desc": "Caminho do arquivo .class de entrada" },
+        { "name": "out", "type": "char *", "desc": "Buffer onde o caminho de saída será gravado" },
+        { "name": "out_size", "type": "size_t", "desc": "Tamanho do buffer out" }
+      ],
+      "returns": "void",
+      "calls": []
+    }
+  ]
+}

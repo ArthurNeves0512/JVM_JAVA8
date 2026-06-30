@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>jvm_stack.c — JVM Java 8 em C</title>
+<link rel="stylesheet" href="../style.css">
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+  mermaid.initialize({ startOnLoad: true, theme: 'default' });
+</script>
+</head>
+<body><nav id="sidebar">
+  <div id="sidebar-header">
+    <a href="../index.html"><div class="logo">JVM</div> JVM Java 8</a>
+  </div>
+  <div id="sidebar-search">
+    <input type="text" placeholder="Filtrar..." id="sidebar-filter">
+  </div>
+  <nav id="sidebar-nav">
+    <div class="nav-section">Visão Geral</div>
+    <a href="../index.html" class="nav-item">Início</a>
+    <a href="../diagram.html" class="nav-item">Diagrama Geral</a>
+    <a href="../structs.html" class="nav-item">Estruturas de Dados</a>
+    <div class="nav-section">Módulos</div>
+    <a href="main.html" class="nav-item ">main.c <span class="tag tag-module">main</span></a>
+    <a href="read_file.html" class="nav-item ">read_file.c <span class="tag tag-module">file</span></a>
+    <a href="dot_class.html" class="nav-item ">dot_class.c <span class="tag tag-module">types</span></a>
+    <a href="attribute.html" class="nav-item ">attribute.c <span class="tag tag-module">types</span></a>
+    <a href="opcodes.html" class="nav-item ">opcodes.c <span class="tag tag-module">types</span></a>
+    <a href="loader.html" class="nav-item ">loader.c <span class="tag tag-module">class_loader</span></a>
+    <a href="fields_interfaces.html" class="nav-item ">fields_interfaces.c <span class="tag tag-module">class_loader</span></a>
+    <a href="methods.html" class="nav-item ">methods.c <span class="tag tag-module">class_loader</span></a>
+    <a href="interpreter.html" class="nav-item ">interpreter.c <span class="tag tag-module">interpreter</span></a>
+    <a href="basic_ops.html" class="nav-item ">basic_ops.c <span class="tag tag-module">interpreter</span></a>
+    <a href="jvm_stack.html" class="nav-item active">jvm_stack.c <span class="tag tag-module">interpreter</span></a>
+    <a href="heap.html" class="nav-item ">heap.c <span class="tag tag-module">interpreter</span></a>
+    <a href="method_invoke.html" class="nav-item ">method_invoke.c <span class="tag tag-module">interpreter</span></a>
+    <a href="native_methods.html" class="nav-item ">native_methods.c <span class="tag tag-module">interpreter</span></a>
+    <a href="printer.html" class="nav-item ">printer.c <span class="tag tag-module">printer</span></a>
+    <a href="args.html" class="nav-item ">args.c <span class="tag tag-module">utils</span></a>
+  </nav>
+</nav>
+<div id="main">
+  <header class="page-header">
+    <div class="breadcrumb"><a href="../index.html">JVM</a> <span>›</span> Módulos</div>
+    <h1>jvm_stack.c <span class="badge badge-module">jvm_stack</span></h1>
+    <div class="subtitle">Pilha de frames de ativação da JVM — push/pop/peek com verificação de overflow.</div>
+  </header>
+  <div class="page-content">
+    <div class="section">
+      <div class="section-title">Papel no projeto</div>
+      <p class="text-muted">Implementa a JVMStack: uma pilha de até 256 frames que simula a call stack da JVM. Cada chamada de método empilha um Frame; cada retorno o desempilha. Detecta stack overflow e underflow com mensagens de erro explícitas.</p>
+    </div>
+    <div class="section">
+      <div class="section-title">Funções</div>
+      <div class="fn-card" id="fn-criaJVMStack">
+  <div class="fn-card-header">
+    <span class="fn-name">criaJVMStack()</span>
+    <span class="fn-line">linha 6</span>
+  </div>
+  <div class="fn-signature"><code>JVMStack *criaJVMStack(void)</code></div>
+  <div class="fn-body">
+    <p class="fn-summary">Aloca e inicializa a pilha de frames JVM com topo=-1 (vazia). Encerra o processo em caso de falha de alocação.</p>
+    
+    <div class="return-row"><strong>Retorno:</strong> Ponteiro para a JVMStack criada</div>
+    
+  </div>
+</div><div class="fn-card" id="fn-empilhaFrame">
+  <div class="fn-card-header">
+    <span class="fn-name">empilhaFrame()</span>
+    <span class="fn-line">linha 15</span>
+  </div>
+  <div class="fn-signature"><code>void empilhaFrame(JVMStack *s, Frame *f)</code></div>
+  <div class="fn-body">
+    <p class="fn-summary">Empilha um Frame na JVMStack. Encerra o processo com mensagem de erro se MAX_FRAMES (256) for excedido.</p>
+    <div class="label mt-8">Parâmetros</div>
+<table class="param-table">
+  <tr><th>Nome</th><th>Tipo</th><th>Descrição</th></tr>
+  <tr><td class="param-name">s</td><td><code>JVMStack *</code></td><td class="param-desc">Pilha de frames</td></tr>
+<tr><td class="param-name">f</td><td><code>Frame *</code></td><td class="param-desc">Frame a empilhar</td></tr>
+
+</table>
+    <div class="return-row"><strong>Retorno:</strong> void</div>
+    
+  </div>
+</div><div class="fn-card" id="fn-desempilhaFrame">
+  <div class="fn-card-header">
+    <span class="fn-name">desempilhaFrame()</span>
+    <span class="fn-line">linha 23</span>
+  </div>
+  <div class="fn-signature"><code>Frame *desempilhaFrame(JVMStack *s)</code></div>
+  <div class="fn-body">
+    <p class="fn-summary">Remove e retorna o Frame do topo da pilha. Imprime mensagem de erro e retorna NULL em caso de underflow.</p>
+    <div class="label mt-8">Parâmetros</div>
+<table class="param-table">
+  <tr><th>Nome</th><th>Tipo</th><th>Descrição</th></tr>
+  <tr><td class="param-name">s</td><td><code>JVMStack *</code></td><td class="param-desc">Pilha de frames</td></tr>
+
+</table>
+    <div class="return-row"><strong>Retorno:</strong> Ponteiro para o Frame removido, ou NULL</div>
+    
+  </div>
+</div><div class="fn-card" id="fn-frameAtual">
+  <div class="fn-card-header">
+    <span class="fn-name">frameAtual()</span>
+    <span class="fn-line">linha 31</span>
+  </div>
+  <div class="fn-signature"><code>Frame *frameAtual(JVMStack *s)</code></div>
+  <div class="fn-body">
+    <p class="fn-summary">Retorna o Frame do topo sem removê-lo. Retorna NULL se a pilha estiver vazia.</p>
+    <div class="label mt-8">Parâmetros</div>
+<table class="param-table">
+  <tr><th>Nome</th><th>Tipo</th><th>Descrição</th></tr>
+  <tr><td class="param-name">s</td><td><code>JVMStack *</code></td><td class="param-desc">Pilha de frames</td></tr>
+
+</table>
+    <div class="return-row"><strong>Retorno:</strong> Ponteiro para o Frame atual, ou NULL</div>
+    
+  </div>
+</div><div class="fn-card" id="fn-liberaJVMStack">
+  <div class="fn-card-header">
+    <span class="fn-name">liberaJVMStack()</span>
+    <span class="fn-line">linha 37</span>
+  </div>
+  <div class="fn-signature"><code>void liberaJVMStack(JVMStack *s)</code></div>
+  <div class="fn-body">
+    <p class="fn-summary">Desempilha e libera todos os frames pendentes chamando liberaFrame(), depois libera o próprio struct da pilha.</p>
+    <div class="label mt-8">Parâmetros</div>
+<table class="param-table">
+  <tr><th>Nome</th><th>Tipo</th><th>Descrição</th></tr>
+  <tr><td class="param-name">s</td><td><code>JVMStack *</code></td><td class="param-desc">Pilha a liberar</td></tr>
+
+</table>
+    <div class="return-row"><strong>Retorno:</strong> void</div>
+    <div class="label mt-8">Chama</div><div class="calls-list"><a href="jvm_stack.html#fn-desempilhaFrame" class="call-link">desempilhaFrame()</a><a href="basic_ops.html#fn-liberaFrame" class="call-link">liberaFrame()</a></div>
+  </div>
+</div>
+    </div>
+    
+  </div>
+</div>
+<script>
+document.getElementById('sidebar-filter').addEventListener('input', function() {
+  const q = this.value.toLowerCase();
+  document.querySelectorAll('#sidebar-nav .nav-item').forEach(el => {
+    el.style.display = el.textContent.toLowerCase().includes(q) ? '' : 'none';
+  });
+});
+document.querySelectorAll('.fn-card-header').forEach(h => {
+  h.addEventListener('click', () => { h.nextElementSibling?.nextElementSibling?.classList.toggle('open'); });
+});
+</script>
+</body>
+</html>

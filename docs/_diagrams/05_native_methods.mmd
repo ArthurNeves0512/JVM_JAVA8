@@ -1,0 +1,31 @@
+flowchart TD
+    initNativeMethods["initNativeMethods()"]
+    lookupNative["lookupNative()"]
+    isNativeClass["isNativeClass()"]
+    reg["reg() [static]"]
+
+    native_print_int["native_print_int()"]
+    native_print_string["native_print_string()"]
+    native_println_void["native_println_void()"]
+    native_println_int["native_println_int()"]
+    native_sb_init["native_sb_init()"]
+    native_sb_append_int["native_sb_append_int()"]
+    native_sb_tostring["native_sb_tostring()"]
+    native_string_valueof_int["native_string_valueof_int()"]
+    native_string_length["native_string_length()"]
+    native_object_init["native_object_init()"]
+
+    initNativeMethods --> reg
+    reg -.->|registra| native_print_int
+    reg -.->|registra| native_print_string
+    reg -.->|registra| native_println_void
+    reg -.->|registra| native_println_int
+    reg -.->|registra| native_sb_init
+    reg -.->|registra| native_sb_append_int
+    reg -.->|registra| native_sb_tostring
+    reg -.->|registra| native_string_valueof_int
+    reg -.->|registra| native_string_length
+    reg -.->|registra| native_object_init
+
+    lookupNative -->|retorna NativeFn| native_print_int
+    lookupNative -->|retorna NativeFn| native_sb_tostring
