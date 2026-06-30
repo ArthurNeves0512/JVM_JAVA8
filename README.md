@@ -2,6 +2,10 @@
 
 Reads and prints the structure of a compiled Java `.class` file.
 
+## Requisitos
+
+- GCC 13.3.0 (Ubuntu 13.3.0-6ubuntu2~24.04.1)
+
 ## Build
 
 ```bash
