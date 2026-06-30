@@ -171,8 +171,13 @@ void execInvokestatic(Frame *caller, ClassFile *cf, u2 idx) {
         }
         fprintf(stderr, "invokestatic: metodo externo '%s.%s%s' ignorado\n",
                 class_name ? class_name : "?", method_name, descriptor);
+        int is_void_s = retorno_void(descriptor);
         free(class_name);
         for (int i = 0; i < n_args; i++) caller->topo--;
+        if (!is_void_s) {
+            memset(&caller->pilha[++caller->topo], 0, sizeof(Slot));
+            caller->pilha[caller->topo].tipo = TIPO_REF;
+        }
         free(method_name);
         free(descriptor);
         return;
@@ -270,10 +275,20 @@ void execInvokevirtual(Frame *caller,
             method_name,
             descriptor);
 
+        int is_void = retorno_void(descriptor);
+
         free(class_name);
         free(method_name);
         free(descriptor);
 
+        /* descarta args + objectref para não corromper a pilha */
+        caller->topo -= (n_args + 1);
+
+        /* métodos não-void devem deixar um valor na pilha */
+        if (!is_void) {
+            memset(&caller->pilha[++caller->topo], 0, sizeof(Slot));
+            caller->pilha[caller->topo].tipo = TIPO_REF;
+        }
         return;
     }
 
@@ -344,6 +359,34 @@ void execInvokespecial(Frame *caller, ClassFile *cf, u2 idx) {
             }
         }
 
+        /* construtor de classe externa: usa obj->class_file apenas se bate com target */
+        if (!m && !same_class && !isNativeClass(target_class ? target_class : "")) {
+            int n_args_x = conta_args(descriptor);
+            int obj_pos  = caller->topo - n_args_x;
+            if (obj_pos >= 0 && caller->pilha[obj_pos].tipo == TIPO_OBJECT) {
+                HeapObject *obj = (HeapObject *)caller->pilha[obj_pos].ref;
+                ClassFile  *obj_cf = obj ? obj->class_file : NULL;
+                if (obj_cf && target_class) {
+                    char *obj_cn = getClassName(obj_cf);
+                    int matches = obj_cn && strcmp(obj_cn, target_class) == 0;
+                    if (matches) {
+                        ClassFile *owner_x = NULL;
+                        method_info *mx = buscaMetodoClasse(obj_cf, "<init>", descriptor, &owner_x);
+                        if (mx) {
+                            Code_attribute *cax = encontraCodeAttr(mx, owner_x->constant_pool);
+                            if (cax) {
+                                free(target_class);
+                                executa_chamada(caller, owner_x, cax, descriptor, 1);
+                                free(method_name);
+                                free(descriptor);
+                                return;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         /* classe externa ou <init> sem Code_attribute: tenta native */
         int n_args = conta_args(descriptor);
         NativeFn fn = lookupNative(target_class ? target_class : "",
@@ -360,14 +403,18 @@ void execInvokespecial(Frame *caller, ClassFile *cf, u2 idx) {
     }
 
     /* Para outros invokespecial (private, super) trata como virtual */
+    int n_args_sp = conta_args(descriptor);
     method_info *m = encontraMetodo(cf, method_name, descriptor);
     if (m) {
         Code_attribute *ca = encontraCodeAttr(m, cf->constant_pool);
         if (ca)
             executa_chamada(caller, cf, ca, descriptor, 1 /* instance */);
+        else
+            caller->topo -= (n_args_sp + 1);
     } else {
         fprintf(stderr, "invokespecial: '%s%s' nao encontrado\n",
                 method_name, descriptor);
+        caller->topo -= (n_args_sp + 1);
     }
 
     free(method_name);

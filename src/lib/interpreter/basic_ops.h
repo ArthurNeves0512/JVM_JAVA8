@@ -63,6 +63,7 @@ Frame *criaFrame(Code_attribute *ca);
 void   liberaFrame(Frame *f);
 void   executaFrame(Frame *f, ClassFile *cf);
 void   liberaArrays(void);
+void   liberaStaticFields(void);
 
 
 #endif
