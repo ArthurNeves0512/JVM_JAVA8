@@ -262,7 +262,7 @@ ClassFile *loadClassFile(const char *filename)
         fp = fopen(filename, "rb"); /* fallback sem prefixo */
 
     if (!fp) {
-        printf("Nao foi possivel abrir %s\n", resolved);
+        fprintf(stderr, "Nao foi possivel abrir %s\n", resolved);
         return NULL;
     }
 
