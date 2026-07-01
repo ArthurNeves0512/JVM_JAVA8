@@ -49,9 +49,10 @@ int main(int argc, char *argv[]) {
     printClassFileAttributes(class_file_ptr);
     fflush(stdout);
 
-    if (args.do_print && terminal_fd >= 0)
+    if (args.do_print && terminal_fd >= 0){
         printFileToTerminal(terminal_fd, args.output_path);
-
+        return 0;
+    }
     /* Restaura stdout para o terminal antes de executar o bytecode */
     if (terminal_fd >= 0) {
         dup2(terminal_fd, STDOUT_FILENO);
