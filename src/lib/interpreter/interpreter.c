@@ -3,6 +3,7 @@
 #include "native_methods.h"
 #include "basic_ops.h"
 #include "heap.h"
+#include "attribute.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -27,6 +28,7 @@ void executaJVM(ClassFile *cf) {
         executaFrame(f, cf);
         liberaFrame(f);
         liberaArrays();
+        liberaStaticFields();
         liberaHeap();
         return;
     }

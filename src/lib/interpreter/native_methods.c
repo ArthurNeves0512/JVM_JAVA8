@@ -41,6 +41,7 @@ NativeFn lookupNative(const char *class_name,
 }
 
 static const char *native_class_list[] = {
+    "java/lang/Object",
     "java/lang/StringBuilder",
     "java/lang/String",
     "java/io/PrintStream",

@@ -21,6 +21,7 @@ typedef struct ClassFile_ {
     method_info *methods;
     u2 attributes_count;
     attribute_info *attributes;
+    struct ClassFile_ *super_class_file; /* ponteiro para o ClassFile da superclasse, para facilitar a resolução de métodos e campos */
 } ClassFile;
 
 ClassFile *allocClassFile();

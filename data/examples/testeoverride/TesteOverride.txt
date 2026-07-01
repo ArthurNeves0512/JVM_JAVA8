@@ -1,0 +1,142 @@
+=== General Information ===
+Magic Number: 0XCAFEBABE
+Minor Version: 0
+Major Version: 65
+Constant Pool Count: 21
+Access flags (0x0021): ACC_PUBLIC | ACC_SUPER
+This Class: 13
+Super Class: 2
+Interfaces Count: 0
+Fields Count: 0
+Methods Count: 2
+Attributes Count: 1
+
+=== Constant Pool ===
+[1] Tag: 10 <Methodref>
+	class_index:2
+	name_and_type_index:3
+	java/lang/Object.<init>:()V
+[2] Tag: 7 <Class>
+	name_index in constant_pool_table:4
+	java/lang/Object
+[3] Tag: 12 <NameAndType>
+	name_index:5
+	descriptor_index:6
+	<init>:()V
+[4] Tag: 1 <Utf8>
+	length of array in bytes: 16
+	java/lang/Object
+[5] Tag: 1 <Utf8>
+	length of array in bytes: 6
+	<init>
+[6] Tag: 1 <Utf8>
+	length of array in bytes: 3
+	()V
+[7] Tag: 7 <Class>
+	name_index in constant_pool_table:8
+	Cachorro
+[8] Tag: 1 <Utf8>
+	length of array in bytes: 8
+	Cachorro
+[9] Tag: 10 <Methodref>
+	class_index:7
+	name_and_type_index:3
+	Cachorro.<init>:()V
+[10] Tag: 10 <Methodref>
+	class_index:7
+	name_and_type_index:11
+	Cachorro.falar:()V
+[11] Tag: 12 <NameAndType>
+	name_index:12
+	descriptor_index:6
+	falar:()V
+[12] Tag: 1 <Utf8>
+	length of array in bytes: 5
+	falar
+[13] Tag: 7 <Class>
+	name_index in constant_pool_table:14
+	TesteOverride
+[14] Tag: 1 <Utf8>
+	length of array in bytes: 13
+	TesteOverride
+[15] Tag: 1 <Utf8>
+	length of array in bytes: 4
+	Code
+[16] Tag: 1 <Utf8>
+	length of array in bytes: 15
+	LineNumberTable
+[17] Tag: 1 <Utf8>
+	length of array in bytes: 4
+	main
+[18] Tag: 1 <Utf8>
+	length of array in bytes: 22
+	([Ljava/lang/String;)V
+[19] Tag: 1 <Utf8>
+	length of array in bytes: 10
+	SourceFile
+[20] Tag: 1 <Utf8>
+	length of array in bytes: 18
+	TesteOverride.java
+
+This class index at constant_pool table 13
+This is the super class index at constant_pool table 2
+
+
+=== Interfaces ===
+interfaces_count: 0
+
+=== Fields ===
+fields_count: 0
+=== Methods ===
+Total methods: 2
+
+[Method 0]
+  Access flags: Access flags (0x0001): ACC_PUBLIC
+  Name index: 5 (<init>)
+  Descriptor index: 6 (()V)
+  Attributes count: 1
+    [Attribute 0] Code
+=== Code Attribute ===
+  max_stack:  1
+  max_locals: 1
+  code_length: 5
+  Bytecode (hex):
+         0: aload_0         
+       1: invokespecial   #1    // java/lang/Object.<init>:()V
+       4: return          
+
+  exception_table_length: 0
+  sub-attributes_count: 1
+  [0]   LineNumberTable  length=1
+    start_pc=0     line=14
+
+[Method 1]
+  Access flags: Access flags (0x0009): ACC_PUBLIC | ACC_STATIC
+  Name index: 17 (main)
+  Descriptor index: 18 (([Ljava/lang/String;)V)
+  Attributes count: 1
+    [Attribute 0] Code
+=== Code Attribute ===
+  max_stack:  2
+  max_locals: 2
+  code_length: 13
+  Bytecode (hex):
+         0: new             #7    // Cachorro
+       3: dup             
+       4: invokespecial   #9    // Cachorro.<init>:()V
+       7: astore_1        
+       8: aload_1         
+       9: invokevirtual   #10   // Cachorro.falar:()V
+      12: return          
+
+  exception_table_length: 0
+  sub-attributes_count: 1
+  [0]   LineNumberTable  length=3
+    start_pc=0     line=16
+    start_pc=8     line=17
+    start_pc=12    line=18
+=== Class Attributes ===
+attributes_count: 1
+  [Attribute 0] SourceFile
+=== SourceFile Attribute ===
+  sourcefile: TesteOverride.java  (#20)

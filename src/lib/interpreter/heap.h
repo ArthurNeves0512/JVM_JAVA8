@@ -6,6 +6,7 @@
 
 typedef struct {
     char  *class_name;
+    ClassFile *class_file;
     u2     num_fields;
     char **field_names;
     Slot  *fields;

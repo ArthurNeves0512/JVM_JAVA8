@@ -1,6 +1,24 @@
 #include "loader.h"
 #include <stdlib.h>
 
+/* Diretório base para busca de .class dependentes */
+static char g_class_dir[512] = "";
+
+void setClassDir(const char *path) {
+    if (!path) { g_class_dir[0] = '\0'; return; }
+    const char *last_sep = NULL;
+    for (const char *p = path; *p; p++)
+        if (*p == '/' || *p == '\\') last_sep = p;
+    if (last_sep) {
+        size_t len = (size_t)(last_sep - path + 1);
+        if (len >= sizeof(g_class_dir)) len = sizeof(g_class_dir) - 1;
+        memcpy(g_class_dir, path, len);
+        g_class_dir[len] = '\0';
+    } else {
+        g_class_dir[0] = '\0';
+    }
+}
+
 u4 readCafeBabe(FILE *ptr_file) {
     u4 magic = u4Read(ptr_file);
     if (magic != 0xCAFEBABE) {
@@ -169,7 +187,7 @@ void classFilesSetup(ClassFile *cf, FILE *fp) {
     cf->major_version       = readMajorVersion(fp);
     cf->constant_pool_count = readConstantPoolCount(fp);
 
-    cf->constant_pool = malloc((cf->constant_pool_count) * sizeof(cp_info));
+    cf->constant_pool = calloc((cf->constant_pool_count), sizeof(cp_info));
     for (u2 i = 1; i < (u2)(cf->constant_pool_count); i++) {
         u1 tag = u1Read(fp);
         if (tag == CONSTANT_Long || tag == CONSTANT_Double) {
@@ -198,4 +216,194 @@ void readClassFileAttributes(ClassFile *cf, FILE *fp) {
     } else {
         cf->attributes = NULL;
     }
+}
+
+char *getClassName(ClassFile *cf)
+{
+    if (cf->this_class == 0)
+        return NULL;
+
+    u2 name_index =
+        cf->constant_pool[cf->this_class]
+            .constant_class_info->name_index;
+
+    return (char *)
+        cf->constant_pool[name_index]
+            .utf8_info->bytes;
+}
+
+char *getSuperClassName(ClassFile *cf)
+{
+    if (cf->super_class == 0)
+        return NULL;
+
+    u2 name_index =
+        cf->constant_pool[cf->super_class]
+            .constant_class_info->name_index;
+
+    return (char *)
+        cf->constant_pool[name_index]
+            .utf8_info->bytes;
+}
+
+ClassFile *loadClassFile(const char *filename)
+{
+    if(isNativeClass(filename))
+        return NULL;
+
+    char resolved[768];
+    if (g_class_dir[0] != '\0')
+        snprintf(resolved, sizeof(resolved), "%s%s", g_class_dir, filename);
+    else
+        snprintf(resolved, sizeof(resolved), "%s", filename);
+
+    FILE *fp = fopen(resolved, "rb");
+    if (!fp && g_class_dir[0] != '\0')
+        fp = fopen(filename, "rb"); /* fallback sem prefixo */
+
+    if (!fp) {
+        fprintf(stderr, "Nao foi possivel abrir %s\n", resolved);
+        return NULL;
+    }
+
+    ClassFile *cf = malloc(sizeof(ClassFile));
+
+    if (!cf) {
+        fclose(fp);
+        return NULL;
+    }
+
+    cf->super_class_file = NULL;
+
+    classFilesSetup(cf, fp);
+
+    readInterfacesCount(cf, fp);
+
+    /* interfaces */
+    if (cf->interfaces_count > 0)
+    {
+        cf->interfaces =
+            malloc(cf->interfaces_count * sizeof(u2));
+
+        for (u2 i = 0; i < cf->interfaces_count; i++)
+            cf->interfaces[i] = u2Read(fp);
+    }
+    else
+    {
+        cf->interfaces = NULL;
+    }
+
+    /* campos */
+    readFields(cf, fp);
+
+    /* métodos */
+    readMethodsCount(cf, fp);
+    readMethods(cf, fp);
+
+    /* atributos */
+    readClassFileAttributes(cf, fp);
+
+    fclose(fp);
+
+    /* carrega herança */
+    cf->super_class_file = loadSuperClass(cf);
+
+    return cf;
+}
+
+ClassFile *loadSuperClass(ClassFile *cf)
+{
+    if (cf == NULL)
+        return NULL;
+
+    /* java/lang/Object não possui superclasse */
+    if (cf->super_class == 0)
+        return NULL;
+
+    /* já carregada */
+    if (cf->super_class_file != NULL)
+        return cf->super_class_file;
+
+    cp_info *classEntry =
+        &cf->constant_pool[cf->super_class];
+
+    u2 name_index =
+        classEntry->constant_class_info->name_index;
+
+    char *superName =
+        getUtf8(cf->constant_pool, name_index);
+
+    if (isNativeClass(superName)) {
+        free(superName);
+        return NULL;
+    }
+    char filename[256];
+    snprintf(filename, sizeof(filename), "%s.class", superName);
+
+    char resolved[768];
+    if (g_class_dir[0] != '\0')
+        snprintf(resolved, sizeof(resolved), "%s%s", g_class_dir, filename);
+    else
+        snprintf(resolved, sizeof(resolved), "%s", filename);
+
+    FILE *fp = fopen(resolved, "rb");
+    if (!fp && g_class_dir[0] != '\0')
+        fp = fopen(filename, "rb");
+
+    if (!fp)
+    {
+        fprintf(stderr,
+                "Nao foi possivel abrir %s\n",
+                resolved);
+        free(superName);
+        return NULL;
+    }
+
+    ClassFile *superCF = malloc(sizeof(ClassFile));
+
+    if (!superCF)
+    {
+        fclose(fp);
+        return NULL;
+    }
+
+    superCF->super_class_file = NULL;
+
+    /* cabeçalho */
+    classFilesSetup(superCF, fp);
+
+    /* interfaces */
+    readInterfacesCount(superCF, fp);
+
+    if (superCF->interfaces_count > 0)
+    {
+        superCF->interfaces =
+            malloc(superCF->interfaces_count * sizeof(u2));
+
+        for (u2 i = 0; i < superCF->interfaces_count; i++)
+            superCF->interfaces[i] = u2Read(fp);
+    }
+    else
+    {
+        superCF->interfaces = NULL;
+    }
+
+    /* fields */
+    readFields(superCF, fp);
+
+    /* methods */
+    readMethodsCount(superCF, fp);
+    readMethods(superCF, fp);
+
+    /* atributos */
+    readClassFileAttributes(superCF, fp);
+
+    fclose(fp);
+
+    /* importante */
+    cf->super_class_file = superCF;
+
+    /* carrega a cadeia inteira */
+    loadSuperClass(superCF);
+    return superCF;
 }

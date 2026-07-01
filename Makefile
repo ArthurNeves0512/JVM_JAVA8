@@ -7,7 +7,7 @@ CFLAGS  = -Wall -Wextra -std=c11 \
   -Isrc/lib/class_loader \
   -Isrc/lib/file \
   -Isrc/lib/printer
-LDFLAGS =
+LDFLAGS = -lm
 
 TARGET   = main
 BUILDDIR = build
@@ -40,7 +40,7 @@ VALGRIND_FLAGS = --leak-check=full \
 all: $(TARGET)
 
 $(TARGET): $(OBJS)
-	$(CC) $(LDFLAGS) $^ -o $@
+	$(CC) $^ $(LDFLAGS) -o $@
 
 $(BUILDDIR)/%.o: %.c
 	@mkdir -p $(dir $@)
@@ -53,7 +53,7 @@ run: all
 
 $(BUILDDIR)/$(TESTDIR)/%: $(TESTDIR)/%.c $(APP_OBJS)
 	@mkdir -p $(dir $@)
-	$(CC) $(CFLAGS) $< $(APP_OBJS) -o $@
+	$(CC) $(CFLAGS) $< $(APP_OBJS) $(LDFLAGS) -o $@
 
 test: $(APP_OBJS) $(TEST_BINS)
 	@echo "=== Running tests ==="
