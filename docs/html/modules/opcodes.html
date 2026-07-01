@@ -54,7 +54,8 @@
 
     <div class="section">
       <div class="section-title">Papel no projeto</div>
-      <p>Define a tabela estática <code>opcode_table[256]</code> mapeando cada bytecode JVM ao seu mnemônico e tamanho em bytes. Implementa o desassemblador de bytecode (<code>printBytecode</code>) que exibe cada instrução com seu offset, nome e operandos — incluindo resolução de referências do constant pool. Também calcula o tamanho correto de instruções de tamanho variável (<code>tableswitch</code>, <code>lookupswitch</code>, <code>wide</code>).</p>
+      <p>Define o enum <code id="enum-Opcode">Opcode</code> (em <code>opcodes.h</code>), que mapeia cada mnemônico JVM ao seu valor hexadecimal — por exemplo, <code>OP_NOP = 0x00</code>, <code>OP_IADD = 0x60</code>, <code>OP_INVOKEVIRTUAL = 0xB6</code>. Esse enum é usado como rótulo de cada <code>case</code> no switch de <a href="basic_ops.html#fn-executaFrame"><code>executaFrame()</code></a>, eliminando literais hexadecimais do interpretador.</p>
+      <p>Define também a tabela estática <code>opcode_table[256]</code> mapeando cada bytecode ao seu mnemônico e tamanho em bytes. Implementa o desassemblador de bytecode (<code>printBytecode</code>) que exibe cada instrução com seu offset, nome e operandos — incluindo resolução de referências do constant pool. Também calcula o tamanho correto de instruções de tamanho variável (<code>tableswitch</code>, <code>lookupswitch</code>, <code>wide</code>).</p>
     </div>
 
     <div class="section">

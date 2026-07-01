@@ -54,7 +54,8 @@
 
     <div class="section">
       <div class="section-title">Papel no projeto</div>
-      <p>O arquivo mais extenso do projeto (1148 linhas). Implementa <code>executaFrame()</code>, o núcleo do interpretador: um <code>while</code> + <code>switch</code> que despacha todos os opcodes JVM suportados. Cobre aritmética inteira, long, float e double; load/store de variáveis locais e pilha; controle de fluxo (if, goto, tableswitch, lookupswitch); criação de objetos e arrays; acesso a campos de instância e estáticos; e despacho de chamadas de método para <code>execInvokestatic</code>, <code>execInvokevirtual</code>, <code>execInvokespecial</code>. Também gerencia a tabela de campos estáticos e o pool de arrays.</p>
+      <p>O arquivo mais extenso do projeto. Implementa <code>executaFrame()</code>, o núcleo do interpretador: um <code>while</code> + <code>switch</code> que despacha todos os opcodes JVM suportados. Cobre aritmética inteira, long, float e double; load/store de variáveis locais e pilha; controle de fluxo (if, goto, tableswitch, lookupswitch); criação de objetos e arrays; acesso a campos de instância e estáticos; e despacho de chamadas de método para <code>execInvokestatic</code>, <code>execInvokevirtual</code>, <code>execInvokespecial</code>. Também gerencia a tabela de campos estáticos e o pool de arrays.</p>
+      <p>Os rótulos de cada <code>case</code> no switch usam o enum <a href="opcodes.html#enum-Opcode"><code>Opcode</code></a> definido em <code>opcodes.h</code> (ex.: <code>case OP_IADD:</code>, <code>case OP_IFEQ:</code>), eliminando literais hexadecimais do código-fonte.</p>
     </div>
 
     <div class="section">
@@ -105,7 +106,7 @@
         <div class="fn-card-header"><span class="fn-name">executaFrame()</span><span class="fn-line">linha 218</span></div>
         <div class="fn-signature"><code>void executaFrame(Frame *f, ClassFile *cf)</code></div>
         <div class="fn-body">
-          <p class="fn-summary">Loop principal de interpretação. A cada iteração lê o opcode no PC e executa via <code>switch</code>. Cobre: aritmética (iadd, ladd, fadd, dadd, ...), conversões (i2l, d2f, ...), load/store (iload, astore, ...), arrays (newarray, aaload, aastore, ...), controle de fluxo (ifeq, goto, tableswitch, lookupswitch), criação de objetos (new), acesso a campos (getfield, putfield, getstatic, putstatic), e chamadas de método (invokestatic, invokevirtual, invokespecial).</p>
+          <p class="fn-summary">Loop principal de interpretação. A cada iteração lê o opcode no PC e executa via <code>switch (op)</code>, cujos <code>case</code>s usam o enum <a href="opcodes.html#enum-Opcode"><code>Opcode</code></a> (ex.: <code>case OP_IADD:</code>, <code>case OP_IFEQ:</code>, <code>case OP_INVOKEVIRTUAL:</code>). Cobre: aritmética (OP_IADD, OP_LADD, OP_FADD, OP_DADD, ...), conversões (OP_I2L, OP_D2F, ...), load/store (OP_ILOAD, OP_ASTORE, ...), arrays (OP_NEWARRAY, OP_AALOAD, OP_AASTORE, ...), controle de fluxo (OP_IFEQ, OP_GOTO, OP_TABLESWITCH, OP_LOOKUPSWITCH), criação de objetos (OP_NEW), acesso a campos (OP_GETFIELD, OP_PUTFIELD, OP_GETSTATIC, OP_PUTSTATIC), e chamadas de método (OP_INVOKESTATIC, OP_INVOKEVIRTUAL, OP_INVOKESPECIAL). 198 opcodes implementados no total.</p>
           <div class="label mt-8">Parâmetros</div>
           <table class="param-table">
             <tr><th>Nome</th><th>Tipo</th><th>Descrição</th></tr>

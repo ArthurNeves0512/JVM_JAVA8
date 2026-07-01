@@ -4,6 +4,7 @@
 #include "native_methods.h"
 #include "attribute.h"
 #include "consts.h"
+#include "opcodes.h"
 #include <math.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -223,138 +224,139 @@ void executaFrame(Frame *f, ClassFile *cf) {
         switch (op) {
 
         /* ── nop ──────────────────────────────────────── */
-        case 0x00: break;                    /* nop */
+        case OP_NOP: break;
 
         /* ── aconst_null ──────────────────────────────── */
-        case 0x01:                           /* aconst_null */
+        case OP_ACONST_NULL:
             memset(&f->pilha[++f->topo], 0, sizeof(Slot));
             f->pilha[f->topo].tipo = TIPO_REF;
             break;
 
         /* ── constantes inteiras ───────────────────────── */
-        case 0x02: PUSH_INT(f, -1); break;  /* iconst_m1 */
-        case 0x03: PUSH_INT(f,  0); break;  /* iconst_0  */
-        case 0x04: PUSH_INT(f,  1); break;  /* iconst_1  */
-        case 0x05: PUSH_INT(f,  2); break;  /* iconst_2  */
-        case 0x06: PUSH_INT(f,  3); break;  /* iconst_3  */
-        case 0x07: PUSH_INT(f,  4); break;  /* iconst_4  */
-        case 0x08: PUSH_INT(f,  5); break;  /* iconst_5  */
+        case OP_ICONST_M1: PUSH_INT(f, -1); break;
+        case OP_ICONST_0:  PUSH_INT(f,  0); break;
+        case OP_ICONST_1:  PUSH_INT(f,  1); break;
+        case OP_ICONST_2:  PUSH_INT(f,  2); break;
+        case OP_ICONST_3:  PUSH_INT(f,  3); break;
+        case OP_ICONST_4:  PUSH_INT(f,  4); break;
+        case OP_ICONST_5:  PUSH_INT(f,  5); break;
 
         /* ── constantes long ───────────────────────────── */
-        case 0x09: PUSH_LONG(f, 0LL); break; /* lconst_0 */
-        case 0x0A: PUSH_LONG(f, 1LL); break; /* lconst_1 */
+        case OP_LCONST_0: PUSH_LONG(f, 0LL); break;
+        case OP_LCONST_1: PUSH_LONG(f, 1LL); break;
 
         /* ── constantes float ──────────────────────────── */
-        case 0x0B: PUSH_FLOAT(f, 0.0f); break; /* fconst_0 */
-        case 0x0C: PUSH_FLOAT(f, 1.0f); break; /* fconst_1 */
-        case 0x0D: PUSH_FLOAT(f, 2.0f); break; /* fconst_2 */
+        case OP_FCONST_0: PUSH_FLOAT(f, 0.0f); break;
+        case OP_FCONST_1: PUSH_FLOAT(f, 1.0f); break;
+        case OP_FCONST_2: PUSH_FLOAT(f, 2.0f); break;
 
         /* ── constantes double ─────────────────────────── */
-        case 0x0E: PUSH_DOUBLE(f, 0.0); break; /* dconst_0 */
-        case 0x0F: PUSH_DOUBLE(f, 1.0); break; /* dconst_1 */
+        case OP_DCONST_0: PUSH_DOUBLE(f, 0.0); break;
+        case OP_DCONST_1: PUSH_DOUBLE(f, 1.0); break;
 
-        case 0x10: {                         /* bipush    */
+        case OP_BIPUSH: {
             int8_t val = (int8_t)READ_U1(f);
             PUSH_INT(f, (int32_t)val);
             break;
         }
 
-        case 0x11: {                         /* sipush    */
+        case OP_SIPUSH: {
             int16_t val = read_i2(f);
             PUSH_INT(f, (int32_t)val);
             break;
         }
 
         /* ── load/store com índice explícito ──────────── */
-        case 0x15: { u1 i = READ_U1(f); PUSH_INT(f, f->locais[i].inteiro); break; } /* iload */
-        case 0x16: { u1 i = READ_U1(f); f->pilha[++f->topo] = f->locais[i]; break; } /* lload */
-        case 0x17: { u1 i = READ_U1(f); f->pilha[++f->topo] = f->locais[i]; break; } /* fload */
-        case 0x18: { u1 i = READ_U1(f); f->pilha[++f->topo] = f->locais[i]; break; } /* dload */
-        case 0x19: { u1 i = READ_U1(f); f->pilha[++f->topo] = f->locais[i]; break; } /* aload */
+        case OP_ILOAD: { u1 i = READ_U1(f); PUSH_INT(f, f->locais[i].inteiro); break; }
+        case OP_LLOAD: { u1 i = READ_U1(f); f->pilha[++f->topo] = f->locais[i]; break; }
+        case OP_FLOAD: { u1 i = READ_U1(f); f->pilha[++f->topo] = f->locais[i]; break; }
+        case OP_DLOAD: { u1 i = READ_U1(f); f->pilha[++f->topo] = f->locais[i]; break; }
+        case OP_ALOAD: { u1 i = READ_U1(f); f->pilha[++f->topo] = f->locais[i]; break; }
 
-        case 0x36: { u1 i = READ_U1(f); f->locais[i].inteiro = POP_INT(f); f->locais[i].tipo = TIPO_INT; break; } /* istore */
-        case 0x37: { u1 i = READ_U1(f); f->locais[i] = f->pilha[f->topo--]; break; } /* lstore */
-        case 0x38: { u1 i = READ_U1(f); f->locais[i] = f->pilha[f->topo--]; break; } /* fstore */
-        case 0x39: { u1 i = READ_U1(f); f->locais[i] = f->pilha[f->topo--]; break; } /* dstore */
-        case 0x3A: { u1 i = READ_U1(f); f->locais[i] = f->pilha[f->topo--]; break; } /* astore */
+        case OP_ISTORE: { u1 i = READ_U1(f); f->locais[i].inteiro = POP_INT(f); f->locais[i].tipo = TIPO_INT; break; }
+        case OP_LSTORE: { u1 i = READ_U1(f); f->locais[i] = f->pilha[f->topo--]; break; }
+        case OP_FSTORE: { u1 i = READ_U1(f); f->locais[i] = f->pilha[f->topo--]; break; }
+        case OP_DSTORE: { u1 i = READ_U1(f); f->locais[i] = f->pilha[f->topo--]; break; }
+        case OP_ASTORE: { u1 i = READ_U1(f); f->locais[i] = f->pilha[f->topo--]; break; }
 
         /* ── lload_0-3 ─────────────────────────────────── */
-        case 0x1E: f->pilha[++f->topo] = f->locais[0]; break; /* lload_0 */
-        case 0x1F: f->pilha[++f->topo] = f->locais[1]; break; /* lload_1 */
-        case 0x20: f->pilha[++f->topo] = f->locais[2]; break; /* lload_2 */
-        case 0x21: f->pilha[++f->topo] = f->locais[3]; break; /* lload_3 */
+        case OP_LLOAD_0: f->pilha[++f->topo] = f->locais[0]; break;
+        case OP_LLOAD_1: f->pilha[++f->topo] = f->locais[1]; break;
+        case OP_LLOAD_2: f->pilha[++f->topo] = f->locais[2]; break;
+        case OP_LLOAD_3: f->pilha[++f->topo] = f->locais[3]; break;
 
         /* ── fload_0-3 ─────────────────────────────────── */
-        case 0x22: f->pilha[++f->topo] = f->locais[0]; break; /* fload_0 */
-        case 0x23: f->pilha[++f->topo] = f->locais[1]; break; /* fload_1 */
-        case 0x24: f->pilha[++f->topo] = f->locais[2]; break; /* fload_2 */
-        case 0x25: f->pilha[++f->topo] = f->locais[3]; break; /* fload_3 */
+        case OP_FLOAD_0: f->pilha[++f->topo] = f->locais[0]; break;
+        case OP_FLOAD_1: f->pilha[++f->topo] = f->locais[1]; break;
+        case OP_FLOAD_2: f->pilha[++f->topo] = f->locais[2]; break;
+        case OP_FLOAD_3: f->pilha[++f->topo] = f->locais[3]; break;
 
         /* ── dload_0-3 ─────────────────────────────────── */
-        case 0x26: f->pilha[++f->topo] = f->locais[0]; break; /* dload_0 */
-        case 0x27: f->pilha[++f->topo] = f->locais[1]; break; /* dload_1 */
-        case 0x28: f->pilha[++f->topo] = f->locais[2]; break; /* dload_2 */
-        case 0x29: f->pilha[++f->topo] = f->locais[3]; break; /* dload_3 */
+        case OP_DLOAD_0: f->pilha[++f->topo] = f->locais[0]; break;
+        case OP_DLOAD_1: f->pilha[++f->topo] = f->locais[1]; break;
+        case OP_DLOAD_2: f->pilha[++f->topo] = f->locais[2]; break;
+        case OP_DLOAD_3: f->pilha[++f->topo] = f->locais[3]; break;
 
-        /* ── aload / astore (referências) ─────────────── */
-        case 0x2A: f->pilha[++f->topo] = f->locais[0]; break; /* aload_0 */
-        case 0x2B: f->pilha[++f->topo] = f->locais[1]; break; /* aload_1 */
-        case 0x2C: f->pilha[++f->topo] = f->locais[2]; break; /* aload_2 */
-        case 0x2D: f->pilha[++f->topo] = f->locais[3]; break; /* aload_3 */
+        /* ── aload_0-3 (referências) ───────────────────── */
+        case OP_ALOAD_0: f->pilha[++f->topo] = f->locais[0]; break;
+        case OP_ALOAD_1: f->pilha[++f->topo] = f->locais[1]; break;
+        case OP_ALOAD_2: f->pilha[++f->topo] = f->locais[2]; break;
+        case OP_ALOAD_3: f->pilha[++f->topo] = f->locais[3]; break;
 
         /* ── lstore_0-3 ────────────────────────────────── */
-        case 0x3F: f->locais[0] = f->pilha[f->topo--]; break; /* lstore_0 */
-        case 0x40: f->locais[1] = f->pilha[f->topo--]; break; /* lstore_1 */
-        case 0x41: f->locais[2] = f->pilha[f->topo--]; break; /* lstore_2 */
-        case 0x42: f->locais[3] = f->pilha[f->topo--]; break; /* lstore_3 */
+        case OP_LSTORE_0: f->locais[0] = f->pilha[f->topo--]; break;
+        case OP_LSTORE_1: f->locais[1] = f->pilha[f->topo--]; break;
+        case OP_LSTORE_2: f->locais[2] = f->pilha[f->topo--]; break;
+        case OP_LSTORE_3: f->locais[3] = f->pilha[f->topo--]; break;
 
         /* ── fstore_0-3 ────────────────────────────────── */
-        case 0x43: f->locais[0] = f->pilha[f->topo--]; break; /* fstore_0 */
-        case 0x44: f->locais[1] = f->pilha[f->topo--]; break; /* fstore_1 */
-        case 0x45: f->locais[2] = f->pilha[f->topo--]; break; /* fstore_2 */
-        case 0x46: f->locais[3] = f->pilha[f->topo--]; break; /* fstore_3 */
+        case OP_FSTORE_0: f->locais[0] = f->pilha[f->topo--]; break;
+        case OP_FSTORE_1: f->locais[1] = f->pilha[f->topo--]; break;
+        case OP_FSTORE_2: f->locais[2] = f->pilha[f->topo--]; break;
+        case OP_FSTORE_3: f->locais[3] = f->pilha[f->topo--]; break;
 
         /* ── dstore_0-3 ────────────────────────────────── */
-        case 0x47: f->locais[0] = f->pilha[f->topo--]; break; /* dstore_0 */
-        case 0x48: f->locais[1] = f->pilha[f->topo--]; break; /* dstore_1 */
-        case 0x49: f->locais[2] = f->pilha[f->topo--]; break; /* dstore_2 */
-        case 0x4A: f->locais[3] = f->pilha[f->topo--]; break; /* dstore_3 */
+        case OP_DSTORE_0: f->locais[0] = f->pilha[f->topo--]; break;
+        case OP_DSTORE_1: f->locais[1] = f->pilha[f->topo--]; break;
+        case OP_DSTORE_2: f->locais[2] = f->pilha[f->topo--]; break;
+        case OP_DSTORE_3: f->locais[3] = f->pilha[f->topo--]; break;
 
-        case 0x4B: f->locais[0] = f->pilha[f->topo--]; break; /* astore_0 */
-        case 0x4C: f->locais[1] = f->pilha[f->topo--]; break; /* astore_1 */
-        case 0x4D: f->locais[2] = f->pilha[f->topo--]; break; /* astore_2 */
-        case 0x4E: f->locais[3] = f->pilha[f->topo--]; break; /* astore_3 */
+        /* ── astore_0-3 ────────────────────────────────── */
+        case OP_ASTORE_0: f->locais[0] = f->pilha[f->topo--]; break;
+        case OP_ASTORE_1: f->locais[1] = f->pilha[f->topo--]; break;
+        case OP_ASTORE_2: f->locais[2] = f->pilha[f->topo--]; break;
+        case OP_ASTORE_3: f->locais[3] = f->pilha[f->topo--]; break;
 
         /* ── arrays de primitivos ─────────────────────── */
-        case 0x2E: {                         /* iaload  */
+        case OP_IALOAD: {
             int32_t   idx = POP_INT(f);
             JVMArray *arr = ARR(f->pilha[f->topo--]);
             PUSH_INT(f, ((int32_t *)arr->data)[idx]);
             break;
         }
 
-        case 0x2F: {                         /* laload */
+        case OP_LALOAD: {
             int32_t   idx = POP_INT(f);
             JVMArray *arr = ARR(f->pilha[f->topo--]);
             PUSH_LONG(f, ((int64_t *)arr->data)[idx]);
             break;
         }
 
-        case 0x30: {                         /* faload */
+        case OP_FALOAD: {
             int32_t   idx = POP_INT(f);
             JVMArray *arr = ARR(f->pilha[f->topo--]);
             PUSH_FLOAT(f, ((float *)arr->data)[idx]);
             break;
         }
 
-        case 0x31: {                         /* daload */
+        case OP_DALOAD: {
             int32_t   idx = POP_INT(f);
             JVMArray *arr = ARR(f->pilha[f->topo--]);
             PUSH_DOUBLE(f, ((double *)arr->data)[idx]);
             break;
         }
 
-        case 0x32: {                         /* aaload */
+        case OP_AALOAD: {
             int32_t   idx = POP_INT(f);
             JVMArray *src = ARR(f->pilha[f->topo--]);
             void     *val = src ? ((void **)src->data)[idx] : NULL;
@@ -367,28 +369,28 @@ void executaFrame(Frame *f, ClassFile *cf) {
             break;
         }
 
-        case 0x33: {                         /* baload (byte/boolean) */
+        case OP_BALOAD: {
             int32_t   idx = POP_INT(f);
             JVMArray *arr = ARR(f->pilha[f->topo--]);
             PUSH_INT(f, (int32_t)((int8_t *)arr->data)[idx]);
             break;
         }
 
-        case 0x34: {                         /* caload (char) */
+        case OP_CALOAD: {
             int32_t   idx = POP_INT(f);
             JVMArray *arr = ARR(f->pilha[f->topo--]);
             PUSH_INT(f, (int32_t)((uint16_t *)arr->data)[idx]);
             break;
         }
 
-        case 0x35: {                         /* saload (short) */
+        case OP_SALOAD: {
             int32_t   idx = POP_INT(f);
             JVMArray *arr = ARR(f->pilha[f->topo--]);
             PUSH_INT(f, (int32_t)((int16_t *)arr->data)[idx]);
             break;
         }
 
-        case 0x4F: {                         /* iastore */
+        case OP_IASTORE: {
             int32_t   val = POP_INT(f);
             int32_t   idx = POP_INT(f);
             JVMArray *arr = ARR(f->pilha[f->topo--]);
@@ -396,7 +398,7 @@ void executaFrame(Frame *f, ClassFile *cf) {
             break;
         }
 
-        case 0x50: {                         /* lastore */
+        case OP_LASTORE: {
             int64_t   val = POP_LONG(f);
             int32_t   idx = POP_INT(f);
             JVMArray *arr = ARR(f->pilha[f->topo--]);
@@ -404,7 +406,7 @@ void executaFrame(Frame *f, ClassFile *cf) {
             break;
         }
 
-        case 0x51: {                         /* fastore */
+        case OP_FASTORE: {
             float     val = POP_FLOAT(f);
             int32_t   idx = POP_INT(f);
             JVMArray *arr = ARR(f->pilha[f->topo--]);
@@ -412,7 +414,7 @@ void executaFrame(Frame *f, ClassFile *cf) {
             break;
         }
 
-        case 0x52: {                         /* dastore */
+        case OP_DASTORE: {
             double    val = POP_DOUBLE(f);
             int32_t   idx = POP_INT(f);
             JVMArray *arr = ARR(f->pilha[f->topo--]);
@@ -420,7 +422,7 @@ void executaFrame(Frame *f, ClassFile *cf) {
             break;
         }
 
-        case 0x53: {                         /* aastore */
+        case OP_AASTORE: {
             Slot  vs  = f->pilha[f->topo--];
             /* TIPO_OBJECT usa .ref; todos os outros (TIPO_REF, TIPO_ARRAY) usam .longo */
             void *val = (vs.tipo == TIPO_OBJECT)
@@ -432,7 +434,7 @@ void executaFrame(Frame *f, ClassFile *cf) {
             break;
         }
 
-        case 0x54: {                         /* bastore (byte/boolean) */
+        case OP_BASTORE: {
             int32_t   val = POP_INT(f);
             int32_t   idx = POP_INT(f);
             JVMArray *arr = ARR(f->pilha[f->topo--]);
@@ -440,7 +442,7 @@ void executaFrame(Frame *f, ClassFile *cf) {
             break;
         }
 
-        case 0x55: {                         /* castore (char) */
+        case OP_CASTORE: {
             int32_t   val = POP_INT(f);
             int32_t   idx = POP_INT(f);
             JVMArray *arr = ARR(f->pilha[f->topo--]);
@@ -448,7 +450,7 @@ void executaFrame(Frame *f, ClassFile *cf) {
             break;
         }
 
-        case 0x56: {                         /* sastore (short) */
+        case OP_SASTORE: {
             int32_t   val = POP_INT(f);
             int32_t   idx = POP_INT(f);
             JVMArray *arr = ARR(f->pilha[f->topo--]);
@@ -456,7 +458,7 @@ void executaFrame(Frame *f, ClassFile *cf) {
             break;
         }
 
-        case 0xBC: {                         /* newarray */
+        case OP_NEWARRAY: {
             u1        atype  = READ_U1(f);
             int32_t   length = POP_INT(f);
             JVMArray *arr    = aloca_array(length, (int)atype);
@@ -466,7 +468,7 @@ void executaFrame(Frame *f, ClassFile *cf) {
             break;
         }
 
-        case 0xBD: {                         /* anewarray */
+        case OP_ANEWARRAY: {
             read_u2(f); /* índice de classe no CP — ignorado */
             int32_t   length = POP_INT(f);
             JVMArray *arr    = aloca_array(length, T_OBJECT);
@@ -476,28 +478,28 @@ void executaFrame(Frame *f, ClassFile *cf) {
             break;
         }
 
-        case 0xBE: {                         /* arraylength */
+        case OP_ARRAYLENGTH: {
             const JVMArray *arr = ARR(f->pilha[f->topo--]);
             PUSH_INT(f, arr->length);
             break;
         }
 
         /* ── ldc / ldc_w / ldc2_w ─────────────────────── */
-        case 0x12: {                         /* ldc      */
+        case OP_LDC: {
             u1 idx = READ_U1(f);
             if (cf) ldc_push(f, cf->constant_pool, (u2)idx);
             else    PUSH_INT(f, 0);
             break;
         }
 
-        case 0x13: {                         /* ldc_w    */
+        case OP_LDC_W: {
             u2 idx = read_u2(f);
             if (cf) ldc_push(f, cf->constant_pool, idx);
             else    PUSH_INT(f, 0);
             break;
         }
 
-        case 0x14: {                         /* ldc2_w   */
+        case OP_LDC2_W: {
             u2 idx = read_u2(f);
             if (cf) ldc2_push(f, cf->constant_pool, idx);
             else    PUSH_INT(f, 0);
@@ -505,28 +507,28 @@ void executaFrame(Frame *f, ClassFile *cf) {
         }
 
         /* ── aritmética inteira ────────────────────────── */
-        case 0x60: {                         /* iadd */
+        case OP_IADD: {
             int32_t v2 = POP_INT(f);
             int32_t v1 = POP_INT(f);
             PUSH_INT(f, v1 + v2);
             break;
         }
 
-        case 0x64: {                         /* isub */
+        case OP_ISUB: {
             int32_t v2 = POP_INT(f);
             int32_t v1 = POP_INT(f);
             PUSH_INT(f, v1 - v2);
             break;
         }
 
-        case 0x68: {                         /* imul */
+        case OP_IMUL: {
             int32_t v2 = POP_INT(f);
             int32_t v1 = POP_INT(f);
             PUSH_INT(f, v1 * v2);
             break;
         }
 
-        case 0x6C: {                         /* idiv */
+        case OP_IDIV: {
             int32_t v2 = POP_INT(f);
             int32_t v1 = POP_INT(f);
             if (v2 == 0) { fprintf(stderr, "ArithmeticException: / by zero\n"); return; }
@@ -534,7 +536,7 @@ void executaFrame(Frame *f, ClassFile *cf) {
             break;
         }
 
-        case 0x70: {                         /* irem */
+        case OP_IREM: {
             int32_t v2 = POP_INT(f);
             int32_t v1 = POP_INT(f);
             if (v2 == 0) { fprintf(stderr, "ArithmeticException: / by zero (irem)\n"); return; }
@@ -542,88 +544,88 @@ void executaFrame(Frame *f, ClassFile *cf) {
             break;
         }
 
-        case 0x74: {                         /* ineg */
+        case OP_INEG: {
             int32_t v1 = POP_INT(f);
             PUSH_INT(f, -v1);
             break;
         }
 
         /* ── aritmética long ───────────────────────────── */
-        case 0x61: { int64_t b=POP_LONG(f), a=POP_LONG(f); PUSH_LONG(f, a+b); break; } /* ladd */
-        case 0x65: { int64_t b=POP_LONG(f), a=POP_LONG(f); PUSH_LONG(f, a-b); break; } /* lsub */
-        case 0x69: { int64_t b=POP_LONG(f), a=POP_LONG(f); PUSH_LONG(f, a*b); break; } /* lmul */
-        case 0x6D: {                         /* ldiv */
+        case OP_LADD: { int64_t b=POP_LONG(f), a=POP_LONG(f); PUSH_LONG(f, a+b); break; }
+        case OP_LSUB: { int64_t b=POP_LONG(f), a=POP_LONG(f); PUSH_LONG(f, a-b); break; }
+        case OP_LMUL: { int64_t b=POP_LONG(f), a=POP_LONG(f); PUSH_LONG(f, a*b); break; }
+        case OP_LDIV: {
             int64_t b = POP_LONG(f), a = POP_LONG(f);
             if (b == 0) { fprintf(stderr, "ArithmeticException: / by zero (long)\n"); return; }
             PUSH_LONG(f, a / b); break;
         }
-        case 0x71: {                         /* lrem */
+        case OP_LREM: {
             int64_t b = POP_LONG(f), a = POP_LONG(f);
             if (b == 0) { fprintf(stderr, "ArithmeticException: / by zero (lrem)\n"); return; }
             PUSH_LONG(f, a % b); break;
         }
-        case 0x75: { int64_t v=POP_LONG(f); PUSH_LONG(f, -v); break; } /* lneg */
+        case OP_LNEG: { int64_t v=POP_LONG(f); PUSH_LONG(f, -v); break; }
 
         /* ── aritmética float ──────────────────────────── */
-        case 0x62: { float b=POP_FLOAT(f), a=POP_FLOAT(f); PUSH_FLOAT(f, a+b); break; } /* fadd */
-        case 0x66: { float b=POP_FLOAT(f), a=POP_FLOAT(f); PUSH_FLOAT(f, a-b); break; } /* fsub */
-        case 0x6A: { float b=POP_FLOAT(f), a=POP_FLOAT(f); PUSH_FLOAT(f, a*b); break; } /* fmul */
-        case 0x6E: { float b=POP_FLOAT(f), a=POP_FLOAT(f); PUSH_FLOAT(f, a/b); break; } /* fdiv */
-        case 0x72: { float b=POP_FLOAT(f), a=POP_FLOAT(f); PUSH_FLOAT(f, fmodf(a,b)); break; } /* frem */
-        case 0x76: { float v=POP_FLOAT(f); PUSH_FLOAT(f, -v); break; } /* fneg */
+        case OP_FADD: { float b=POP_FLOAT(f), a=POP_FLOAT(f); PUSH_FLOAT(f, a+b); break; }
+        case OP_FSUB: { float b=POP_FLOAT(f), a=POP_FLOAT(f); PUSH_FLOAT(f, a-b); break; }
+        case OP_FMUL: { float b=POP_FLOAT(f), a=POP_FLOAT(f); PUSH_FLOAT(f, a*b); break; }
+        case OP_FDIV: { float b=POP_FLOAT(f), a=POP_FLOAT(f); PUSH_FLOAT(f, a/b); break; }
+        case OP_FREM: { float b=POP_FLOAT(f), a=POP_FLOAT(f); PUSH_FLOAT(f, fmodf(a,b)); break; }
+        case OP_FNEG: { float v=POP_FLOAT(f); PUSH_FLOAT(f, -v); break; }
 
         /* ── aritmética double ─────────────────────────── */
-        case 0x63: { double b=POP_DOUBLE(f), a=POP_DOUBLE(f); PUSH_DOUBLE(f, a+b); break; } /* dadd */
-        case 0x67: { double b=POP_DOUBLE(f), a=POP_DOUBLE(f); PUSH_DOUBLE(f, a-b); break; } /* dsub */
-        case 0x6B: { double b=POP_DOUBLE(f), a=POP_DOUBLE(f); PUSH_DOUBLE(f, a*b); break; } /* dmul */
-        case 0x6F: { double b=POP_DOUBLE(f), a=POP_DOUBLE(f); PUSH_DOUBLE(f, a/b); break; } /* ddiv */
-        case 0x73: { double b=POP_DOUBLE(f), a=POP_DOUBLE(f); PUSH_DOUBLE(f, fmod(a,b)); break; } /* drem */
-        case 0x77: { double v=POP_DOUBLE(f); PUSH_DOUBLE(f, -v); break; } /* dneg */
+        case OP_DADD: { double b=POP_DOUBLE(f), a=POP_DOUBLE(f); PUSH_DOUBLE(f, a+b); break; }
+        case OP_DSUB: { double b=POP_DOUBLE(f), a=POP_DOUBLE(f); PUSH_DOUBLE(f, a-b); break; }
+        case OP_DMUL: { double b=POP_DOUBLE(f), a=POP_DOUBLE(f); PUSH_DOUBLE(f, a*b); break; }
+        case OP_DDIV: { double b=POP_DOUBLE(f), a=POP_DOUBLE(f); PUSH_DOUBLE(f, a/b); break; }
+        case OP_DREM: { double b=POP_DOUBLE(f), a=POP_DOUBLE(f); PUSH_DOUBLE(f, fmod(a,b)); break; }
+        case OP_DNEG: { double v=POP_DOUBLE(f); PUSH_DOUBLE(f, -v); break; }
 
         /* ── bitwise inteiro ───────────────────────────── */
-        case 0x78: { int32_t b=POP_INT(f)&0x1F, a=POP_INT(f); PUSH_INT(f, a<<b); break; }  /* ishl */
-        case 0x7A: { int32_t b=POP_INT(f)&0x1F, a=POP_INT(f); PUSH_INT(f, a>>b); break; }  /* ishr */
-        case 0x7C: { int32_t b=POP_INT(f)&0x1F; uint32_t a=(uint32_t)POP_INT(f); PUSH_INT(f, (int32_t)(a>>b)); break; } /* iushr */
-        case 0x7E: { int32_t b=POP_INT(f), a=POP_INT(f); PUSH_INT(f, a&b); break; }  /* iand */
-        case 0x80: { int32_t b=POP_INT(f), a=POP_INT(f); PUSH_INT(f, a|b); break; }  /* ior  */
-        case 0x82: { int32_t b=POP_INT(f), a=POP_INT(f); PUSH_INT(f, a^b); break; }  /* ixor */
+        case OP_ISHL:  { int32_t b=POP_INT(f)&0x1F, a=POP_INT(f); PUSH_INT(f, a<<b); break; }
+        case OP_ISHR:  { int32_t b=POP_INT(f)&0x1F, a=POP_INT(f); PUSH_INT(f, a>>b); break; }
+        case OP_IUSHR: { int32_t b=POP_INT(f)&0x1F; uint32_t a=(uint32_t)POP_INT(f); PUSH_INT(f, (int32_t)(a>>b)); break; }
+        case OP_IAND:  { int32_t b=POP_INT(f), a=POP_INT(f); PUSH_INT(f, a&b); break; }
+        case OP_IOR:   { int32_t b=POP_INT(f), a=POP_INT(f); PUSH_INT(f, a|b); break; }
+        case OP_IXOR:  { int32_t b=POP_INT(f), a=POP_INT(f); PUSH_INT(f, a^b); break; }
 
         /* ── bitwise long ──────────────────────────────── */
-        case 0x79: { int32_t b=POP_INT(f)&0x3F; int64_t a=POP_LONG(f); PUSH_LONG(f, a<<b); break; }  /* lshl */
-        case 0x7B: { int32_t b=POP_INT(f)&0x3F; int64_t a=POP_LONG(f); PUSH_LONG(f, a>>b); break; }  /* lshr */
-        case 0x7D: { int32_t b=POP_INT(f)&0x3F; uint64_t a=(uint64_t)POP_LONG(f); PUSH_LONG(f, (int64_t)(a>>b)); break; } /* lushr */
-        case 0x7F: { int64_t b=POP_LONG(f), a=POP_LONG(f); PUSH_LONG(f, a&b); break; }  /* land */
-        case 0x81: { int64_t b=POP_LONG(f), a=POP_LONG(f); PUSH_LONG(f, a|b); break; }  /* lor  */
-        case 0x83: { int64_t b=POP_LONG(f), a=POP_LONG(f); PUSH_LONG(f, a^b); break; }  /* lxor */
+        case OP_LSHL:  { int32_t b=POP_INT(f)&0x3F; int64_t a=POP_LONG(f); PUSH_LONG(f, a<<b); break; }
+        case OP_LSHR:  { int32_t b=POP_INT(f)&0x3F; int64_t a=POP_LONG(f); PUSH_LONG(f, a>>b); break; }
+        case OP_LUSHR: { int32_t b=POP_INT(f)&0x3F; uint64_t a=(uint64_t)POP_LONG(f); PUSH_LONG(f, (int64_t)(a>>b)); break; }
+        case OP_LAND:  { int64_t b=POP_LONG(f), a=POP_LONG(f); PUSH_LONG(f, a&b); break; }
+        case OP_LOR:   { int64_t b=POP_LONG(f), a=POP_LONG(f); PUSH_LONG(f, a|b); break; }
+        case OP_LXOR:  { int64_t b=POP_LONG(f), a=POP_LONG(f); PUSH_LONG(f, a^b); break; }
 
         /* ── variáveis locais ──────────────────────────── */
-        case 0x1A: PUSH_INT(f, f->locais[0].inteiro); break;  /* iload_0 */
-        case 0x1B: PUSH_INT(f, f->locais[1].inteiro); break;  /* iload_1 */
-        case 0x1C: PUSH_INT(f, f->locais[2].inteiro); break;  /* iload_2 */
-        case 0x1D: PUSH_INT(f, f->locais[3].inteiro); break;  /* iload_3 */
+        case OP_ILOAD_0: PUSH_INT(f, f->locais[0].inteiro); break;
+        case OP_ILOAD_1: PUSH_INT(f, f->locais[1].inteiro); break;
+        case OP_ILOAD_2: PUSH_INT(f, f->locais[2].inteiro); break;
+        case OP_ILOAD_3: PUSH_INT(f, f->locais[3].inteiro); break;
 
-        case 0x3B: {                         /* istore_0 */
+        case OP_ISTORE_0: {
             f->locais[0].inteiro = POP_INT(f);
             f->locais[0].tipo    = TIPO_INT;
             break;
         }
-        case 0x3C: {                         /* istore_1 */
+        case OP_ISTORE_1: {
             f->locais[1].inteiro = POP_INT(f);
             f->locais[1].tipo    = TIPO_INT;
             break;
         }
-        case 0x3D: {                         /* istore_2 */
+        case OP_ISTORE_2: {
             f->locais[2].inteiro = POP_INT(f);
             f->locais[2].tipo    = TIPO_INT;
             break;
         }
-        case 0x3E: {                         /* istore_3 */
+        case OP_ISTORE_3: {
             f->locais[3].inteiro = POP_INT(f);
             f->locais[3].tipo    = TIPO_INT;
             break;
         }
 
-        case 0x84: {                         /* iinc */
+        case OP_IINC: {
             u1      index = READ_U1(f);
             int8_t  cst   = (int8_t)READ_U1(f);
             f->locais[index].inteiro += (int32_t)cst;
@@ -631,65 +633,65 @@ void executaFrame(Frame *f, ClassFile *cf) {
         }
 
         /* ── conversões de tipo ────────────────────────── */
-        case 0x85: { int32_t v=POP_INT(f); PUSH_LONG(f, (int64_t)v); break; }   /* i2l */
-        case 0x86: { int32_t v=POP_INT(f); PUSH_FLOAT(f, (float)v); break; }    /* i2f */
-        case 0x87: { int32_t v=POP_INT(f); PUSH_DOUBLE(f, (double)v); break; }  /* i2d */
-        case 0x88: { int64_t v=POP_LONG(f); PUSH_INT(f, (int32_t)v); break; }   /* l2i */
-        case 0x89: { int64_t v=POP_LONG(f); PUSH_FLOAT(f, (float)v); break; }   /* l2f */
-        case 0x8A: { int64_t v=POP_LONG(f); PUSH_DOUBLE(f, (double)v); break; } /* l2d */
-        case 0x8B: { float v=POP_FLOAT(f); PUSH_INT(f, isnan(v)?0:(int32_t)v); break; } /* f2i */
-        case 0x8C: { float v=POP_FLOAT(f); PUSH_LONG(f, isnan(v)?0LL:(int64_t)v); break; } /* f2l */
-        case 0x8D: { float v=POP_FLOAT(f); PUSH_DOUBLE(f, (double)v); break; }  /* f2d */
-        case 0x8E: { double v=POP_DOUBLE(f); PUSH_INT(f, isnan(v)?0:(int32_t)v); break; } /* d2i */
-        case 0x8F: { double v=POP_DOUBLE(f); PUSH_LONG(f, isnan(v)?0LL:(int64_t)v); break; } /* d2l */
-        case 0x90: { double v=POP_DOUBLE(f); PUSH_FLOAT(f, (float)v); break; }  /* d2f */
-        case 0x91: { int32_t v=POP_INT(f); PUSH_INT(f, (int32_t)(int8_t)v); break; }  /* i2b */
-        case 0x92: { int32_t v=POP_INT(f); PUSH_INT(f, v & 0xFFFF); break; }    /* i2c */
-        case 0x93: { int32_t v=POP_INT(f); PUSH_INT(f, (int32_t)(int16_t)v); break; } /* i2s */
+        case OP_I2L: { int32_t v=POP_INT(f); PUSH_LONG(f, (int64_t)v); break; }
+        case OP_I2F: { int32_t v=POP_INT(f); PUSH_FLOAT(f, (float)v); break; }
+        case OP_I2D: { int32_t v=POP_INT(f); PUSH_DOUBLE(f, (double)v); break; }
+        case OP_L2I: { int64_t v=POP_LONG(f); PUSH_INT(f, (int32_t)v); break; }
+        case OP_L2F: { int64_t v=POP_LONG(f); PUSH_FLOAT(f, (float)v); break; }
+        case OP_L2D: { int64_t v=POP_LONG(f); PUSH_DOUBLE(f, (double)v); break; }
+        case OP_F2I: { float v=POP_FLOAT(f); PUSH_INT(f, isnan(v)?0:(int32_t)v); break; }
+        case OP_F2L: { float v=POP_FLOAT(f); PUSH_LONG(f, isnan(v)?0LL:(int64_t)v); break; }
+        case OP_F2D: { float v=POP_FLOAT(f); PUSH_DOUBLE(f, (double)v); break; }
+        case OP_D2I: { double v=POP_DOUBLE(f); PUSH_INT(f, isnan(v)?0:(int32_t)v); break; }
+        case OP_D2L: { double v=POP_DOUBLE(f); PUSH_LONG(f, isnan(v)?0LL:(int64_t)v); break; }
+        case OP_D2F: { double v=POP_DOUBLE(f); PUSH_FLOAT(f, (float)v); break; }
+        case OP_I2B: { int32_t v=POP_INT(f); PUSH_INT(f, (int32_t)(int8_t)v); break; }
+        case OP_I2C: { int32_t v=POP_INT(f); PUSH_INT(f, v & 0xFFFF); break; }
+        case OP_I2S: { int32_t v=POP_INT(f); PUSH_INT(f, (int32_t)(int16_t)v); break; }
 
         /* ── comparações numéricas ─────────────────────── */
-        case 0x94: { /* lcmp */
+        case OP_LCMP: {
             int64_t b=POP_LONG(f), a=POP_LONG(f);
             PUSH_INT(f, a>b ? 1 : a<b ? -1 : 0);
             break;
         }
-        case 0x95: { /* fcmpl — NaN → -1 */
+        case OP_FCMPL: { /* NaN → -1 */
             float b=POP_FLOAT(f), a=POP_FLOAT(f);
             PUSH_INT(f, (isnan(a)||isnan(b)) ? -1 : a>b ? 1 : a<b ? -1 : 0);
             break;
         }
-        case 0x96: { /* fcmpg — NaN → 1 */
+        case OP_FCMPG: { /* NaN → 1 */
             float b=POP_FLOAT(f), a=POP_FLOAT(f);
             PUSH_INT(f, (isnan(a)||isnan(b)) ? 1 : a>b ? 1 : a<b ? -1 : 0);
             break;
         }
-        case 0x97: { /* dcmpl — NaN → -1 */
+        case OP_DCMPL: { /* NaN → -1 */
             double b=POP_DOUBLE(f), a=POP_DOUBLE(f);
             PUSH_INT(f, (isnan(a)||isnan(b)) ? -1 : a>b ? 1 : a<b ? -1 : 0);
             break;
         }
-        case 0x98: { /* dcmpg — NaN → 1 */
+        case OP_DCMPG: { /* NaN → 1 */
             double b=POP_DOUBLE(f), a=POP_DOUBLE(f);
             PUSH_INT(f, (isnan(a)||isnan(b)) ? 1 : a>b ? 1 : a<b ? -1 : 0);
             break;
         }
 
         /* ── manipulação de pilha ─────────────────────── */
-        case 0x57:                           /* pop */
+        case OP_POP:
             f->topo--;
             break;
 
-        case 0x58:                           /* pop2 */
+        case OP_POP2:
             f->topo -= 2;
             break;
 
-        case 0x59: {                         /* dup */
+        case OP_DUP: {
             f->pilha[f->topo + 1] = f->pilha[f->topo];
             f->topo++;
             break;
         }
 
-        case 0x5A: {                         /* dup_x1: ..v2,v1 → ..v1,v2,v1 */
+        case OP_DUP_X1: { /* ..v2,v1 → ..v1,v2,v1 */
             Slot v1 = f->pilha[f->topo];
             f->pilha[f->topo + 1] = f->pilha[f->topo];
             f->pilha[f->topo]     = f->pilha[f->topo - 1];
@@ -698,7 +700,7 @@ void executaFrame(Frame *f, ClassFile *cf) {
             break;
         }
 
-        case 0x5B: {                         /* dup_x2: ..v3,v2,v1 → ..v1,v3,v2,v1 */
+        case OP_DUP_X2: { /* ..v3,v2,v1 → ..v1,v3,v2,v1 */
             Slot v1 = f->pilha[f->topo];
             f->pilha[f->topo + 1] = f->pilha[f->topo];
             f->pilha[f->topo]     = f->pilha[f->topo - 1];
@@ -708,14 +710,14 @@ void executaFrame(Frame *f, ClassFile *cf) {
             break;
         }
 
-        case 0x5C: {                         /* dup2: ..v2,v1 → ..v2,v1,v2,v1 */
+        case OP_DUP2: { /* ..v2,v1 → ..v2,v1,v2,v1 */
             f->pilha[f->topo + 1] = f->pilha[f->topo - 1];
             f->pilha[f->topo + 2] = f->pilha[f->topo];
             f->topo += 2;
             break;
         }
 
-        case 0x5D: {                         /* dup2_x1: ..v3,v2,v1 → ..v2,v1,v3,v2,v1 */
+        case OP_DUP2_X1: { /* ..v3,v2,v1 → ..v2,v1,v3,v2,v1 */
             Slot v1 = f->pilha[f->topo];
             Slot v2 = f->pilha[f->topo - 1];
             f->pilha[f->topo + 2] = v1;
@@ -727,7 +729,7 @@ void executaFrame(Frame *f, ClassFile *cf) {
             break;
         }
 
-        case 0x5E: {                         /* dup2_x2: ..v4,v3,v2,v1 → ..v2,v1,v4,v3,v2,v1 */
+        case OP_DUP2_X2: { /* ..v4,v3,v2,v1 → ..v2,v1,v4,v3,v2,v1 */
             Slot v1 = f->pilha[f->topo];
             Slot v2 = f->pilha[f->topo - 1];
             f->pilha[f->topo + 2] = v1;
@@ -740,7 +742,7 @@ void executaFrame(Frame *f, ClassFile *cf) {
             break;
         }
 
-        case 0x5F: {                         /* swap */
+        case OP_SWAP: {
             Slot tmp              = f->pilha[f->topo];
             f->pilha[f->topo]     = f->pilha[f->topo - 1];
             f->pilha[f->topo - 1] = tmp;
@@ -748,7 +750,7 @@ void executaFrame(Frame *f, ClassFile *cf) {
         }
 
                 /* ── objetos ───────────────────────────────────── */
-        case 0xBB: {                         /* new */
+        case OP_NEW: {
             u2 idx = read_u2(f);
 
             if (!cf) {
@@ -795,7 +797,7 @@ void executaFrame(Frame *f, ClassFile *cf) {
             break;
         }
 
-        case 0xB4: {                         /* getfield */
+        case OP_GETFIELD: {
             u2 idx = read_u2(f);
 
             if (!cf) {
@@ -832,7 +834,7 @@ void executaFrame(Frame *f, ClassFile *cf) {
             break;
         }
 
-        case 0xB5: {                         /* putfield */
+        case OP_PUTFIELD: {
             u2 idx = read_u2(f);
 
             if (!cf) {
@@ -870,7 +872,7 @@ void executaFrame(Frame *f, ClassFile *cf) {
         }
 
         /* ── getstatic / putstatic ─────────────────────── */
-        case 0xB2: {                         /* getstatic */
+        case OP_GETSTATIC: {
             u2 idx = read_u2(f);
             if (!cf) { PUSH_INT(f, 0); break; }
             const CONSTANT_Fieldref_info *fref = cf->constant_pool[idx].fieldRef_info;
@@ -906,7 +908,7 @@ void executaFrame(Frame *f, ClassFile *cf) {
             break;
         }
 
-        case 0xB3: {                         /* putstatic */
+        case OP_PUTSTATIC: {
             u2 idx = read_u2(f);
             if (!cf) { f->topo--; break; }
 
@@ -931,28 +933,28 @@ void executaFrame(Frame *f, ClassFile *cf) {
             break;
         }
 
-        case 0xB6: {                         /* invokevirtual */
+        case OP_INVOKEVIRTUAL: {
             u2 idx = read_u2(f);
             if (!cf) { return; }
             execInvokevirtual(f, cf, idx);
             break;
         }
 
-        case 0xB7: {                         /* invokespecial */
+        case OP_INVOKESPECIAL: {
             u2 idx = read_u2(f);
             if (!cf) { return; }
             execInvokespecial(f, cf, idx);
             break;
         }
 
-        case 0xB8: {                         /* invokestatic */
+        case OP_INVOKESTATIC: {
             u2 idx = read_u2(f);
             if (!cf) { return; }
             execInvokestatic(f, cf, idx);
             break;
         }
 
-        case 0xB9: {                         /* invokeinterface */
+        case OP_INVOKEINTERFACE: {
             u2 idx = read_u2(f);
             READ_U1(f); /* count */
             READ_U1(f); /* 0 */
@@ -961,43 +963,43 @@ void executaFrame(Frame *f, ClassFile *cf) {
             break;
         }
 
-        case 0xBF: {                         /* athrow */
+        case OP_ATHROW: {
             fprintf(stderr, "athrow: excecao lancada (nao suportada)\n");
             return;
         }
 
-        case 0xC0: {                         /* checkcast — sem verificação real */
+        case OP_CHECKCAST: { /* sem verificação real */
             read_u2(f);
             /* mantém o ref no topo */
             break;
         }
 
-        case 0xC1: {                         /* instanceof */
+        case OP_INSTANCEOF: {
             read_u2(f);
             Slot s = f->pilha[f->topo--];
             PUSH_INT(f, (s.ref != NULL || s.tipo == TIPO_OBJECT) ? 1 : 0);
             break;
         }
 
-        case 0xC2: /* monitorenter */
-        case 0xC3: /* monitorexit */
+        case OP_MONITORENTER:
+        case OP_MONITOREXIT:
             f->topo--;
             break;
 
-        case 0xC4: {                         /* wide */
+        case OP_WIDE: {
             u1 next = READ_U1(f);
             u2 idx  = read_u2(f);
-            if (next == 0x84) { /* wide iinc */
+            if (next == OP_IINC) { /* wide iinc */
                 int16_t cst = read_i2(f);
                 f->locais[idx].inteiro += (int32_t)cst;
             } else {
                 switch (next) {
-                    case 0x15: PUSH_INT(f, f->locais[idx].inteiro); break; /* iload */
-                    case 0x16: case 0x17: case 0x18: case 0x19:
-                        f->pilha[++f->topo] = f->locais[idx]; break; /* lload/fload/dload/aload */
-                    case 0x36: f->locais[idx].inteiro = POP_INT(f); f->locais[idx].tipo = TIPO_INT; break; /* istore */
-                    case 0x37: case 0x38: case 0x39: case 0x3A:
-                        f->locais[idx] = f->pilha[f->topo--]; break; /* lstore/fstore/dstore/astore */
+                    case OP_ILOAD: PUSH_INT(f, f->locais[idx].inteiro); break;
+                    case OP_LLOAD: case OP_FLOAD: case OP_DLOAD: case OP_ALOAD:
+                        f->pilha[++f->topo] = f->locais[idx]; break;
+                    case OP_ISTORE: f->locais[idx].inteiro = POP_INT(f); f->locais[idx].tipo = TIPO_INT; break;
+                    case OP_LSTORE: case OP_FSTORE: case OP_DSTORE: case OP_ASTORE:
+                        f->locais[idx] = f->pilha[f->topo--]; break;
                     default:
                         fprintf(stderr, "wide: opcode 0x%02X nao suportado\n", next);
                         break;
@@ -1006,7 +1008,7 @@ void executaFrame(Frame *f, ClassFile *cf) {
             break;
         }
 
-        case 0xC5: {                         /* multianewarray */
+        case OP_MULTIANEWARRAY: {
             u2 idx  = read_u2(f);
             u1 dims = READ_U1(f);
             (void)idx;
@@ -1035,12 +1037,12 @@ void executaFrame(Frame *f, ClassFile *cf) {
     { int16_t o = read_i2(f); int32_t v = POP_INT(f); \
       if (cond) { f->pc = instr_pc + (u4)(int32_t)o; } break; }
 
-        case 0x99: BRANCH_IF1(v == 0)   /* ifeq */
-        case 0x9A: BRANCH_IF1(v != 0)   /* ifne */
-        case 0x9B: BRANCH_IF1(v <  0)   /* iflt */
-        case 0x9C: BRANCH_IF1(v >= 0)   /* ifge */
-        case 0x9D: BRANCH_IF1(v >  0)   /* ifgt */
-        case 0x9E: BRANCH_IF1(v <= 0)   /* ifle */
+        case OP_IFEQ: BRANCH_IF1(v == 0)
+        case OP_IFNE: BRANCH_IF1(v != 0)
+        case OP_IFLT: BRANCH_IF1(v <  0)
+        case OP_IFGE: BRANCH_IF1(v >= 0)
+        case OP_IFGT: BRANCH_IF1(v >  0)
+        case OP_IFLE: BRANCH_IF1(v <= 0)
 #undef BRANCH_IF1
 
         /* ── desvios binários (compara dois ints) ──────────────── */
@@ -1048,22 +1050,22 @@ void executaFrame(Frame *f, ClassFile *cf) {
     { int16_t o = read_i2(f); int32_t v2 = POP_INT(f); int32_t v1 = POP_INT(f); \
       if (cond) { f->pc = instr_pc + (u4)(int32_t)o; } break; }
 
-        case 0x9F: BRANCH_IF2(v1 == v2) /* if_icmpeq */
-        case 0xA0: BRANCH_IF2(v1 != v2) /* if_icmpne */
-        case 0xA1: BRANCH_IF2(v1 <  v2) /* if_icmplt */
-        case 0xA2: BRANCH_IF2(v1 >= v2) /* if_icmpge */
-        case 0xA3: BRANCH_IF2(v1 >  v2) /* if_icmpgt */
-        case 0xA4: BRANCH_IF2(v1 <= v2) /* if_icmple */
+        case OP_IF_ICMPEQ: BRANCH_IF2(v1 == v2)
+        case OP_IF_ICMPNE: BRANCH_IF2(v1 != v2)
+        case OP_IF_ICMPLT: BRANCH_IF2(v1 <  v2)
+        case OP_IF_ICMPGE: BRANCH_IF2(v1 >= v2)
+        case OP_IF_ICMPGT: BRANCH_IF2(v1 >  v2)
+        case OP_IF_ICMPLE: BRANCH_IF2(v1 <= v2)
 #undef BRANCH_IF2
 
-        case 0xA5: { /* if_acmpeq */
+        case OP_IF_ACMPEQ: {
             int16_t o = read_i2(f);
             void *s2 = f->pilha[f->topo--].ref;
             void *s1 = f->pilha[f->topo--].ref;
             if (s1 == s2) f->pc = instr_pc + (u4)(int32_t)o;
             break;
         }
-        case 0xA6: { /* if_acmpne */
+        case OP_IF_ACMPNE: {
             int16_t o = read_i2(f);
             void *s2 = f->pilha[f->topo--].ref;
             void *s1 = f->pilha[f->topo--].ref;
@@ -1071,13 +1073,13 @@ void executaFrame(Frame *f, ClassFile *cf) {
             break;
         }
 
-        case 0xA7: {                         /* goto */
+        case OP_GOTO: {
             int16_t offset = read_i2(f);
             f->pc = instr_pc + (u4)(int32_t)offset;
             break;
         }
 
-        case 0xAA: {                         /* tableswitch */
+        case OP_TABLESWITCH: {
             u4 pad = (4 - (f->pc % 4)) % 4;
             f->pc += pad;
             int32_t deflt = (int32_t)(((u4)READ_U1(f)<<24)|((u4)READ_U1(f)<<16)|((u4)READ_U1(f)<<8)|(u4)READ_U1(f));
@@ -1095,7 +1097,7 @@ void executaFrame(Frame *f, ClassFile *cf) {
             break;
         }
 
-        case 0xAB: {                         /* lookupswitch */
+        case OP_LOOKUPSWITCH: {
             u4 pad    = (4 - (f->pc % 4)) % 4;
             f->pc += pad;
             int32_t deflt  = (int32_t)(((u4)READ_U1(f)<<24)|((u4)READ_U1(f)<<16)|((u4)READ_U1(f)<<8)|(u4)READ_U1(f));
@@ -1111,32 +1113,32 @@ void executaFrame(Frame *f, ClassFile *cf) {
             break;
         }
 
-        case 0xC6: {                         /* ifnull */
+        case OP_IFNULL: {
             int16_t o = read_i2(f);
             Slot s = f->pilha[f->topo--];
             if (s.ref == NULL && s.longo == 0) f->pc = instr_pc + (u4)(int32_t)o;
             break;
         }
-        case 0xC7: {                         /* ifnonnull */
+        case OP_IFNONNULL: {
             int16_t o = read_i2(f);
             Slot s = f->pilha[f->topo--];
             if (s.ref != NULL || s.longo != 0) f->pc = instr_pc + (u4)(int32_t)o;
             break;
         }
 
-        case 0xC8: {                         /* goto_w */
+        case OP_GOTO_W: {
             int32_t off = (int32_t)(((u4)READ_U1(f)<<24)|((u4)READ_U1(f)<<16)|((u4)READ_U1(f)<<8)|(u4)READ_U1(f));
             f->pc = instr_pc + (u4)off;
             break;
         }
 
         /* ── retorno ───────────────────────────────────── */
-        case 0xAC: /* ireturn — int    */
-        case 0xAD: /* lreturn — long   */
-        case 0xAE: /* freturn — float  */
-        case 0xAF: /* dreturn — double */
-        case 0xB0: /* areturn — ref    */
-        case 0xB1: /* return  — void   */
+        case OP_IRETURN:
+        case OP_LRETURN:
+        case OP_FRETURN:
+        case OP_DRETURN:
+        case OP_ARETURN:
+        case OP_RETURN:
             return;
 
         default:
